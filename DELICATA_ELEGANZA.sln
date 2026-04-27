@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DELICATA_ELEGANZA", "DELICATA_ELEGANZA.csproj", "{46F8B57C-43A9-4986-B3C2-26D9216E50A9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{46F8B57C-43A9-4986-B3C2-26D9216E50A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46F8B57C-43A9-4986-B3C2-26D9216E50A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46F8B57C-43A9-4986-B3C2-26D9216E50A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46F8B57C-43A9-4986-B3C2-26D9216E50A9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {38EA04D5-25B3-47BB-B816-3AC2B9E3EB0E}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#f4ece0">
+    <link rel="icon" href="/LogoDE/genfavicon-512.png" aria-label="Logo de la Página.">
+    <title>Restablecer contraseña -- DE</title>
+
+    <!-- FUENTE (opcional pero elegante) -->
+    <link href="/fonts/cinzel-v26-latin-regular.woff2" as="font" type="font/woff2">
+    <link href="/fonts/webfonts/fa-solid-900.woff2" as="font" type="font/woff2">
+    <link href="/fonts/webfonts/fa-brands-400.woff2" as="font" type="font/woff2">
+
+    <link rel="apple-touch-icon" href="/LogoDE/genfavicon-512.png">
+
+
+    <link rel="stylesheet" href="reset.css">
+</head>
+<body>
+
+    <div class="reset-container">
+        <h2>Restablecer contraseña</h2>
+
+        <input type="password" id="password" placeholder="Nueva contraseña" />
+        <input type="password" id="password2" placeholder="Repetir contraseña" />
+
+        <button onclick="resetear()">Cambiar contraseña</button>
+
+        <p id="msg"></p>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+
+        async function resetear() {
+            const p1 = document.getElementById("password").value;
+            const p2 = document.getElementById("password2").value;
+            const msg = document.getElementById("msg");
+
+            msg.innerText = "";
+
+            if (!token) {
+                msg.innerText = "Token inválido";
+                return;
+            }
+
+            if (p1 !== p2) {
+                msg.innerText = "Las contraseñas no coinciden";
+                return;
+            }
+
+            const res = await fetch("https://localhost:7181/api/usuarios/reset-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    token: token,
+                    nuevaContrasena: p1
+                })
+            });
+
+            if (!res.ok) {
+                msg.innerText = "El enlace es inválido o ya expiró";
+                return;
+            }
+
+            msg.innerText = "Contraseña actualizada correctamente";
+        }
+    </script>
+
+</body>
+</html>

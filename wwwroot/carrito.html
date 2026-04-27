@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Carrito — Delicata Eleganza</title>
+    <link rel="icon" href="/LogoDE/genfavicon-512.png" aria-label="Logo de la Página.">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#f4ece0">
+
+    <!-- Fuentes (igual que index.html) -->
+    <link rel="preload" href="/fonts/poppins-v24-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/cinzel-v26-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="/Style.min.css">
+    <link rel="stylesheet" href="/carrito.css">
+    <link rel="stylesheet" href="/fonts/css/all.min.css">
+
+    <!-- Scripts -->
+    <script src="/carrito.js" defer></script>
+</head>
+<body class="page-carrito">
+
+    <!-- NAVBAR (oculta en page-carrito por CSS) -->
+    <header class="navbar" role="banner">
+        <div class="logo-box">
+            <div class="de-logo">DE</div>
+        </div>
+        <h1 class="title">Delicata Eleganza</h1>
+        <div class="user-box">
+            <span class="greeting" id="greeting">¡Hola Visitante!</span>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="carrito-page-wrapper" id="pageWrapper">
+
+        <!-- Hero -->
+        <div class="carrito-hero">
+            <h2><i class="fa-solid fa-bag-shopping"></i> Mi Carrito</h2>
+            <p>Revisá tus productos y consultá el precio total por WhatsApp</p>
+        </div>
+
+        <!-- Layout principal -->
+        <div class="carrito-layout">
+
+            <!-- COLUMNA IZQUIERDA: lista de productos -->
+            <section>
+                <div class="carrito-lista-titulo">Productos seleccionados</div>
+
+                <!-- Aviso si no hay sesión -->
+                <div class="carrito-sin-sesion" id="avisoSinSesion" style="display:none;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>
+                        <strong>Tu carrito se guarda en este dispositivo.</strong><br>
+                        Si querés conservarlo entre sesiones o acceder desde otro equipo,
+                        <a href="/" style="color:var(--carrito-dorado);text-decoration:underline;">iniciá sesión</a>.
+                    </span>
+                </div>
+
+                <!-- Lista dinámica de items -->
+                <div id="carritoLista"></div>
+            </section>
+
+            <!-- COLUMNA DERECHA: resumen + botón WPP -->
+            <aside id="carritoResumen" class="carrito-resumen">
+                <div class="carrito-resumen-titulo">Resumen</div>
+
+                <div class="carrito-resumen-fila">
+                    <span>Productos distintos</span>
+                    <span id="resumenProductos">0</span>
+                </div>
+                <div class="carrito-resumen-fila">
+                    <span>Total de unidades</span>
+                    <span id="resumenUnidades">0</span>
+                </div>
+                <div class="carrito-resumen-fila total">
+                    <span>Precio a confirmar</span>
+                    <span>Por WhatsApp</span>
+                </div>
+
+                <div class="carrito-resumen-nota">
+                    <i class="fa-solid fa-heart"></i>
+                    Los precios son confirmados directamente con el vendedor por WhatsApp.
+                </div>
+
+                <button class="btn-consultar-wpp" id="btnConsultarWpp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    Consultar precio total
+                </button>
+
+                <a href="/" class="btn-consultar-wpp btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Seguir comprando
+                </a>
+
+                <button class="btn-vaciar-carrito" id="btnVaciar">
+                    <i class="fa-solid fa-trash"></i>
+                    Vaciar carrito
+                </button>
+            </aside>
+
+        </div><!-- /carrito-layout -->
+
+    </div><!-- /carrito-page-wrapper -->
+    <!-- FOOTER -->
+    <footer class="footer" role="contentinfo">
+        <div class="footer-icons">
+            <a href="https://maps.app.goo.gl/qqT2RS29RPJqmkZA7" target="_blank" rel="noopener noreferrer">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>25 de Mayo & Jose Mateo Luque — Villa del Rosario</span>
+            </a>
+            <a href="https://wa.me/5493573692940" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-whatsapp"></i>
+                <span>+5493573692940</span>
+            </a>
+            <a href="https://www.instagram.com/delicataeleganza/" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-instagram"></i>
+                <span>@delicataeleganza</span>
+            </a>
+            <a href="mailto:reflej8@hotmail.com">
+                <i class="fa-solid fa-envelope"></i>
+                <span>reflej8@hotmail.com</span>
+            </a>
+        </div>
+        <p>© 2026 Delicata Eleganza — Delicadeza y Elegancia en cada detalle.</p>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- Script: saludo y aviso sesión -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const usuario = localStorage.getItem("usuarioDelicata");
+            const correo = localStorage.getItem("correoDelicata");
+            const greeting = document.getElementById("greeting");
+
+            if (usuario && greeting) greeting.textContent = `¡Hola ${usuario}!`;
+
+            const aviso = document.getElementById("avisoSinSesion");
+            if (!correo && aviso) aviso.style.display = "flex";
+        });
+    </script>
+
+</body>
+</html>
