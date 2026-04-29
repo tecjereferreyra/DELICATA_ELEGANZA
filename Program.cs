@@ -1,12 +1,13 @@
 ﻿using DELICATA_ELEGANZA.Data;
 using DELICATA_ELEGANZA.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System.IO.Compression;
 using System.Text;
-
+using Npgsql.EntityFrameworkCore.PostgreSQL; 
 var builder = WebApplication.CreateBuilder(args);
 
 // ==========================================
@@ -58,8 +59,9 @@ builder.Services
 builder.Services.AddScoped<EmailService>();
 
 // 4. BASE DE DATOS
+// ✅ DESPUÉS — PostgreSQL
 builder.Services.AddDbContext<DelicataContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 5. SWAGGER
 builder.Services.AddEndpointsApiExplorer();
