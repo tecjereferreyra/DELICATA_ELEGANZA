@@ -1,4 +1,4 @@
-﻿
+﻿const IMG_BASE_URL = "https://delicata-eleganza.onrender.com";
 const CARRITO_KEY = "carritoDelicata";
 const WPP_CARRITO = "5493573692940";   
 
@@ -306,7 +306,7 @@ function inicializarPaginaCarrito() {
             const imagenRelativa = i.imagenUrl || "";
             const foto = imagenRelativa.startsWith("http")
                 ? imagenRelativa
-                : `${window.location.origin}${imagenRelativa}`;
+                : `${IMG_BASE_URL}${imagenRelativa}`;
 
             return `• ${i.nombre}\n` +
                 `  Modelo: ${i.modelo}\n` +

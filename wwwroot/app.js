@@ -1,4 +1,4 @@
-﻿const API_URL = "https://delicata-eleganza.onrender.com/api";
+﻿const API_URL = "https://delicata-eleganza.onrender.com/api/Productos";
 const USUARIOS_URL = "/api/Usuarios";
 
 let productosData = [];
@@ -658,7 +658,7 @@ function abrirModal(prod) {
         const imagenRelativa = prod.ImagenUrl || prod.imagenUrl || "";
         const imagenAbsoluta = imagenRelativa.startsWith("http")
             ? imagenRelativa
-            : `${window.location.origin}${imagenRelativa}`;
+            : `https://delicata-eleganza.onrender.com${imagenRelativa}`;
 
         const mensaje = `¡Hola Edgar!, me gustaría saber el precio de este producto:\n` +
             `Nombre: ${nombreProducto}\n` +
@@ -887,6 +887,8 @@ async function cargarProductos(forzar = false) {
         aplicarFiltros();
     } catch (err) {
         console.error("Error cargando productos", err);
+        // Opcional: mostrar en el contenedor para debug
+        contenedor.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
     } finally {
         isLoadingProductos = false;
     }
