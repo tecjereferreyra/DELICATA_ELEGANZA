@@ -735,29 +735,14 @@ const cardObserver = new IntersectionObserver(
                     entry.target.classList.add("is-visible");
                     observer.unobserve(entry.target);
                 }, delay);
-
-                // ✅ AGREGAR ESTO — precachear imágenes al entrar en viewport
-                const id = entry.target.dataset.id;
-                const prod = productosMap?.get(String(id));
-                if (prod && !prod._imagenesCache) {
-                    fetch(`/api/Productos/${id}`)
-                        .then(r => r.ok ? r.json() : null)
-                        .then(detalle => {
-                            if (!detalle) return;
-                            const extras = detalle.imagenes || detalle.Imagenes || [];
-                            if (extras.length > 0) {
-                                prod._imagenesCache = [
-                                    detalle.imagenUrl || detalle.ImagenUrl || prod.ImagenUrl,
-                                    ...extras
-                                ];
-                            }
-                        })
-                        .catch(() => { });
-                }
             }
         });
     },
-    { root: null, threshold: 0, rootMargin: "200px 0px" }
+    {
+        root: null,
+        threshold: 0,
+        rootMargin: "200px 0px"
+    }
 );
 
 /* ---------------- RENDERIZADO PROGRESIVO OPTIMIZADO ---------------- */
