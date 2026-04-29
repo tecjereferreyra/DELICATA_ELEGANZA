@@ -9,7 +9,8 @@ let productoSeleccionado = null;
 let productosRenderizados = 0;
 let _cerrarModalTimeout = null;
 let _menuCerradoRecien = false;
-const BLOQUE_CARGA = 12;
+const BLOQUE_CARGA = 24;
+const delay = 0;
 let productosFiltrados = [];
 let esAdminActual = false;
 /* ---------------- UTILIDADES OPTIMIZADAS ---------------- */
@@ -48,7 +49,13 @@ const throttle = (func, limit) => {
         }
     };
 };
+const esMobile = window.innerWidth < 768;
 
+if (esMobile) {
+    card.classList.add("is-visible");
+} else {
+    cardObserver.observe(card);
+}
 /* ---------------- CAMPOS DEL MODAL ---------------- */
 function ocultarCampoModal(id) {
     const el = document.getElementById(id);
