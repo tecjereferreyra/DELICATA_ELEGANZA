@@ -280,7 +280,7 @@ function abrirModalProducto() {
 /* ---------------- CARRUSEL MODAL ---------------- */
 let carruselActual = 0;
 
-function renderCarrusel(imagenes, altTexto) {
+function renderCarrusel(imagenes, altTexto, esParcial = false) {
     const wrapper = document.getElementById("carruselWrapper");
     const dots = document.getElementById("carruselDots");
     const btnPrev = document.getElementById("carruselPrev");
@@ -291,11 +291,20 @@ function renderCarrusel(imagenes, altTexto) {
     if (dots) dots.innerHTML = "";
     carruselActual = 0;
 
-    // Ocultar flechas y dots ANTES de renderizar para evitar flash
     const soloUna = imagenes.length <= 1;
-    btnPrev?.classList.toggle("oculto", soloUna);
-    btnNext?.classList.toggle("oculto", soloUna);
-    if (dots) dots.style.display = soloUna ? "none" : "";
+
+    if (esParcial) {
+        btnPrev?.style.setProperty('visibility', 'hidden');
+        btnNext?.style.setProperty('visibility', 'hidden');
+        if (dots) dots.style.visibility = 'hidden';
+    } else {
+        btnPrev?.style.removeProperty('visibility');
+        btnNext?.style.removeProperty('visibility');
+        if (dots) dots.style.visibility = '';
+        btnPrev?.classList.toggle("oculto", soloUna);
+        btnNext?.classList.toggle("oculto", soloUna);
+        if (dots) dots.style.display = soloUna ? "none" : "";
+    }
 
     imagenes.forEach((url, idx) => {
         const slide = document.createElement("div");
@@ -700,9 +709,8 @@ function abrirModal(prod) {
         renderCarrusel(prod._imagenesCache, safeText(prod.Nombre || prod.nombre));
         abrirModalProducto();
     } else {
-        // Sin caché: primero mostramos la imagen principal y abrimos,
-        // luego el fetch actualiza el carrusel en segundo plano
-        renderCarrusel([imagenPrincipal], safeText(prod.Nombre || prod.nombre));
+        // Sin caché: true = parcial, oculta flechas sin flash
+        renderCarrusel([imagenPrincipal], safeText(prod.Nombre || prod.nombre), true);
         abrirModalProducto();
         fetch(`/api/Productos/${prod.IdProducto}`)
             .then(r => r.ok ? r.json() : null)
@@ -713,11 +721,11 @@ function abrirModal(prod) {
                     ? [safeText(detalle.imagenUrl || detalle.ImagenUrl || imagenPrincipal), ...extras]
                     : [imagenPrincipal];
                 prod._imagenesCache = todas;
-                // Solo re-renderizar si el modal sigue abierto (el usuario no lo cerró)
                 if (domCache.modal?.classList.contains("show")) {
                     const wrapper = document.getElementById("carruselWrapper");
                     if (wrapper) wrapper.style.minHeight = wrapper.offsetHeight + "px";
-                    renderCarrusel(todas, safeText(prod.Nombre || prod.nombre));
+                    // false = definitivo, muestra/oculta flechas según corresponda
+                    renderCarrusel(todas, safeText(prod.Nombre || prod.nombre), false);
                     requestAnimationFrame(() => { if (wrapper) wrapper.style.minHeight = ""; });
                 }
             })
@@ -1141,12 +1149,39 @@ function openUserModalAsLogin() {
             return;
         }
 
+        const btn = loginFormLocal.querySelector("button[type='submit']");
+
         try {
-            const res = await fetch(`${USUARIOS_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ correo, contrasena })
-            });
+            btn.disabled = true;
+            btn.textContent = "Conectando...";
+            showLoginMessage("Conectando con el servidor, aguardá un momento...", "info");
+
+            let res;
+            for (let intento = 0; intento < 2; intento++) {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 20000);
+                try {
+                    res = await fetch(`${USUARIOS_URL}/login`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ correo, contrasena }),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timer);
+                    break;
+                } catch (innerErr) {
+                    clearTimeout(timer);
+                    if (intento === 0) {
+                        showLoginMessage("El servidor está iniciando, reintentando...", "info");
+                        await new Promise(r => setTimeout(r, 3000));
+                    } else {
+                        throw innerErr;
+                    }
+                }
+            }
+
+            btn.disabled = false;
+            btn.textContent = "Iniciar Sesión";
 
             if (res.ok) {
                 const data = await res.json();
@@ -1164,13 +1199,15 @@ function openUserModalAsLogin() {
                 }, 700);
                 verificarUsuarioAutorizado();
             } else if (res.status === 401) {
-                showLoginMessage("No se pudo acceder: credenciales incorrectas.", "error");
+                showLoginMessage("Credenciales incorrectas.", "error");
             } else {
-                showLoginMessage("Error de conexión al servidor. Intenta nuevamente.", "error");
+                showLoginMessage("Error en el servidor. Intenta nuevamente.", "error");
             }
         } catch (err) {
+            btn.disabled = false;
+            btn.textContent = "Iniciar Sesión";
             console.error("Error en login:", err);
-            showLoginMessage("Error de conexión al servidor. Intenta nuevamente.", "error");
+            showLoginMessage("No se pudo conectar. Verificá tu internet e intentá de nuevo.", "error");
         }
     });
 
@@ -1470,12 +1507,12 @@ document.addEventListener("DOMContentLoaded", () => {
             categoriaLinks.forEach(l => l.classList.remove('active-cat'));
             if (linkDesktop) linkDesktop.classList.add('active-cat');
 
+            // ✅ Activar el flag PRIMERO, antes de cualquier repaint
+            _menuCerradoRecien = true;
+            setTimeout(() => { _menuCerradoRecien = false; }, 600); // era 400
+
             aplicarFiltros();
             unlockScroll();
-
-            // Activar flag: las tarjetas ignorarán el próximo tap por 400ms
-            _menuCerradoRecien = true;
-            setTimeout(() => { _menuCerradoRecien = false; }, 400);
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -1484,7 +1521,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     });
-
     const closeBtn = document.querySelector(".menu-close");
     closeBtn?.addEventListener("click", () => {
         mobileMenu.classList.remove("active");
