@@ -7,6 +7,8 @@ let mobileMenu;
 let isLoadingProductos = false;
 let productoSeleccionado = null;
 let productosRenderizados = 0;
+let _cerrarModalTimeout = null;
+let _menuCerradoRecien = false;
 const BLOQUE_CARGA = 12;
 let productosFiltrados = [];
 let esAdminActual = false;
@@ -63,29 +65,48 @@ function mostrarCampoModal(id) {
     const parent = el.closest("p, div");
     if (parent) parent.style.display = "block";
 }
+
 let _scrollLockedAt = 0;
 
 function lockScroll() {
-    if (document.body.classList.contains('scroll-locked')) return; // ya estaba bloqueado
-    _scrollLockedAt = window.scrollY;
+    if (document.body.classList.contains('scroll-locked')) return;
+
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', '#111111');
+
+    // Safari toma el color del html para su barra — forzarlo oscuro al bloquear
+    document.documentElement.style.backgroundColor = '#111111';
+
+    _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.body.style.position = 'fixed';
     document.body.style.top = `-${_scrollLockedAt}px`;
     document.body.style.width = '100%';
     document.body.classList.add('scroll-locked');
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
 }
 
 function unlockScroll() {
+    if (!document.body.classList.contains('scroll-locked')) return;
+
     const restoreY = _scrollLockedAt;
+    document.body.classList.remove('scroll-locked');
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.width = '';
-    document.body.classList.remove('scroll-locked');
 
-    document.documentElement.style.scrollBehavior = 'auto';
-    window.scrollTo(0, restoreY);
-    requestAnimationFrame(() => {
-        document.documentElement.style.scrollBehavior = '';
-    });
+    // Restaurar color del html
+    document.documentElement.style.backgroundColor = '';
+
+    if (/iP(hone|ad|od)/.test(navigator.userAgent) ||
+        (navigator.userAgent.includes('Mac') && 'ontouchend' in document)) {
+        requestAnimationFrame(() => {
+            document.documentElement.scrollTop = restoreY;
+            document.body.scrollTop = restoreY;
+            window.scrollTo(0, restoreY);
+        });
+    } else {
+        window.scrollTo({ top: restoreY, behavior: 'instant' });
+    }
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
@@ -240,15 +261,21 @@ function registrarCierreBackdrop(modalEl, cerrarFn) {
 function abrirModalProducto() {
     const modal = domCache.modal;
     if (!modal) return;
+
+    if (_cerrarModalTimeout) {
+        clearTimeout(_cerrarModalTimeout);
+        _cerrarModalTimeout = null;
+    }
+
     lockScroll();
-    modal.style.display = 'flex';
-    // Un solo rAF es suficiente para que el display:flex se aplique antes de la clase;
-    // el double-rAF generaba un frame extra de retraso visible en Safari.
+    document.activeElement?.blur();
+    modal.removeAttribute("aria-hidden");
+    modal.inert = false;
+
+    // Un solo rAF para que el browser procese el estado anterior antes de agregar .show
     requestAnimationFrame(() => {
         modal.classList.add("show");
     });
-    modal.removeAttribute("aria-hidden");
-    modal.inert = false;
 }
 /* ---------------- CARRUSEL MODAL ---------------- */
 let carruselActual = 0;
@@ -323,15 +350,9 @@ function cerrarModalProducto() {
     modal.classList.remove("show");
     modal.setAttribute("aria-hidden", "true");
     modal.inert = true;
-
-    // Safari (iOS y macOS escritorio) necesita esperar a la transición CSS antes
-    // de restaurar el scroll, si no salta visualmente al tope de la página.
-    const esSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (esSafari) {
-        setTimeout(() => unlockScroll(), 350);
-    } else {
-        unlockScroll();
-    }
+    unlockScroll();
+    // Ya no necesitamos setTimeout para display:none porque usamos visibility
+    _cerrarModalTimeout = null;
 }
 
 /* ---------------- INICIALIZACIÓN RÁPIDA ---------------- */
@@ -522,8 +543,11 @@ function crearTarjetaDOM(prod, index = 0) {
                 .catch(() => { });
         }
     }, { once: true }); // el observer la muestra cuando entra en pantalla
-    card.addEventListener("click", () => abrirModal(prod), { passive: true });
-    cardObserver.observe(card);   // ← AGREGAR ESTA LÍNEA
+    card.addEventListener("click", () => {
+        if (_menuCerradoRecien) return;  
+        abrirModal(prod);
+    }, { passive: true });
+    cardObserver.observe(card);   
     return card;
 }
 
@@ -544,7 +568,7 @@ function cerrarModalAdmin(idModal) {
     const modalEl = document.getElementById(idModal);
     if (!modalEl) return;
     modalEl.classList.remove("show", "active");
-
+    unlockScroll(); // ← agregar esta línea
 }
 
 /* ---------------- MODAL PRODUCTO ---------------- */
@@ -691,7 +715,10 @@ function abrirModal(prod) {
                 prod._imagenesCache = todas;
                 // Solo re-renderizar si el modal sigue abierto (el usuario no lo cerró)
                 if (domCache.modal?.classList.contains("show")) {
+                    const wrapper = document.getElementById("carruselWrapper");
+                    if (wrapper) wrapper.style.minHeight = wrapper.offsetHeight + "px";
                     renderCarrusel(todas, safeText(prod.Nombre || prod.nombre));
+                    requestAnimationFrame(() => { if (wrapper) wrapper.style.minHeight = ""; });
                 }
             })
             .catch(() => { });
@@ -1087,7 +1114,6 @@ function openUserModalAsLogin() {
     linkOlvidaste?.addEventListener("click", (e) => {
         e.preventDefault();
         userModal.style.display = "none";
-        unlockScroll();
         openRecuperarModal();
     });
 
@@ -1399,13 +1425,19 @@ document.addEventListener("DOMContentLoaded", () => {
     hamburger = document.querySelector(".hamburger");
     mobileMenu = document.querySelector(".mobile-menu");
 
-    hamburger?.addEventListener("click", () => {
+    hamburger?.addEventListener("click", (e) => {
+        e.stopPropagation();
         const abierto = mobileMenu.classList.toggle("active");
         hamburger.setAttribute("aria-expanded", abierto);
         mobileMenu.setAttribute("aria-hidden", !abierto);
-        abierto ? lockScroll() : unlockScroll();
+
+        // Actualizar theme-color para Safari
         const metaTheme = document.querySelector('meta[name="theme-color"]');
-        if (metaTheme) metaTheme.setAttribute('content', abierto ? '#111111' : '#f4ece0');
+        if (metaTheme) {
+            metaTheme.setAttribute('content', '#111111'); // siempre negro
+        }
+
+        abierto ? lockScroll() : unlockScroll();
     });
     // ── Cerrar menú al tocar fuera (tap en overlay) ──
     document.addEventListener("click", (e) => {
@@ -1420,31 +1452,29 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.style.backgroundColor = '';
             unlockScroll();
         }
-    });
+    }); 
+
     document.querySelectorAll(".mobile-categories li").forEach(item => {
-        item.addEventListener("click", () => {
+        item.addEventListener("click", (e) => {
+            e.stopPropagation();
             const cat = item.dataset.cat;
             const linkDesktop = document.querySelector(`.categories a[data-cat="${cat}"]`);
 
-            // 1. Cerrar menú
             mobileMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", false);
             mobileMenu.setAttribute("aria-hidden", true);
             document.body.style.backgroundColor = '';
 
-            // 2. Marcar categoría activa visualmente
             categoriaLinks.forEach(l => l.classList.remove('active-cat'));
             if (linkDesktop) linkDesktop.classList.add('active-cat');
 
-            // 3. Aplicar filtros inmediatamente (sin esperar al scroll)
             aplicarFiltros();
-
-            // 4. Restaurar scroll (unlockScroll hace scrollTo(restoreY) instantáneo
-            //    y en su propio rAF resetea scrollBehavior)
             unlockScroll();
 
-            // 5. Doble rAF: esperar a que unlockScroll termine su rAF
-            //    y recién ahí hacer el scroll suave al top
+            // Activar flag: las tarjetas ignorarán el próximo tap por 400ms
+            _menuCerradoRecien = true;
+            setTimeout(() => { _menuCerradoRecien = false; }, 400);
+
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2582,7 +2612,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos extra: compartimentos, cierre, capacidad, genero,
     //                  alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
+    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera","fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);

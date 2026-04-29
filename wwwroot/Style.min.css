@@ -9,7 +9,7 @@
     .carrusel-slide img, .product-card img {
         aspect-ratio: 1/1;
         object-fit: cover;
-        will-change: transform
+    
     }
 
 body, header.navbar {
@@ -109,11 +109,11 @@ body, header.navbar {
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     font-size: clamp(13px, 1.8vw, 16px);
     overflow-y: scroll;
     overflow-x: hidden;
-    background-color: #f4ece0
+    background-color: var(--color-fondo-principal);
 }
 
 body {
@@ -121,7 +121,9 @@ body {
     font-family: Cinzel,Poppins,sans-serif;
     background-color: var(--color-fondo-principal);
     color: var(--color-texto-oscuro);
-    flex-direction: column
+    flex-direction: column;
+    margin: 0;
+    padding-top: env(safe-area-inset-top);
 }
 
     body.scroll-locked {
@@ -543,7 +545,7 @@ header.navbar .title {
     .hamburger span {
         width: 26px;
         height: 2px;
-        background: var(--color-marca-oro);
+        background: var(--color-marca-oro); /* ← siempre blanco, sobre el navbar oscuro */
         border-radius: 2px
     }
 
@@ -781,7 +783,10 @@ header.navbar .title {
         transform: translateY(-2px);
         box-shadow: 0 14px 30px rgba(0,0,0,.1)
     }
-
+    .product-card.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
     .mobile-menu.active .mobile-categories li, .product-card.is-visible {
         opacity: 1;
         transform: translateY(0)
@@ -925,18 +930,23 @@ header.navbar .title {
 .modal {
     position: fixed;
     inset: 0;
-    display: flex;
+    display: flex; /* ← siempre flex, nunca none */
     align-items: center;
-    opacity: 0;
+    justify-content: center;
     pointer-events: none;
-    transition: opacity .35s;
-    z-index: 1000
+    opacity: 0;
+    visibility: hidden; /* ← esto lo oculta sin romper el layout */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 1000;
+    background: transparent;
+    transition: opacity 0.3s ease, visibility 0.3s ease, background 0.3s ease;
 }
 
     .modal.show {
         opacity: 1;
+        visibility: visible;
         pointer-events: auto;
-        background: rgba(0,0,0,.45)
+        background: rgba(0,0,0,.45);
     }
 
 .modal-content {
@@ -1570,7 +1580,7 @@ footer.footer {
     position: fixed;
     inset: 0;
     padding-bottom: env(safe-area-inset-bottom,0);
-    background: rgba(17,17,17,.97);
+    background: #111111;
     z-index: 1000;
     display: flex;
     flex-direction: column;
