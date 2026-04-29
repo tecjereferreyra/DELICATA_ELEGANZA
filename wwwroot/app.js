@@ -1,4 +1,4 @@
-﻿const API_URL = "/api/Productos";
+﻿const API_URL = "https://delicata-eleganza.onrender.com/api";
 const USUARIOS_URL = "/api/Usuarios";
 
 let productosData = [];

@@ -26,7 +26,7 @@ namespace DELICATA_ELEGANZA.Services
             message.To.Add(MailboxAddress.Parse(emailDestino));
             message.Subject = "Recuperación de contraseña";
 
-            string link = $"https://localhost:7181/reset.html?token={token}";
+            string link = $"https://delicata-eleganza.onrender.com/reset.html?token={token}";
 
             message.Body = new TextPart("plain")
             {
