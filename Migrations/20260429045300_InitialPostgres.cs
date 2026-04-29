@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace DELICATA_ELEGANZA.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,9 +15,9 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Capacidades",
                 columns: table => new
                 {
-                    id_capacidad = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    id_capacidad = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Descripcion = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -27,9 +28,9 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Categorias",
                 columns: table => new
                 {
-                    id_categoria = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    id_categoria = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -40,9 +41,9 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Generos",
                 columns: table => new
                 {
-                    id_genero = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    id_genero = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Descripcion = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,9 +54,9 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Marcas",
                 columns: table => new
                 {
-                    id_marca = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    id_marca = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -66,9 +67,9 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Materiales",
                 columns: table => new
                 {
-                    id_material = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    id_material = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -79,9 +80,9 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Tipos",
                 columns: table => new
                 {
-                    id_tipo = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    id_tipo = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -92,9 +93,9 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "TiposCierre",
                 columns: table => new
                 {
-                    id_tipo_cierre = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    id_tipo_cierre = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -105,14 +106,14 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Usuarios",
                 columns: table => new
                 {
-                    IdUsuario = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Apellido = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Correo = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    NombreUsuario = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Rol = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    IdUsuario = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "text", nullable: false),
+                    Apellido = table.Column<string>(type: "text", nullable: false),
+                    Correo = table.Column<string>(type: "text", nullable: false),
+                    NombreUsuario = table.Column<string>(type: "text", nullable: false),
+                    Password = table.Column<string>(type: "text", nullable: false),
+                    Rol = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,29 +124,29 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "Productos",
                 columns: table => new
                 {
-                    id_producto = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Modelo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    id_categoria = table.Column<int>(type: "int", nullable: true),
-                    id_marca = table.Column<int>(type: "int", nullable: true),
-                    id_tipo = table.Column<int>(type: "int", nullable: true),
-                    id_material = table.Column<int>(type: "int", nullable: true),
-                    Compartimentos = table.Column<int>(type: "int", nullable: true),
-                    id_capacidad = table.Column<int>(type: "int", nullable: true),
-                    id_genero = table.Column<int>(type: "int", nullable: true),
-                    Alto = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Ancho = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Profundidad = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Peso = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Diametro = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    CantidadRuedas = table.Column<int>(type: "int", nullable: true),
-                    FuelleExpandible = table.Column<bool>(type: "bit", nullable: true),
-                    id_tipo_cierre = table.Column<int>(type: "int", nullable: true),
-                    Stock = table.Column<int>(type: "int", nullable: true),
-                    ImagenUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Disponible = table.Column<bool>(type: "bit", nullable: false)
+                    id_producto = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "text", nullable: false),
+                    Modelo = table.Column<string>(type: "text", nullable: false),
+                    Color = table.Column<string>(type: "text", nullable: false),
+                    id_categoria = table.Column<int>(type: "integer", nullable: true),
+                    id_marca = table.Column<int>(type: "integer", nullable: true),
+                    id_tipo = table.Column<int>(type: "integer", nullable: true),
+                    id_material = table.Column<int>(type: "integer", nullable: true),
+                    Compartimentos = table.Column<int>(type: "integer", nullable: true),
+                    id_capacidad = table.Column<int>(type: "integer", nullable: true),
+                    id_genero = table.Column<int>(type: "integer", nullable: true),
+                    Alto = table.Column<decimal>(type: "numeric", nullable: true),
+                    Ancho = table.Column<decimal>(type: "numeric", nullable: true),
+                    Profundidad = table.Column<decimal>(type: "numeric", nullable: true),
+                    Peso = table.Column<decimal>(type: "numeric", nullable: true),
+                    Diametro = table.Column<decimal>(type: "numeric", nullable: true),
+                    CantidadRuedas = table.Column<int>(type: "integer", nullable: true),
+                    FuelleExpandible = table.Column<bool>(type: "boolean", nullable: true),
+                    id_tipo_cierre = table.Column<int>(type: "integer", nullable: true),
+                    Stock = table.Column<int>(type: "integer", nullable: true),
+                    ImagenUrl = table.Column<string>(type: "text", nullable: true),
+                    Disponible = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -198,11 +199,11 @@ namespace DELICATA_ELEGANZA.Migrations
                 name: "ProductoImagenes",
                 columns: table => new
                 {
-                    id_imagen = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    id_producto = table.Column<int>(type: "int", nullable: false),
-                    Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Orden = table.Column<int>(type: "int", nullable: false)
+                    id_imagen = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id_producto = table.Column<int>(type: "integer", nullable: false),
+                    Url = table.Column<string>(type: "text", nullable: false),
+                    Orden = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
