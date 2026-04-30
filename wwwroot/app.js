@@ -9,7 +9,7 @@ let productoSeleccionado = null;
 let productosRenderizados = 0;
 let _cerrarModalTimeout = null;
 let _menuCerradoRecien = false;
-const BLOQUE_CARGA = 24;
+const BLOQUE_CARGA = 12;
 const delay = 0;
 let productosFiltrados = [];
 let esAdminActual = false;
@@ -49,13 +49,6 @@ const throttle = (func, limit) => {
         }
     };
 };
-const esMobile = window.innerWidth < 768;
-
-if (esMobile) {
-    card.classList.add("is-visible");
-} else {
-    cardObserver.observe(card);
-}
 /* ---------------- CAMPOS DEL MODAL ---------------- */
 function ocultarCampoModal(id) {
     const el = document.getElementById(id);
@@ -74,46 +67,26 @@ function mostrarCampoModal(id) {
 }
 
 let _scrollLockedAt = 0;
-
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
 
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) metaTheme.setAttribute('content', '#111111');
-
-    // Safari toma el color del html para su barra — forzarlo oscuro al bloquear
-    document.documentElement.style.backgroundColor = '#111111';
-
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${_scrollLockedAt}px`;
-    document.body.style.width = '100%';
+
+    // En vez de position:fixed en body (que dispara la barra de Safari),
+    // usamos overflow:hidden en html + guardamos el scroll manualmente
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.paddingRight = ''; // evita layout shift si había scrollbar
     document.body.classList.add('scroll-locked');
-    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
 
-    const restoreY = _scrollLockedAt;
     document.body.classList.remove('scroll-locked');
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
+    document.documentElement.style.overflow = '';
 
-    // Restaurar color del html
-    document.documentElement.style.backgroundColor = '';
-
-    if (/iP(hone|ad|od)/.test(navigator.userAgent) ||
-        (navigator.userAgent.includes('Mac') && 'ontouchend' in document)) {
-        requestAnimationFrame(() => {
-            document.documentElement.scrollTop = restoreY;
-            document.body.scrollTop = restoreY;
-            window.scrollTo(0, restoreY);
-        });
-    } else {
-        window.scrollTo({ top: restoreY, behavior: 'instant' });
-    }
+    // Restaurar posición de scroll
+    window.scrollTo({ top: _scrollLockedAt, behavior: 'instant' });
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
@@ -1015,7 +988,10 @@ const aplicarFiltros = () => {
         .trim();
 
     const categoriaActivaRaw = [...(domCache.categoriesLinks || [])]
-        .find(l => l.classList.contains("active-cat"))?.dataset.cat || "todos";
+        .find(l => l.classList.contains("active-cat"))?.dataset.cat
+        || window._categoriaMobileActiva
+        || "todos";
+    window._categoriaMobileActiva = null; // limpiar después de usar
     const categoriaActiva = normalizar(categoriaActivaRaw);
 
     // 1. Filtrar por categoría (match exacto normalizado)
@@ -1499,24 +1475,31 @@ document.addEventListener("DOMContentLoaded", () => {
             unlockScroll();
         }
     }); 
-
     document.querySelectorAll(".mobile-categories li").forEach(item => {
         item.addEventListener("click", (e) => {
             e.stopPropagation();
             const cat = item.dataset.cat;
-            const linkDesktop = document.querySelector(`.categories a[data-cat="${cat}"]`);
 
             mobileMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", false);
             mobileMenu.setAttribute("aria-hidden", true);
             document.body.style.backgroundColor = '';
 
+            // Limpiar active-cat de todos los links desktop
             categoriaLinks.forEach(l => l.classList.remove('active-cat'));
-            if (linkDesktop) linkDesktop.classList.add('active-cat');
 
-            // ✅ Activar el flag PRIMERO, antes de cualquier repaint
+            // Buscar el link desktop comparando con normalizar() igual que hace aplicarFiltros
+            const catNorm = normalizar(cat);
+            const linkDesktop = [...categoriaLinks].find(l => normalizar(l.dataset.cat || "") === catNorm);
+            if (linkDesktop) {
+                linkDesktop.classList.add('active-cat');
+            } else {
+                // Fallback: guardar la categoría para que aplicarFiltros la use directamente
+                window._categoriaMobileActiva = cat;
+            }
+
             _menuCerradoRecien = true;
-            setTimeout(() => { _menuCerradoRecien = false; }, 600); // era 400
+            setTimeout(() => { _menuCerradoRecien = false; }, 600);
 
             aplicarFiltros();
             unlockScroll();
