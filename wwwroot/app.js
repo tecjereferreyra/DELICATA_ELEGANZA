@@ -1249,11 +1249,16 @@ function openUserModalAsRegister() {
         }
 
         try {
+            showLoginMessage("Conectando con el servidor, aguardá un momento...", "info");
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 90000);
             const res = await fetch(`${USUARIOS_URL}/registro`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ Nombre: nombre, Correo: correo, Contrasena: contrasena })
+                body: JSON.stringify({ Nombre: nombre, Correo: correo, Contrasena: contrasena }),
+                signal: controller.signal
             });
+            clearTimeout(timer);
 
             if (res.ok) {
                 showLoginMessage("Cuenta creada con éxito 🎉", "success");
@@ -1694,7 +1699,7 @@ function openRecuperarModal() {
             return;
         }
 
-        const res = await fetch("/api/usuarios/recuperar", {
+        const res = await fetch(`${USUARIOS_URL}/recuperar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })

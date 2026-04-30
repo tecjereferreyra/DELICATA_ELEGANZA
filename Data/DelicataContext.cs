@@ -43,9 +43,9 @@ namespace DELICATA_ELEGANZA.Data
                 .HasDatabaseName("IX_ProductoImagenes_Producto");
             // ── Índices de Usuario ────────────────────────────────────────
             modelBuilder.Entity<Usuario>()
-                .HasIndex(u => u.Correo)
-                .IsUnique()
-                .HasDatabaseName("UQ_Usuarios_Correo");
+    .HasIndex(u => u.Email)
+    .IsUnique()
+    .HasDatabaseName("UQ__Usuarios__A9D1053455A53AFD");
 
             // ── Relaciones de Productos ───────────────────────────────────
             modelBuilder.Entity<Productos>()
