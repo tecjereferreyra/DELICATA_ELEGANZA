@@ -906,7 +906,6 @@ async function cargarProductos(forzar = false) {
             const prod = normalizarProducto(p);
             return recalcularCamposBusqueda(prod);
         });
-
         // Guardar en localStorage para la próxima visita
         try {
             localStorage.setItem(cacheKey, JSON.stringify(nuevos));
