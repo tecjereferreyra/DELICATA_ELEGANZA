@@ -67,15 +67,27 @@ function mostrarCampoModal(id) {
 }
 
 let _scrollLockedAt = 0;
+function getScrollbarWidth() {
+    // En mobile el scrollbar es overlay (ancho 0), en desktop ocupa espacio real
+    return window.innerWidth - document.documentElement.clientWidth;
+}
+
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
 
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
 
-    // En vez de position:fixed en body (que dispara la barra de Safari),
-    // usamos overflow:hidden en html + guardamos el scroll manualmente
+    const scrollbarWidth = getScrollbarWidth();
+
+    // Compensar el espacio que va a dejar el scrollbar al ocultarse
+    if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+        // Si tu navbar es fixed, también necesita compensación
+        const navbar = document.querySelector('header.navbar');
+        if (navbar) navbar.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
     document.documentElement.style.overflow = 'hidden';
-    document.body.style.paddingRight = ''; // evita layout shift si había scrollbar
     document.body.classList.add('scroll-locked');
 }
 
@@ -85,7 +97,11 @@ function unlockScroll() {
     document.body.classList.remove('scroll-locked');
     document.documentElement.style.overflow = '';
 
-    // Restaurar posición de scroll
+    // Sacar la compensación
+    document.body.style.paddingRight = '';
+    const navbar = document.querySelector('header.navbar');
+    if (navbar) navbar.style.paddingRight = '';
+
     window.scrollTo({ top: _scrollLockedAt, behavior: 'instant' });
 }
 /* ---------------- NORMALIZADOR ---------------- */
@@ -858,29 +874,60 @@ async function cargarProductos(forzar = false) {
     isLoadingProductos = true;
 
     try {
-        if (productosData.length === 0) renderSkeletons(8);
+        // ── Mostrar caché local inmediatamente si existe ──
+        const cacheKey = "delicata_productos_v1";
+        const cachedRaw = !forzar && localStorage.getItem(cacheKey);
 
+        if (cachedRaw) {
+            try {
+                const cached = JSON.parse(cachedRaw);
+                if (cached?.length > 0) {
+                    productosData = cached;
+                    aplicarFiltros(); // mostrar inmediatamente
+                }
+            } catch (e) {
+                localStorage.removeItem(cacheKey);
+            }
+        } else {
+            // Solo mostrar skeletons si no hay nada que mostrar
+            renderSkeletons(8);
+        }
+
+        // ── Siempre buscar la versión actualizada en background ──
         const resp = await fetch(API_URL, {
             headers: forzar
                 ? { "Cache-Control": "no-cache, no-store" }
-                : { "Cache-Control": "max-age=60" }
+                : { "Cache-Control": "max-age=300" }
         });
         if (!resp.ok) throw new Error("Error cargando productos");
 
         const data = await resp.json();
-        productosData = data.map(p => {
+        const nuevos = data.map(p => {
             const prod = normalizarProducto(p);
             return recalcularCamposBusqueda(prod);
         });
+
+        // Guardar en localStorage para la próxima visita
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify(nuevos));
+        } catch (e) {
+            // localStorage lleno — no es crítico
+        }
+
+        productosData = nuevos;
         aplicarFiltros();
+
     } catch (err) {
         console.error("Error cargando productos", err);
-        const contenedor = document.getElementById("contenedor-productos");
-        contenedor.innerHTML = `
-        <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--color-marca-oro);">
-            <p style="font-size:1.1rem; margin-bottom:12px;">⏳ El servidor está iniciando, esto puede tardar hasta 1 minuto...</p>
-            <p style="font-size:0.9rem; opacity:0.7;">Por favor esperá y recargá la página en unos segundos.</p>
-        </div>`;
+        // Si hay caché, no mostrar el error — ya se están viendo los productos
+        if (productosData.length === 0) {
+            const contenedor = document.getElementById("contenedor-productos");
+            contenedor.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--color-marca-oro);">
+                <p style="font-size:1.1rem; margin-bottom:12px;">⏳ El servidor está iniciando, esto puede tardar hasta 1 minuto...</p>
+                <p style="font-size:0.9rem; opacity:0.7;">Por favor esperá y recargá la página en unos segundos.</p>
+            </div>`;
+        }
     } finally {
         isLoadingProductos = false;
     }

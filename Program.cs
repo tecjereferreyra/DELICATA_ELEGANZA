@@ -63,6 +63,8 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddDbContext<DelicataContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// 5. RESPONSE CACHE
+builder.Services.AddResponseCaching();
 // 5. SWAGGER
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -114,7 +116,7 @@ var app = builder.Build();
 
 // 1. Compresión — debe ser lo primero para comprimir todo lo que sigue
 app.UseResponseCompression();
-
+app.UseResponseCaching();
 // 2. CORS — antes de cualquier middleware que genere respuestas
 app.UseCors("PermitirTodo");
 

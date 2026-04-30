@@ -33,6 +33,7 @@ namespace DELICATA_ELEGANZA.Controllers
         // GET: api/Productos
         // ============================================================
         [HttpGet]
+        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, NoStore = false)]
         public async Task<IActionResult> GetProductos()
         {
             try
