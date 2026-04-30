@@ -875,8 +875,12 @@ async function cargarProductos(forzar = false) {
         aplicarFiltros();
     } catch (err) {
         console.error("Error cargando productos", err);
-        // Opcional: mostrar en el contenedor para debug
-        contenedor.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+        const contenedor = document.getElementById("contenedor-productos");
+        contenedor.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--color-marca-oro);">
+            <p style="font-size:1.1rem; margin-bottom:12px;">⏳ El servidor está iniciando, esto puede tardar hasta 1 minuto...</p>
+            <p style="font-size:0.9rem; opacity:0.7;">Por favor esperá y recargá la página en unos segundos.</p>
+        </div>`;
     } finally {
         isLoadingProductos = false;
     }
@@ -1142,7 +1146,7 @@ function openUserModalAsLogin() {
             let res;
             for (let intento = 0; intento < 2; intento++) {
                 const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), 20000);
+                const timer = setTimeout(() => controller.abort(), 60000); // 60s para el cold start
                 try {
                     res = await fetch(`${USUARIOS_URL}/login`, {
                         method: "POST",
@@ -2731,6 +2735,21 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // ==========================================================
     Object.values(campos).forEach(el => setVisible(el, true));
 }
+// Mantener el servidor de Render despierto
+function keepAliveRender() {
+    fetch("https://delicata-eleganza.onrender.com/api/Productos?limit=1", {
+        method: "GET",
+        cache: "no-store"
+    }).catch(() => { });
+}
+setInterval(keepAliveRender, 10 * 60 * 1000);
+
+// ← esto ya estaba, no lo toques
+window.addEventListener("load", () => {
+    requestAnimationFrame(() => {
+        document.body.classList.add("page-ready");
+    });
+});
 window.addEventListener("load", () => {
     requestAnimationFrame(() => {
         document.body.classList.add("page-ready");
