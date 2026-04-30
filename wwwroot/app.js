@@ -275,7 +275,6 @@ function abrirModalProducto() {
 }
 /* ---------------- CARRUSEL MODAL ---------------- */
 let carruselActual = 0;
-
 function renderCarrusel(imagenes, altTexto, esParcial = false) {
     const wrapper = document.getElementById("carruselWrapper");
     const dots = document.getElementById("carruselDots");
@@ -283,45 +282,73 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
     const btnNext = document.getElementById("carruselNext");
     if (!wrapper) return;
 
-    wrapper.innerHTML = "";
-    if (dots) dots.innerHTML = "";
-    carruselActual = 0;
-
     const soloUna = imagenes.length <= 1;
 
     if (esParcial) {
+        // Primera pasada: solo poner la imagen principal sin tocar flechas
+        wrapper.innerHTML = "";
+        if (dots) dots.innerHTML = "";
+        carruselActual = 0;
         btnPrev?.style.setProperty('visibility', 'hidden');
         btnNext?.style.setProperty('visibility', 'hidden');
         if (dots) dots.style.visibility = 'hidden';
-    } else {
-        btnPrev?.style.removeProperty('visibility');
-        btnNext?.style.removeProperty('visibility');
-        if (dots) dots.style.visibility = '';
-        btnPrev?.classList.toggle("oculto", soloUna);
-        btnNext?.classList.toggle("oculto", soloUna);
-        if (dots) dots.style.display = soloUna ? "none" : "";
+
+        const slide = document.createElement("div");
+        slide.className = "carrusel-slide active";
+        const img = document.createElement("img");
+        img.src = imagenes[0];
+        img.alt = altTexto + " 1";
+        img.loading = "eager";
+        img.width = 400; img.height = 400;
+        slide.appendChild(img);
+        wrapper.appendChild(slide);
+        return;
     }
 
+    // Segunda pasada (definitiva): NO borrar el primer slide, solo agregar los demás
+    const slidesExistentes = wrapper.querySelectorAll(".carrusel-slide");
+
+    // Actualizar src de la primera imagen por si cambió
+    if (slidesExistentes[0]) {
+        const imgExistente = slidesExistentes[0].querySelector("img");
+        if (imgExistente && imgExistente.src !== imagenes[0]) {
+            imgExistente.src = imagenes[0];
+        }
+    }
+
+    // Agregar slides que faltan (desde índice 1 en adelante)
     imagenes.forEach((url, idx) => {
+        if (idx === 0) return; // ya existe
         const slide = document.createElement("div");
-        slide.className = "carrusel-slide" + (idx === 0 ? " active" : "");
+        slide.className = "carrusel-slide";
         const img = document.createElement("img");
         img.src = url;
         img.alt = altTexto + " " + (idx + 1);
-        img.loading = idx === 0 ? "eager" : "lazy";
-        img.width = 400;
-        img.height = 400;
+        img.loading = "lazy";
+        img.width = 400; img.height = 400;
         slide.appendChild(img);
         wrapper.appendChild(slide);
+    });
 
-        if (dots) {
+    // Actualizar dots
+    if (dots) {
+        dots.innerHTML = "";
+        imagenes.forEach((_, idx) => {
             const dot = document.createElement("span");
             dot.className = "dot" + (idx === 0 ? " active" : "");
             dot.dataset.idx = idx;
             dot.addEventListener("click", () => irASlide(parseInt(dot.dataset.idx)));
             dots.appendChild(dot);
-        }
-    });
+        });
+    }
+
+    // Mostrar/ocultar flechas y dots con transición suave
+    btnPrev?.style.removeProperty('visibility');
+    btnNext?.style.removeProperty('visibility');
+    if (dots) dots.style.visibility = '';
+    btnPrev?.classList.toggle("oculto", soloUna);
+    btnNext?.classList.toggle("oculto", soloUna);
+    if (dots) dots.style.display = soloUna ? "none" : "";
 }
 
 function irASlide(idx) {

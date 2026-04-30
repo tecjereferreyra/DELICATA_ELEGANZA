@@ -178,9 +178,12 @@ input::placeholder {
     font-size: 1rem;
     color: #ffffffc9;
     cursor: pointer;
-    transition: background .2s,color .2s
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
-
+    .carrusel-btn.oculto {
+        opacity: 0;
+        pointer-events: none;
+    }
     .carrusel-btn.prev {
         left: 4px
     }
