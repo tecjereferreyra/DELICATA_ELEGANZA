@@ -65,44 +65,25 @@ function mostrarCampoModal(id) {
     const parent = el.closest("p, div");
     if (parent) parent.style.display = "block";
 }
-
 let _scrollLockedAt = 0;
+
 function getScrollbarWidth() {
-    // En mobile el scrollbar es overlay (ancho 0), en desktop ocupa espacio real
     return window.innerWidth - document.documentElement.clientWidth;
 }
 
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
-
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
-
-    const scrollbarWidth = getScrollbarWidth();
-
-    // Compensar el espacio que va a dejar el scrollbar al ocultarse
-    if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-        // Si tu navbar es fixed, también necesita compensación
-        const navbar = document.querySelector('header.navbar');
-        if (navbar) navbar.style.paddingRight = `${scrollbarWidth}px`;
-    }
-
-    document.documentElement.style.overflow = 'hidden';
     document.body.classList.add('scroll-locked');
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
-
     document.body.classList.remove('scroll-locked');
-    document.documentElement.style.overflow = '';
-
-    // Sacar la compensación
-    document.body.style.paddingRight = '';
-    const navbar = document.querySelector('header.navbar');
-    if (navbar) navbar.style.paddingRight = '';
-
-    window.scrollTo({ top: _scrollLockedAt, behavior: 'instant' });
+    const pos = _scrollLockedAt;
+    requestAnimationFrame(() => {
+        window.scrollTo({ top: pos, behavior: 'instant' });
+    });
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
@@ -1569,10 +1550,11 @@ document.addEventListener("DOMContentLoaded", () => {
             // ← ELIMINAR el else con window._categoriaMobileActiva
 
             _menuCerradoRecien = true;
-            setTimeout(() => { _menuCerradoRecien = false; }, 100);
-
             unlockScroll();
-            aplicarFiltros();
+            setTimeout(() => {
+                aplicarFiltros();
+                setTimeout(() => { _menuCerradoRecien = false; }, 400);
+            }, 50);
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -1925,14 +1907,6 @@ function validarCampos(data, esEditar = false) {
             errores.push("• El material es obligatorio.");
         if (campoVisible("prodTipo") && !data.Tipo?.trim())
             errores.push("• El tipo es obligatorio.");
-    }
-    if (esEditar) {
-        const capEl = document.getElementById("prodCapacidadEditar");
-        const capCol = capEl?.closest(".col");
-        const capVisible = capCol ? capCol.style.display !== "none" : !!capEl;
-        if (capVisible && !data.Capacidad?.trim()) {
-            errores.push("• La capacidad es obligatoria.");
-        }
     }
 
     if (!esEditar) {

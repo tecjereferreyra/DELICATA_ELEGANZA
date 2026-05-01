@@ -113,6 +113,7 @@ html {
     font-size: clamp(13px, 1.8vw, 16px);
     overflow-y: scroll;
     overflow-x: hidden;
+    scrollbar-gutter: stable;
     background-color: var(--color-fondo-principal);
 }
 
@@ -125,9 +126,9 @@ body {
     margin: 0;
     padding-top: env(safe-area-inset-top);
 }
-
     body.scroll-locked {
-        overscroll-behavior-y: none
+        overflow: hidden;
+        overscroll-behavior-y: none;
     }
 
 main {
