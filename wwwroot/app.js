@@ -307,26 +307,15 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
 
     // Segunda pasada (definitiva): NO borrar el primer slide, solo agregar los demás
     carruselActual = 0;
-    wrapper.querySelectorAll(".carrusel-slide").forEach((s, i) => s.classList.toggle("active", i === 0));
-    const slidesExistentes = wrapper.querySelectorAll(".carrusel-slide");
+    wrapper.innerHTML = "";
 
-    // Actualizar src de la primera imagen por si cambió
-    if (slidesExistentes[0]) {
-        const imgExistente = slidesExistentes[0].querySelector("img");
-        if (imgExistente && imgExistente.src !== imagenes[0]) {
-            imgExistente.src = imagenes[0];
-        }
-    }
-
-    // Agregar slides que faltan (desde índice 1 en adelante)
     imagenes.forEach((url, idx) => {
-        if (idx === 0) return; // ya existe
         const slide = document.createElement("div");
-        slide.className = "carrusel-slide";
+        slide.className = "carrusel-slide" + (idx === 0 ? " active" : "");
         const img = document.createElement("img");
         img.src = url;
         img.alt = altTexto + " " + (idx + 1);
-        img.loading = "lazy";
+        img.loading = idx === 0 ? "eager" : "lazy";
         img.width = 400; img.height = 400;
         slide.appendChild(img);
         wrapper.appendChild(slide);
@@ -1580,10 +1569,10 @@ document.addEventListener("DOMContentLoaded", () => {
             // ← ELIMINAR el else con window._categoriaMobileActiva
 
             _menuCerradoRecien = true;
-            setTimeout(() => { _menuCerradoRecien = false; }, 600);
+            setTimeout(() => { _menuCerradoRecien = false; }, 100);
 
             unlockScroll();
-            setTimeout(() => aplicarFiltros(), 80);
+            aplicarFiltros();
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -1937,11 +1926,15 @@ function validarCampos(data, esEditar = false) {
         if (campoVisible("prodTipo") && !data.Tipo?.trim())
             errores.push("• El tipo es obligatorio.");
     }
+    if (esEditar) {
+        const capEl = document.getElementById("prodCapacidadEditar");
+        const capCol = capEl?.closest(".col");
+        const capVisible = capCol ? capCol.style.display !== "none" : !!capEl;
+        if (capVisible && !data.Capacidad?.trim()) {
+            errores.push("• La capacidad es obligatoria.");
+        }
+    }
 
-    // Campos dimensionales (alto, ancho, peso, etc.):
-    // Solo obligatorios al CREAR y si están visibles.
-    // En edición son siempre opcionales — el usuario puede modificar
-    // solo lo que quiere sin tocar el resto.
     if (!esEditar) {
         if (campoVisible("prodAlto") && !data.Alto) errores.push("• El alto es obligatorio.");
         if (campoVisible("prodAncho") && !data.Ancho) errores.push("• El ancho es obligatorio.");
