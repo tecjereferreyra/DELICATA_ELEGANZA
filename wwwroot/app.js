@@ -306,17 +306,27 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
     }
 
     // Segunda pasada (definitiva): NO borrar el primer slide, solo agregar los demás
-    // Segunda pasada (definitiva): limpiar TODO y reconstruir desde cero
     carruselActual = 0;
-    wrapper.innerHTML = "";
+    wrapper.querySelectorAll(".carrusel-slide").forEach((s, i) => s.classList.toggle("active", i === 0));
+    const slidesExistentes = wrapper.querySelectorAll(".carrusel-slide");
 
+    // Actualizar src de la primera imagen por si cambió
+    if (slidesExistentes[0]) {
+        const imgExistente = slidesExistentes[0].querySelector("img");
+        if (imgExistente && imgExistente.src !== imagenes[0]) {
+            imgExistente.src = imagenes[0];
+        }
+    }
+
+    // Agregar slides que faltan (desde índice 1 en adelante)
     imagenes.forEach((url, idx) => {
+        if (idx === 0) return; // ya existe
         const slide = document.createElement("div");
-        slide.className = "carrusel-slide" + (idx === 0 ? " active" : "");
+        slide.className = "carrusel-slide";
         const img = document.createElement("img");
         img.src = url;
         img.alt = altTexto + " " + (idx + 1);
-        img.loading = idx === 0 ? "eager" : "lazy";
+        img.loading = "lazy";
         img.width = 400; img.height = 400;
         slide.appendChild(img);
         wrapper.appendChild(slide);
@@ -1570,7 +1580,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // ← ELIMINAR el else con window._categoriaMobileActiva
 
             _menuCerradoRecien = true;
-            setTimeout(() => { _menuCerradoRecien = false; }, 250);
+            setTimeout(() => { _menuCerradoRecien = false; }, 600);
 
             unlockScroll();
             setTimeout(() => aplicarFiltros(), 80);
@@ -2480,13 +2490,9 @@ async function guardarEdicionProducto() {
         const capElEdit = document.getElementById("prodCapacidadEditar");
         const capColEdit = capElEdit?.closest(".col");
         const capValEdit = capElEdit?.value.trim();
-        if (capColEdit?.style.display !== "none") {
-            if (capValEdit) {
-                fd.append("Capacidad", capValEdit);
-            }
-           
+        if (capColEdit?.style.display !== "none" && capValEdit) {
+            fd.append("Capacidad", capValEdit);
         }
-    
         appendIfVisible(fd, "prodAltoEditar", "Alto", "");
         appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", ""); 
         appendIfVisible(fd, "prodAnchoEditar", "Ancho", "");
