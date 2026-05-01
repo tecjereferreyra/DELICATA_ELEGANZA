@@ -1553,14 +1553,9 @@ document.addEventListener("DOMContentLoaded", () => {
             unlockScroll();
             setTimeout(() => {
                 aplicarFiltros();
-                setTimeout(() => { _menuCerradoRecien = false; }, 400);
-            }, 50);
-
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                });
-            });
+                window.scrollTo({ top: 0, behavior: "instant" });
+                setTimeout(() => { _menuCerradoRecien = false; }, 600);
+            }, 80);
         });
     });
     const closeBtn = document.querySelector(".menu-close");
@@ -2426,7 +2421,7 @@ async function guardarEdicionProducto() {
             Stock: document.getElementById("prodStockEditar")?.value.trim() ?? "",
             Alto: document.getElementById("prodAltoEditar")?.value.trim() ?? "",
             Ancho: document.getElementById("prodAnchoEditar")?.value.trim() ?? "",
-            Capacidad: (() => { const el = document.getElementById("prodCapacidadEditar"); const col = el?.closest(".col"); return (col?.style.display === "none") ? "N/A" : (el?.value.trim() ?? ""); })(),
+            Capacidad: (() => { const el = document.getElementById("prodCapacidadEditar"); const col = el?.closest(".col"); return (col?.style.display === "none") ? "" : (el?.value.trim() ?? ""); })(),
             Compartimentos: document.getElementById("prodCompartimentosEditar")?.value.trim() ?? "",
             Profundidad: document.getElementById("prodProfundidadEditar")?.value.trim() ?? "",
             Peso: document.getElementById("prodPesoEditar")?.value.trim() ?? "",

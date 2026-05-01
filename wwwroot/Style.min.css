@@ -127,9 +127,12 @@ body {
     padding-top: env(safe-area-inset-top);
 }
     body.scroll-locked {
-        overflow: hidden;
         overscroll-behavior-y: none;
     }
+
+html:has(body.scroll-locked) {
+    overflow: hidden;
+}
 
 main {
     flex: 1;
