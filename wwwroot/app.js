@@ -857,10 +857,15 @@ function recalcularCamposBusqueda(prod) {
         prod.Compartimentos !== "—" ? String(prod.Compartimentos) : null,
         prod.CantidadRuedas !== "—" ? String(prod.CantidadRuedas) : null,
         prod.Disponible ? "disponible" : "sin stock",
+        altoStr ? `alto ${altoStr}cm` : null,
+        altoStr ? `alto ${altoStr} cm` : null,
         altoStr ? altoStr + "cm" : null,
         altoStr ? altoStr + " cm" : null,
+        anchoStr ? `ancho ${anchoStr}cm` : null,
         anchoStr ? anchoStr + "cm" : null,
         anchoStr ? anchoStr + " cm" : null,
+        profStr ? `largo ${profStr}cm` : null,
+        profStr ? `largo ${profStr} cm` : null,
         profStr ? profStr + "cm" : null,
         pesoStr ? pesoStr + "g" : null,
         pesoStr ? pesoStr + " g" : null,
@@ -999,15 +1004,14 @@ function parsearGrupos(textoBusqueda) {
 function palabraMatchFuzzy(palabra, textoNormalizado) {
     const tokens = textoNormalizado.split(/\s+/);
     if (tokens.includes(palabra)) return true;
-    // Si tiene dígitos: solo match exacto por inclusión
     if (/\d/.test(palabra)) {
         return tokens.some(token => token.includes(palabra));
     }
-    // Palabras cortas (<=4 letras): sin tolerancia a errores
-    const maxDist = palabra.length <= 6 ? 0 : 1;
+    // Palabras de 1-3 letras: sin tolerancia. De 4 en adelante: tolerancia 1.
+    const maxDist = palabra.length <= 3 ? 0 : 1;
     if (maxDist === 0) return false;
     return tokens.some(token => {
-        if (Math.abs(token.length - palabra.length) > maxDist) return false;
+        if (Math.abs(token.length - palabra.length) > maxDist + 1) return false;
         return levenshtein(palabra, token) <= maxDist;
     });
 }
@@ -1015,19 +1019,20 @@ function palabraMatchFuzzy(palabra, textoNormalizado) {
 
 const PALABRAS_IGNORAR = new Set([
     "con", "de", "para", "del", "en", "a", "el", "la", "los", "las", "un", "una",
-    "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",
-    "alto", "lrg", "alt", "largo", "capacidad", "compartimentos",
-    "tipo", "cierre", "simple", "doble",   // ← cierre/tipo no deben ser términos solos
-    "por", "x", "cm", "mm", "de", "y",    // ← separadores de medidas
-    "unisex", "mixto", "milimetros", "modelo", "profundidad", "peso", "g", "diametro", "fuelle", "expandible", "stock", "genero", "cantidad", "ruedas", "ancho", "triple", "imantado", "a presion"
+    "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",  
+    "lrg", "alt", "capacidad", "compartimentos",
+    "tipo", "cierre", "simple", "doble",
+    "por", "x", "cm", "mm", "de", "y",
+    "unisex", "mixto", "milimetros", "modelo", "profundidad", "peso", "g", "diametro",
+    "fuelle", "expandible", "stock", "genero", "cantidad", "ruedas", "triple",
+    "imantado", "a presion"
 ]);
-
 
 function normalizarTermino(p) {
     return p
         .replace(/os$/, "o")
         .replace(/as$/, "a")
-        .replace(/es$/, "");
+        .replace(/([^aeiou]{2,})es$/, "$1");
 }
 
 function matchBusquedaFuzzy(camposNormalizados, textoBusqueda) {
@@ -1054,21 +1059,15 @@ const CATEGORIAS_MAP = {
 const aplicarFiltros = () => {
     const textoBusqueda = normalizar(domCache.searchInput?.value || "")
         .replace(/-/g, " ")
-        .replace(/\balt\.?\b/gi, "")
-        .replace(/\blrg\.?\b/gi, "")
-        .replace(/\bpor\b/gi, "")    // ← AGREGAR: "por" = separador de medidas
-        .replace(/\baltо\b/gi, "")
-        .replace(/\blargo\b/gi, "")
-        .replace(/\bancho\b/gi, "")  // ← AGREGAR: "ancho" ya está en los campos
+        .replace(/\balt\.?\b/gi, "alto")
+        .replace(/\blrg\.?\b/gi, "largo")
+        .replace(/\bpor\b/gi, "")
         .replace(/\bx\b/g, "")
-        .replace(/\s{2,}/g, " ")
         .trim();
 
     const categoriaActivaRaw = [...(domCache.categoriesLinks || [])]
         .find(l => l.classList.contains("active-cat"))?.dataset.cat
-        || window._categoriaMobileActiva
         || "todos";
-    window._categoriaMobileActiva = null; // limpiar después de usar
     const categoriaActiva = normalizar(categoriaActivaRaw);
 
     // 1. Filtrar por categoría (match exacto normalizado)
@@ -1570,15 +1569,12 @@ document.addEventListener("DOMContentLoaded", () => {
             // Limpiar active-cat de todos los links desktop
             categoriaLinks.forEach(l => l.classList.remove('active-cat'));
 
-            // Buscar el link desktop comparando con normalizar() igual que hace aplicarFiltros
             const catNorm = normalizar(cat);
             const linkDesktop = [...categoriaLinks].find(l => normalizar(l.dataset.cat || "") === catNorm);
             if (linkDesktop) {
                 linkDesktop.classList.add('active-cat');
-            } else {
-                // Fallback: guardar la categoría para que aplicarFiltros la use directamente
-                window._categoriaMobileActiva = cat;
             }
+            // ← ELIMINAR el else con window._categoriaMobileActiva
 
             _menuCerradoRecien = true;
             setTimeout(() => { _menuCerradoRecien = false; }, 600);
@@ -2488,13 +2484,16 @@ async function guardarEdicionProducto() {
         fd.append("Modelo", document.getElementById("prodModeloEditar").value);
         fd.append("Color", document.getElementById("prodColorEditar").value);
 
-        const capValEdit = document.getElementById("prodCapacidadEditar")?.value.trim();
-        const capColEdit = document.getElementById("prodCapacidadEditar")?.closest(".col");
-        if (capValEdit && capColEdit?.style.display !== "none") {
+        const capElEdit = document.getElementById("prodCapacidadEditar");
+        const capColEdit = capElEdit?.closest(".col");
+        const capValEdit = capElEdit?.value.trim();
+        if (capColEdit?.style.display === "none") {
+            fd.append("Capacidad", "");   // campo oculto → vacío explícito
+        } else if (capValEdit) {
             fd.append("Capacidad", capValEdit);
         }
-        appendIfVisible(fd, "prodAltoEditar", "Alto", "0");
-        appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", "0");
+        appendIfVisible(fd, "prodAltoEditar", "Alto", "");
+        appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", ""); 
         appendIfVisible(fd, "prodAnchoEditar", "Ancho", "");
         appendIfVisible(fd, "prodProfundidadEditar", "Profundidad", "");
         appendIfVisible(fd, "prodPesoEditar", "Peso", "");
