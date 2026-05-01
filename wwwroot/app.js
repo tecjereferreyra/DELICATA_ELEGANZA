@@ -390,6 +390,8 @@ function cerrarModalProducto() {
 /* ---------------- INICIALIZACIÓN RÁPIDA ---------------- */
 document.addEventListener("DOMContentLoaded", () => {
     initDOMCache();
+    // Reasignar ahora que el DOM está listo (la declaración fuera del DOMContentLoaded captura NodeList vacía)
+    categoriaLinks = document.querySelectorAll('.categories a');
 
     const modalLogin = document.getElementById("userModal");
     const modalRecuperar = document.getElementById("modalRecuperar");
@@ -576,10 +578,10 @@ function crearTarjetaDOM(prod, index = 0) {
         }
     }, { once: true }); // el observer la muestra cuando entra en pantalla
     card.addEventListener("click", () => {
-        if (_menuCerradoRecien) return;  
+        if (_menuCerradoRecien) return;
         abrirModal(prod);
     }, { passive: true });
-    cardObserver.observe(card);   
+    cardObserver.observe(card);
     return card;
 }
 
@@ -735,10 +737,13 @@ function abrirModal(prod) {
         // Sin caché: true = parcial, oculta flechas sin flash
         renderCarrusel([imagenPrincipal], safeText(prod.Nombre || prod.nombre), true);
         abrirModalProducto();
+        const idAbierto = prod.IdProducto;
         fetch(`/api/Productos/${prod.IdProducto}`)
             .then(r => r.ok ? r.json() : null)
             .then(detalle => {
                 if (!detalle) return;
+                // Si el usuario ya abrió otro producto, descartar este resultado
+                if (productoSeleccionado?.IdProducto !== idAbierto) return;
                 const extras = detalle.imagenes || detalle.Imagenes || [];
                 const todas = extras.length > 0
                     ? [safeText(detalle.imagenUrl || detalle.ImagenUrl || imagenPrincipal), ...extras]
@@ -797,7 +802,7 @@ function renderizarProductosProgresivo() {
     btnVerMas.style.display = productosRenderizados < productosFiltrados.length ? "block" : "none";
 }
 /* ---------------- FILTROS POR CATEGORÍA ---------------- */
-const categoriaLinks = document.querySelectorAll('.categories a');
+let categoriaLinks = document.querySelectorAll('.categories a');
 
 const normalizar = texto =>
     texto.toString().toLowerCase()
@@ -1019,7 +1024,7 @@ function palabraMatchFuzzy(palabra, textoNormalizado) {
 
 const PALABRAS_IGNORAR = new Set([
     "con", "de", "para", "del", "en", "a", "el", "la", "los", "las", "un", "una",
-    "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",  
+    "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",
     "lrg", "alt", "capacidad", "compartimentos",
     "tipo", "cierre", "simple", "doble",
     "por", "x", "cm", "mm", "de", "y",
@@ -1555,7 +1560,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.style.backgroundColor = '';
             unlockScroll();
         }
-    }); 
+    });
     document.querySelectorAll(".mobile-categories li").forEach(item => {
         item.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -1935,10 +1940,7 @@ function validarCampos(data, esEditar = false) {
             errores.push("• El tipo es obligatorio.");
     }
 
-    // Campos dimensionales (alto, ancho, peso, etc.):
-    // Solo obligatorios al CREAR y si están visibles.
-    // En edición son siempre opcionales — el usuario puede modificar
-    // solo lo que quiere sin tocar el resto.
+ 
     if (!esEditar) {
         if (campoVisible("prodAlto") && !data.Alto) errores.push("• El alto es obligatorio.");
         if (campoVisible("prodAncho") && !data.Ancho) errores.push("• El ancho es obligatorio.");
@@ -1953,13 +1955,11 @@ function validarCampos(data, esEditar = false) {
         if (campoVisible("prodTipoCierre") && !data.TipoCierre?.trim())
             errores.push("• El tipo de cierre es obligatorio.");
     }
-
-    if (errores.length > 0) {
-        alert("Por favor corregí los siguientes errores:\n\n" + errores.join("\n"));
-        return false;
-    }
-    return true;
+    alert("Por favor corregí los siguientes errores:\n\n" + errores.join("\n"));
+    return false;
 }
+return true;
+
 
 function aplicarNullCamposOcultos(data, esEditar = false) {
     const suf = esEditar ? "Editar" : "";
@@ -2487,13 +2487,12 @@ async function guardarEdicionProducto() {
         const capElEdit = document.getElementById("prodCapacidadEditar");
         const capColEdit = capElEdit?.closest(".col");
         const capValEdit = capElEdit?.value.trim();
-        if (capColEdit?.style.display === "none") {
-            fd.append("Capacidad", "");   // campo oculto → vacío explícito
-        } else if (capValEdit) {
+        if (capColEdit?.style.display !== "none" && capValEdit) {
             fd.append("Capacidad", capValEdit);
         }
+        // Si está oculto (ej: piercing/aro) → no se envía Capacidad al backend
         appendIfVisible(fd, "prodAltoEditar", "Alto", "");
-        appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", ""); 
+        appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", "");
         appendIfVisible(fd, "prodAnchoEditar", "Ancho", "");
         appendIfVisible(fd, "prodProfundidadEditar", "Profundidad", "");
         appendIfVisible(fd, "prodPesoEditar", "Peso", "");
@@ -2721,7 +2720,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos extra: compartimentos, cierre, capacidad, genero,
     //                  alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera","fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
+    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
