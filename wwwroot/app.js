@@ -9,6 +9,7 @@ let productoSeleccionado = null;
 let productosRenderizados = 0;
 let _cerrarModalTimeout = null;
 let _menuCerradoRecien = false;
+let categoriaActivaActual = "todos"; // fuente de verdad del filtro activo
 const BLOQUE_CARGA = 12;
 const delay = 0;
 let productosFiltrados = [];
@@ -323,6 +324,64 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
     if (dots) dots.style.display = soloUna ? "none" : "";
 }
 
+/* ----------- COMPLETAR CARRUSEL SIN PARPADEO ----------- */
+// Agrega slides 2..n sin destruir el slide 0 (evita el parpadeo de imagen)
+function completarCarrusel(imagenes, altTexto) {
+    const wrapper = document.getElementById("carruselWrapper");
+    const dots = document.getElementById("carruselDots");
+    const btnPrev = document.getElementById("carruselPrev");
+    const btnNext = document.getElementById("carruselNext");
+    if (!wrapper) return;
+
+    const soloUna = imagenes.length <= 1;
+
+    // Actualizar src del primer slide si la URL cambió (raro, pero seguro)
+    const primerImg = wrapper.querySelector(".carrusel-slide:first-child img");
+    if (primerImg && imagenes[0]) {
+        const urlNueva = new URL(imagenes[0], location.href).href;
+        if (primerImg.src !== urlNueva) primerImg.src = imagenes[0];
+    }
+
+    // Eliminar slides 2..n que pudieran existir de una apertura anterior
+    wrapper.querySelectorAll(".carrusel-slide").forEach((slide, i) => {
+        if (i > 0) slide.remove();
+    });
+
+    // Agregar slides 2..n de forma silenciosa (no hay innerHTML reset → sin parpadeo)
+    for (let idx = 1; idx < imagenes.length; idx++) {
+        const slide = document.createElement("div");
+        slide.className = "carrusel-slide";
+        const img = document.createElement("img");
+        img.src = imagenes[idx];
+        img.alt = altTexto + " " + (idx + 1);
+        img.loading = "lazy";
+        img.width = 400;
+        img.height = 400;
+        slide.appendChild(img);
+        wrapper.appendChild(slide);
+    }
+
+    // Actualizar dots
+    if (dots) {
+        dots.innerHTML = "";
+        imagenes.forEach((_, idx) => {
+            const dot = document.createElement("span");
+            dot.className = "dot" + (idx === 0 ? " active" : "");
+            dot.dataset.idx = idx;
+            dot.addEventListener("click", () => irASlide(parseInt(dot.dataset.idx)));
+            dots.appendChild(dot);
+        });
+    }
+
+    // Mostrar/ocultar flechas y dots según corresponda
+    btnPrev?.style.removeProperty("visibility");
+    btnNext?.style.removeProperty("visibility");
+    if (dots) dots.style.visibility = "";
+    btnPrev?.classList.toggle("oculto", soloUna);
+    btnNext?.classList.toggle("oculto", soloUna);
+    if (dots) dots.style.display = soloUna ? "none" : "";
+}
+
 function irASlide(idx) {
     const slides = document.querySelectorAll("#carruselWrapper .carrusel-slide");
     const dots = document.querySelectorAll("#carruselDots .dot");
@@ -548,10 +607,10 @@ function crearTarjetaDOM(prod, index = 0) {
         }
     }, { once: true }); // el observer la muestra cuando entra en pantalla
     card.addEventListener("click", () => {
-        if (_menuCerradoRecien) return;  
+        if (_menuCerradoRecien) return;
         abrirModal(prod);
     }, { passive: true });
-    cardObserver.observe(card);   
+    cardObserver.observe(card);
     return card;
 }
 
@@ -718,11 +777,8 @@ function abrirModal(prod) {
                     : [imagenPrincipal];
                 prod._imagenesCache = todas;
                 if (domCache.modal?.classList.contains("show")) {
-                    const wrapper = document.getElementById("carruselWrapper");
-                    if (wrapper) wrapper.style.minHeight = wrapper.offsetHeight + "px";
-                    // false = definitivo, muestra/oculta flechas según corresponda
-                    renderCarrusel(todas, safeText(prod.Nombre || prod.nombre), false);
-                    requestAnimationFrame(() => { if (wrapper) wrapper.style.minHeight = ""; });
+                    // Usar completarCarrusel: agrega slides 2..n sin tocar slide 0 → sin parpadeo
+                    completarCarrusel(todas, safeText(prod.Nombre || prod.nombre));
                 }
             })
             .catch(() => { });
@@ -780,9 +836,11 @@ const normalizar = texto =>
 
 categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
+        if (_menuCerradoRecien) { e.preventDefault(); return; } // bloquea tap fantasma post-menú
         e.preventDefault();
         categoriaLinks.forEach(l => l.classList.remove('active-cat'));
         e.target.classList.add('active-cat');
+        categoriaActivaActual = normalizar(e.target.dataset.cat || "todos");
         aplicarFiltros();
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -992,7 +1050,7 @@ function palabraMatchFuzzy(palabra, textoNormalizado) {
 
 const PALABRAS_IGNORAR = new Set([
     "con", "de", "para", "del", "en", "a", "el", "la", "los", "las", "un", "una",
-    "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",  
+    "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",
     "lrg", "alt", "capacidad", "compartimentos",
     "tipo", "cierre", "simple", "doble",
     "por", "x", "cm", "mm", "de", "y",
@@ -1038,10 +1096,8 @@ const aplicarFiltros = () => {
         .replace(/\bx\b/g, "")
         .trim();
 
-    const categoriaActivaRaw = [...(domCache.categoriesLinks || [])]
-        .find(l => l.classList.contains("active-cat"))?.dataset.cat
-        || "todos";
-    const categoriaActiva = normalizar(categoriaActivaRaw);
+    const categoriaActivaRaw = categoriaActivaActual;
+    const categoriaActiva = categoriaActivaRaw;
 
     // 1. Filtrar por categoría (match exacto normalizado)
     let base;
@@ -1528,7 +1584,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.style.backgroundColor = '';
             unlockScroll();
         }
-    }); 
+    });
     document.querySelectorAll(".mobile-categories li").forEach(item => {
         item.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -1549,6 +1605,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             // ← ELIMINAR el else con window._categoriaMobileActiva
 
+            categoriaActivaActual = catNorm || "todos"; // fuente de verdad actualizada
             _menuCerradoRecien = true;
             unlockScroll();
             setTimeout(() => {
@@ -2449,14 +2506,9 @@ async function guardarEdicionProducto() {
         fd.append("Modelo", document.getElementById("prodModeloEditar").value);
         fd.append("Color", document.getElementById("prodColorEditar").value);
 
-        const capElEdit = document.getElementById("prodCapacidadEditar");
-        const capColEdit = capElEdit?.closest(".col");
-        const capValEdit = capElEdit?.value.trim();
-        if (capColEdit?.style.display !== "none" && capValEdit) {
-            fd.append("Capacidad", capValEdit);
-        }
+        appendIfVisible(fd, "prodCapacidadEditar", "Capacidad", "");
         appendIfVisible(fd, "prodAltoEditar", "Alto", "");
-        appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", ""); 
+        appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", "");
         appendIfVisible(fd, "prodAnchoEditar", "Ancho", "");
         appendIfVisible(fd, "prodProfundidadEditar", "Profundidad", "");
         appendIfVisible(fd, "prodPesoEditar", "Peso", "");
@@ -2684,7 +2736,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos extra: compartimentos, cierre, capacidad, genero,
     //                  alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera","fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
+    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);

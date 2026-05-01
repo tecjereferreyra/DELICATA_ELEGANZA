@@ -1303,7 +1303,7 @@ header.navbar .title {
 .modal-box {
     width: 94%;
     max-width: 860px;
-    max-height: 95vh;
+    max-height: 90vh;
     overflow-y: auto;
     background: linear-gradient(180deg,#fefdfb,#faf4ea);
     border-radius: 22px;
