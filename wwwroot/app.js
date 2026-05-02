@@ -1603,7 +1603,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (linkDesktop) {
                 linkDesktop.classList.add('active-cat');
             }
-            // ← ELIMINAR el else con window._categoriaMobileActiva
+         
 
             categoriaActivaActual = catNorm || "todos"; // fuente de verdad actualizada
             _menuCerradoRecien = true;
@@ -1611,8 +1611,8 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                 aplicarFiltros();
                 window.scrollTo({ top: 0, behavior: "instant" });
-                setTimeout(() => { _menuCerradoRecien = false; }, 600);
-            }, 80);
+                setTimeout(() => { _menuCerradoRecien = false; }, 800);
+            }, 150);
         });
     });
     const closeBtn = document.querySelector(".menu-close");
@@ -2506,7 +2506,12 @@ async function guardarEdicionProducto() {
         fd.append("Modelo", document.getElementById("prodModeloEditar").value);
         fd.append("Color", document.getElementById("prodColorEditar").value);
 
-        appendIfVisible(fd, "prodCapacidadEditar", "Capacidad", "");
+        const capElEdit = document.getElementById("prodCapacidadEditar");
+        const capColEdit = capElEdit?.closest(".col");
+        if (capColEdit?.style.display !== "none") {
+            const capV = capElEdit?.value?.trim();
+            if (capV) fd.append("Capacidad", capV);
+        }
         appendIfVisible(fd, "prodAltoEditar", "Alto", "");
         appendIfVisible(fd, "prodCompartimentosEditar", "Compartimentos", "");
         appendIfVisible(fd, "prodAnchoEditar", "Ancho", "");
