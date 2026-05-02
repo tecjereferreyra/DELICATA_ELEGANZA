@@ -16,7 +16,7 @@ namespace DELICATA_ELEGANZA.DTO
         public string Material { get; set; }
 
         public int? Compartimentos { get; set; }
-        public string Capacidad { get; set; }   // sigue siendo string
+        public string? Capacidad { get; set; }   // sigue siendo string
         public decimal? Alto { get; set; }
         public decimal? Ancho { get; set; }
         public decimal? Profundidad { get; set; }
