@@ -1608,11 +1608,9 @@ document.addEventListener("DOMContentLoaded", () => {
             categoriaActivaActual = catNorm || "todos"; // fuente de verdad actualizada
             _menuCerradoRecien = true;
             unlockScroll();
-            setTimeout(() => {
-                aplicarFiltros();
-                window.scrollTo({ top: 0, behavior: "instant" });
-                setTimeout(() => { _menuCerradoRecien = false; }, 800);
-            }, 150);
+            aplicarFiltros();
+            window.scrollTo({ top: 0, behavior: "instant" });
+            setTimeout(() => { _menuCerradoRecien = false; }, 1200);
         });
     });
     const closeBtn = document.querySelector(".menu-close");
