@@ -888,6 +888,10 @@ function recalcularCamposBusqueda(prod) {
         prod.Compartimentos !== "—" ? String(prod.Compartimentos) : null,
         prod.CantidadRuedas !== "—" ? String(prod.CantidadRuedas) : null,
         prod.Disponible ? "disponible" : "sin stock",
+        // Fuelle expandible indexado correctamente
+        prod.FuelleExpandible === true ? "fuelle expandible" : null,
+        prod.FuelleExpandible === false ? "sin fuelle" : null,
+        // Medidas
         altoStr ? `alto ${altoStr}cm` : null,
         altoStr ? `alto ${altoStr} cm` : null,
         altoStr ? altoStr + "cm" : null,
@@ -903,7 +907,7 @@ function recalcularCamposBusqueda(prod) {
         diamStr ? diamStr + "mm" : null,
         diamStr ? diamStr + " mm" : null,
         altoStr, anchoStr, profStr, pesoStr, diamStr,
-        expandirConSinonimos(prod.Color),   // ← AGREGAR ESTA LÍNEA
+        // ← expandirConSinonimos ELIMINADO: causaba falsos positivos de color
     ].filter(v => v && v !== "—" && v !== "null" && String(v).trim() !== "")
         .join(" ")
         .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/-/g, " ");
@@ -1054,16 +1058,29 @@ const PALABRAS_IGNORAR = new Set([
     "lrg", "alt", "capacidad", "compartimentos",
     "tipo", "cierre", "simple", "doble",
     "por", "x", "cm", "mm", "de", "y",
-    "unisex", "mixto", "milimetros", "modelo", "profundidad", "peso", "g", "diametro",
-    "fuelle", "expandible", "stock", "genero", "cantidad", "ruedas", "triple",
+    "milimetros", "profundidad", "peso", "g", "diametro",
+    "stock", "genero", "cantidad", "ruedas", "triple",
     "imantado", "a presion"
+ 
 ]);
+const BUSQUEDA_ALIAS = {
+    "dama": "mujer",
+    "femenino": "mujer",
+    "masculino": "hombre",
+    "caballero": "hombre",
+    "varon": "hombre",
+};
 
+function normalizarBusqueda(texto) {
+    return texto.split(/\s+/).map(p => BUSQUEDA_ALIAS[p] || p).join(" ");
+}
 function normalizarTermino(p) {
     return p
         .replace(/os$/, "o")
         .replace(/as$/, "a")
-        .replace(/([^aeiou]{2,})es$/, "$1");
+        .replace(/([^aeiou]{2,})es$/, "$1")
+        .replace(/([^aeiou])es$/, "$1"); 
+
 }
 
 function matchBusquedaFuzzy(camposNormalizados, textoBusqueda) {
@@ -1088,13 +1105,15 @@ const CATEGORIAS_MAP = {
 };
 
 const aplicarFiltros = () => {
-    const textoBusqueda = normalizar(domCache.searchInput?.value || "")
-        .replace(/-/g, " ")
-        .replace(/\balt\.?\b/gi, "alto")
-        .replace(/\blrg\.?\b/gi, "largo")
-        .replace(/\bpor\b/gi, "")
-        .replace(/\bx\b/g, "")
-        .trim();
+    const textoBusqueda = normalizarBusqueda(   // ← envolver con esta función
+        normalizar(domCache.searchInput?.value || "")
+            .replace(/-/g, " ")
+            .replace(/\balt\.?\b/gi, "alto")
+            .replace(/\blrg\.?\b/gi, "largo")
+            .replace(/\bpor\b/gi, "")
+            .replace(/\bx\b/g, "")
+            .trim()
+    );
 
     const categoriaActivaRaw = categoriaActivaActual;
     const categoriaActiva = categoriaActivaRaw;
