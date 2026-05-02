@@ -17,6 +17,9 @@ body.page-carrito .navbar {
 }
 body.page-carrito {
     overscroll-behavior-y: none;
+    min-height: 100dvh; /* ← ocupa toda la pantalla */
+    display: flex; /* ← layout columna */
+    flex-direction: column;
 }
 .btn-carrito-flotante {
     position: fixed;
@@ -279,7 +282,7 @@ body.page-carrito {
         font-family: Cinzel,serif
     }
 .carrito-page-wrapper {
-    min-height: auto; /* ← no forzar altura mínima */
+    flex: 1; 
     background: var(--carrito-fondo);
     overscroll-behavior-y: none;
 }

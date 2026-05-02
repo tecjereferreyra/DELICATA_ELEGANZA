@@ -40,7 +40,11 @@ namespace DELICATA_ELEGANZA.Controllers
             cmd.Parameters.AddWithValue("@p", hashed);
             await cmd.ExecuteNonQueryAsync();
 
-            _ = Task.Run(() => _email.EnviarMailBienvenida(usuario.Correo, usuario.Nombre));
+            _ = Task.Run(async () =>
+            {
+                try { await _email.EnviarMailBienvenida(usuario.Correo, usuario.Nombre); }
+                catch (Exception ex) { Console.WriteLine($"[EMAIL ERROR] Bienvenida: {ex.Message}"); }
+            });
             return Ok(new { message = "Registro exitoso" });
         }
 
@@ -103,7 +107,11 @@ namespace DELICATA_ELEGANZA.Controllers
                 updateCmd.Parameters.AddWithValue("@id", userId);
                 await updateCmd.ExecuteNonQueryAsync();
 
-                _ = Task.Run(() => _email.EnviarMailRecuperacion(dto.Email, token));
+                _ = Task.Run(async () =>
+                {
+                    try { await _email.EnviarMailRecuperacion(dto.Email, token); }
+                    catch (Exception ex) { Console.WriteLine($"[EMAIL ERROR] Recuperar: {ex.Message}"); }
+                });
                 return Ok(new { message = "Si el correo existe, se enviará un enlace." });
             }
             catch (Exception ex)
