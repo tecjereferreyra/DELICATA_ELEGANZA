@@ -1609,7 +1609,9 @@ document.addEventListener("DOMContentLoaded", () => {
             _menuCerradoRecien = true;
             unlockScroll();
             aplicarFiltros();
-            window.scrollTo({ top: 0, behavior: "instant" });
+            requestAnimationFrame(() => {
+                window.scrollTo({ top: 0, behavior: "instant" });
+            });
             setTimeout(() => { _menuCerradoRecien = false; }, 1200);
         });
     });
@@ -2137,10 +2139,9 @@ function appendIfVisible(fd, inputId, fieldName, fallback = undefined) {
             fd.append(fieldName, fallback);
         }
     } else {
-        if (fallback !== undefined) {
-            fd.append(fieldName, fallback);
-        }
+        fd.append(fieldName, "null");
     }
+
 }
 
 async function guardarNuevoProducto() {
