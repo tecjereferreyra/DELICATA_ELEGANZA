@@ -1,99 +1,58 @@
-﻿using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+﻿using System.Net.Http.Json;
 
 namespace DELICATA_ELEGANZA.Services
 {
     public class EmailService
     {
         private readonly IConfiguration _config;
+        private readonly HttpClient _http;
 
         public EmailService(IConfiguration config)
         {
             _config = config;
+            _http = new HttpClient();
+            _http.DefaultRequestHeaders.Add(
+                "Authorization",
+                $"Bearer {_config["Resend:ApiKey"]}"
+            );
         }
 
         public async Task EnviarMailRecuperacion(string emailDestino, string token)
         {
-            var smtp = _config.GetSection("Smtp");
-
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(
-                "Delicata Eleganza",
-                smtp["From"]
-            ));
-
-            message.To.Add(MailboxAddress.Parse(emailDestino));
-            message.Subject = "Recuperación de contraseña";
-
             string link = $"https://delicata-eleganza.onrender.com/reset.html?token={token}";
 
-            message.Body = new TextPart("plain")
+            var body = new
             {
-                Text = $"Hacé click en el siguiente enlace para cambiar tu contraseña:\n\n{link}\n\nAtte: Edgar Albert."
+                from = "Delicata Eleganza <onboarding@resend.dev>",
+                to = new[] { emailDestino },
+                subject = "Recuperación de contraseña",
+                text = $"Hacé click en el siguiente enlace para cambiar tu contraseña:\n\n{link}\n\nAtte: Edgar Albert."
             };
 
-            using var client = new SmtpClient();
-
-            await client.ConnectAsync(
-                smtp["Host"],
-                int.Parse(smtp["Port"]),
-                SecureSocketOptions.StartTls
-            );
-
-            await client.AuthenticateAsync(
-                smtp["User"],
-                smtp["Pass"]
-            );
-
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            var res = await _http.PostAsJsonAsync("https://api.resend.com/emails", body);
+            if (!res.IsSuccessStatusCode)
+            {
+                var error = await res.Content.ReadAsStringAsync();
+                throw new Exception($"Resend error: {error}");
+            }
         }
 
-        // ✅ ESTE MÉTODO VA ADENTRO DE LA CLASE
         public async Task EnviarMailBienvenida(string emailDestino, string nombre)
         {
-            var smtp = _config.GetSection("Smtp");
-
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(
-                "Delicata Eleganza",
-                smtp["From"]
-            ));
-
-            message.To.Add(MailboxAddress.Parse(emailDestino));
-            message.Subject = "¡Bienvenido a DELICATA ELEGANZA!";
-
-            message.Body = new TextPart("plain")
+            var body = new
             {
-                Text =
-$@"
-¡Hola {nombre}!,
-
-Es un gran placer decirte que ya estás formando parte de nuestro local.
-Desde ahora podrás disfrutar de nuestros productos, novedades y beneficios exclusivos.
-
-Gracias por elegirnos.
-
-Con cariño,
-Edgar Albert."
+                from = "Delicata Eleganza <onboarding@resend.dev>",
+                to = new[] { emailDestino },
+                subject = "¡Bienvenido a DELICATA ELEGANZA!",
+                text = $"¡Hola {nombre}!\n\nEs un gran placer decirte que ya estás formando parte de nuestro local.\nDesde ahora podrás disfrutar de nuestros productos, novedades y beneficios exclusivos.\n\nGracias por elegirnos.\n\nCon cariño,\nEdgar Albert."
             };
 
-            using var client = new SmtpClient();
-
-            await client.ConnectAsync(
-                smtp["Host"],
-                int.Parse(smtp["Port"]),
-                SecureSocketOptions.StartTls
-            );
-
-            await client.AuthenticateAsync(
-                smtp["User"],
-                smtp["Pass"]
-            );
-
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            var res = await _http.PostAsJsonAsync("https://api.resend.com/emails", body);
+            if (!res.IsSuccessStatusCode)
+            {
+                var error = await res.Content.ReadAsStringAsync();
+                throw new Exception($"Resend error: {error}");
+            }
         }
     }
 }
