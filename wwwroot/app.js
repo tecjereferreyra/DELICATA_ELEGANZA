@@ -1927,7 +1927,7 @@ function validarCampos(data, esEditar = false) {
     const suf = esEditar ? "Editar" : "";
     const errores = [];
 
-    // Campos siempre obligatorios en ambos modos
+    // 1. Campos siempre obligatorios (Base)
     if (!data.Nombre?.trim()) errores.push("• El nombre es obligatorio.");
     if (!data.Modelo?.trim()) errores.push("• El modelo es obligatorio.");
     if (!data.Color?.trim()) errores.push("• El color es obligatorio.");
@@ -1944,45 +1944,52 @@ function validarCampos(data, esEditar = false) {
             errores.push("• La imagen principal es obligatoria.");
     }
 
-    // Helper visibilidad
-    function campoVisible(id) {
-        const el = document.getElementById(id);
+    // 2. Helper de visibilidad REFORMULADO para coincidir con toggleFieldsByTipo
+    function campoVisible(idBase) {
+        // Genera el ID exacto que usa tu toggle (ej: prodCapacidad o prodCapacidadEditar)
+        const el = document.getElementById("prod" + idBase + suf);
         if (!el) return false;
         const col = el.closest(".col");
+        // Si el contenedor .col tiene display: none, el campo no debe validarse
         return !col || col.style.display !== "none";
     }
 
-    // Material y Tipo: obligatorios solo al CREAR
-    // En edición ya están cargados, no forzar re-completar
+    // 3. Validaciones de Material y Tipo (solo al crear, según tu lógica)
     if (!esEditar) {
-        if (campoVisible("prodMaterial") && !data.Material?.trim())
+        if (campoVisible("Material") && !data.Material?.trim())
             errores.push("• El material es obligatorio.");
-        if (campoVisible("prodTipo") && !data.Tipo?.trim())
+        if (campoVisible("Tipo") && !data.Tipo?.trim())
             errores.push("• El tipo es obligatorio.");
     }
 
-    if (!esEditar) {
-        if (campoVisible("prodAlto") && !data.Alto) errores.push("• El alto es obligatorio.");
-        if (campoVisible("prodAncho") && !data.Ancho) errores.push("• El ancho es obligatorio.");
-        if (campoVisible("prodCapacidad") && !data.Capacidad) errores.push("• La capacidad es obligatoria.");
-        if (campoVisible("prodCompartimentos") && !data.Compartimentos) errores.push("• Los compartimentos son obligatorios.");
-        if (campoVisible("prodProfundidad") && !data.Profundidad) errores.push("• La profundidad es obligatoria.");
-        if (campoVisible("prodPeso") && !data.Peso) errores.push("• El peso es obligatorio.");
-        if (campoVisible("prodGenero") && !data.Genero?.trim()) errores.push("• El género es obligatorio.");
-        if (campoVisible("prodDiametro") && !data.Diametro) errores.push("• El diámetro es obligatorio.");
-        if (campoVisible("prodCantidadRuedas") && (data.CantidadRuedas === "" || data.CantidadRuedas == null))
-            errores.push("• La cantidad de ruedas es obligatoria.");
-        if (campoVisible("prodTipoCierre") && !data.TipoCierre?.trim())
-            errores.push("• El tipo de cierre es obligatorio.");
-    }
+    // 4. Validaciones dependientes del Toggle (ahora dinámicas por ID + sufijo)[cite: 4]
+    // Importante: No pasamos "prodAlto", pasamos solo "Alto" porque el helper ya pone "prod" y el sufijo
 
+    if (campoVisible("Alto") && !data.Alto) errores.push("• El alto es obligatorio.");
+    if (campoVisible("Ancho") && !data.Ancho) errores.push("• El ancho es obligatorio.");
+    if (campoVisible("Capacidad") && !data.Capacidad) errores.push("• La capacidad es obligatoria.");
+    if (campoVisible("Compartimentos") && !data.Compartimentos) errores.push("• Los compartimentos son obligatorios.");
+    if (campoVisible("Profundidad") && !data.Profundidad) errores.push("• La profundidad es obligatoria.");
+    if (campoVisible("Peso") && !data.Peso) errores.push("• El peso es obligatorio.");
+    if (campoVisible("Genero") && !data.Genero?.trim()) errores.push("• El género es obligatorio.");
+    if (campoVisible("Diametro") && !data.Diametro) errores.push("• El diámetro es obligatorio.");
+
+    if (campoVisible("CantidadRuedas") && (data.CantidadRuedas === "" || data.CantidadRuedas == null))
+        errores.push("• La cantidad de ruedas es obligatoria.");
+
+    if (campoVisible("TipoCierre") && !data.TipoCierre?.trim())
+        errores.push("• El tipo de cierre es obligatorio.");
+
+    if (campoVisible("FuelleExpandible") && !data.FuelleExpandible)
+        errores.push("• El fuelle expandible es obligatorio.");
+
+    // 5. Salida
     if (errores.length > 0) {
         alert("Por favor corregí los siguientes errores:\n\n" + errores.join("\n"));
         return false;
     }
-    return true;
+    return true; //[cite: 3]
 }
-
 function aplicarNullCamposOcultos(data, esEditar = false) {
     const suf = esEditar ? "Editar" : "";
 
