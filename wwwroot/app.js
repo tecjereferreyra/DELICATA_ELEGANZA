@@ -1587,6 +1587,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.querySelectorAll(".mobile-categories li").forEach(item => {
         item.addEventListener("click", (e) => {
+            if (_menuCerradoRecien) { e.stopPropagation(); return; } // FIX 2: bloquea ghost taps
             e.stopPropagation();
             const cat = item.dataset.cat;
 
@@ -1595,7 +1596,6 @@ document.addEventListener("DOMContentLoaded", () => {
             mobileMenu.setAttribute("aria-hidden", true);
             document.body.style.backgroundColor = '';
 
-            // Limpiar active-cat de todos los links desktop
             categoriaLinks.forEach(l => l.classList.remove('active-cat'));
 
             const catNorm = normalizar(cat);
@@ -1603,11 +1603,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (linkDesktop) {
                 linkDesktop.classList.add('active-cat');
             }
-         
 
-           categoriaActivaActual = catNorm || "todos"; // fuente de verdad actualizada
+            categoriaActivaActual = catNorm || "todos";
             _menuCerradoRecien = true;
-            unlockScroll();
+            document.body.classList.remove('scroll-locked'); // FIX 1: unlock sin restaurar posición
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
             setTimeout(() => { _menuCerradoRecien = false; }, 1200);
