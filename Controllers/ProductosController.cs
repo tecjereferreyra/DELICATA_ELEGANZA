@@ -4,17 +4,18 @@ using DELICATA_ELEGANZA.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Webp;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -23,10 +24,12 @@ namespace DELICATA_ELEGANZA.Controllers
     public class ProductosController : ControllerBase
     {
         private readonly DelicataContext _context;
+        private readonly IMemoryCache _cache;
 
-        public ProductosController(DelicataContext context)
+        public ProductosController(DelicataContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         // ============================================================
@@ -36,6 +39,11 @@ namespace DELICATA_ELEGANZA.Controllers
         [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, NoStore = false)]
         public async Task<IActionResult> GetProductos()
         {
+            const string KEY = "productos_lista";
+
+            if (_cache.TryGetValue(KEY, out List<ProductoDTO> cached))
+                return Ok(cached);
+
             try
             {
                 var productos = await _context.Productos
@@ -61,7 +69,6 @@ namespace DELICATA_ELEGANZA.Controllers
 
                         Compartimentos = p.Compartimentos,
 
-                        // ✅ Capacidad ahora es objeto de navegación
                         IdCapacidad = p.id_capacidad,
                         Capacidad = p.Capacidad != null ? p.Capacidad.Descripcion : "N/D",
 
@@ -70,7 +77,6 @@ namespace DELICATA_ELEGANZA.Controllers
                         Profundidad = p.Profundidad,
                         Peso = p.Peso,
 
-                        // ✅ Genero ahora es objeto de navegación
                         IdGenero = p.id_genero,
                         Genero = p.Genero != null ? p.Genero.Descripcion : null,
 
@@ -88,6 +94,8 @@ namespace DELICATA_ELEGANZA.Controllers
                         Disponible = p.Disponible
                     })
                     .ToListAsync();
+
+                _cache.Set(KEY, productos, TimeSpan.FromMinutes(5));
 
                 return Ok(productos);
             }
@@ -151,6 +159,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 .Include(p => p.Genero)
                 .Include(p => p.Imagenes)
                 .FirstOrDefaultAsync(p => p.id_producto == id);
+
             if (producto == null)
                 return NotFound();
 
@@ -173,7 +182,6 @@ namespace DELICATA_ELEGANZA.Controllers
 
                 Compartimentos = producto.Compartimentos,
 
-                // ✅ Capacidad como objeto de navegación
                 IdCapacidad = producto.id_capacidad,
                 Capacidad = producto.Capacidad?.Descripcion,
 
@@ -182,7 +190,6 @@ namespace DELICATA_ELEGANZA.Controllers
                 Profundidad = producto.Profundidad,
                 Peso = producto.Peso,
 
-                // ✅ Genero como objeto de navegación
                 IdGenero = producto.id_genero,
                 Genero = producto.Genero?.Descripcion,
 
@@ -196,9 +203,9 @@ namespace DELICATA_ELEGANZA.Controllers
                 ImagenUrl = producto.ImagenUrl ?? "/ImagenUrl/default.jpg",
                 Disponible = producto.Disponible,
                 Imagenes = producto.Imagenes?
-                .OrderBy(i => i.Orden)
-                .Select(i => i.Url)
-                .ToList()
+                    .OrderBy(i => i.Orden)
+                    .Select(i => i.Url)
+                    .ToList()
             };
 
             return Ok(productoDTO);
@@ -214,13 +221,14 @@ namespace DELICATA_ELEGANZA.Controllers
             [FromForm] ProductoUpdateDTO productoDto,
             [FromForm] IFormFile? imagen)
         {
+            _cache.Remove("productos_lista");
+
             var producto = await _context.Productos
                 .FirstOrDefaultAsync(p => p.id_producto == id);
 
             if (producto == null)
                 return NotFound();
 
-            // 🔹 Datos básicos
             producto.Nombre = productoDto.Nombre;
             producto.Modelo = productoDto.Modelo;
             producto.Color = productoDto.Color;
@@ -235,16 +243,14 @@ namespace DELICATA_ELEGANZA.Controllers
             producto.Stock = productoDto.Stock ?? producto.Stock;
             producto.Disponible = producto.Stock > 0;
 
-            // ✅ FKs incluyendo las nuevas entidades
             producto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
             producto.id_marca = await GetOrCreateMarca(productoDto.Marca);
             producto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
             producto.id_material = await GetOrCreateMaterial(productoDto.Material);
             producto.id_tipo_cierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
-            producto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad); // ✅
-            producto.id_genero = await GetOrCreateGenero(productoDto.Genero);       // ✅
+            producto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
+            producto.id_genero = await GetOrCreateGenero(productoDto.Genero);
 
-            // 🔹 Imagen (opcional)
             if (imagen != null && imagen.Length > 0)
             {
                 if (!string.IsNullOrEmpty(producto.ImagenUrl))
@@ -273,6 +279,8 @@ namespace DELICATA_ELEGANZA.Controllers
             [FromForm] ProductoCreateDTO productoDto,
             [FromForm] IFormFile? imagen)
         {
+            _cache.Remove("productos_lista");
+
             if (productoDto == null)
                 return BadRequest("Datos incompletos.");
 
@@ -293,7 +301,6 @@ namespace DELICATA_ELEGANZA.Controllers
             };
             nuevoProducto.Disponible = nuevoProducto.Stock > 0;
 
-            // ✅ Todas las FKs por GetOrCreate
             nuevoProducto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
             nuevoProducto.id_marca = await GetOrCreateMarca(productoDto.Marca);
             nuevoProducto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
@@ -309,34 +316,34 @@ namespace DELICATA_ELEGANZA.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(
-     "GetProducto",
-     new { id = nuevoProducto.id_producto },
-     new ProductoDTO
-     {
-         IdProducto = nuevoProducto.id_producto,
-         Nombre = nuevoProducto.Nombre,
-         Modelo = nuevoProducto.Modelo,
-         Color = nuevoProducto.Color,
-         IdCategoria = nuevoProducto.id_categoria,
-         IdMarca = nuevoProducto.id_marca,
-         IdTipo = nuevoProducto.id_tipo,
-         IdMaterial = nuevoProducto.id_material,
-         IdCapacidad = nuevoProducto.id_capacidad,
-         IdGenero = nuevoProducto.id_genero,
-         IdTipoCierre = nuevoProducto.id_tipo_cierre,
-         Compartimentos = nuevoProducto.Compartimentos,
-         Alto = nuevoProducto.Alto,
-         Ancho = nuevoProducto.Ancho,
-         Profundidad = nuevoProducto.Profundidad,
-         Peso = nuevoProducto.Peso,
-         Diametro = nuevoProducto.Diametro,
-         CantidadRuedas = nuevoProducto.CantidadRuedas,
-         FuelleExpandible = nuevoProducto.FuelleExpandible,
-         Stock = nuevoProducto.Stock,
-         Disponible = nuevoProducto.Disponible,
-         ImagenUrl = nuevoProducto.ImagenUrl ?? "/ImagenUrl/default.jpg",
-         Imagenes = new List<string>()
-     });
+                "GetProducto",
+                new { id = nuevoProducto.id_producto },
+                new ProductoDTO
+                {
+                    IdProducto = nuevoProducto.id_producto,
+                    Nombre = nuevoProducto.Nombre,
+                    Modelo = nuevoProducto.Modelo,
+                    Color = nuevoProducto.Color,
+                    IdCategoria = nuevoProducto.id_categoria,
+                    IdMarca = nuevoProducto.id_marca,
+                    IdTipo = nuevoProducto.id_tipo,
+                    IdMaterial = nuevoProducto.id_material,
+                    IdCapacidad = nuevoProducto.id_capacidad,
+                    IdGenero = nuevoProducto.id_genero,
+                    IdTipoCierre = nuevoProducto.id_tipo_cierre,
+                    Compartimentos = nuevoProducto.Compartimentos,
+                    Alto = nuevoProducto.Alto,
+                    Ancho = nuevoProducto.Ancho,
+                    Profundidad = nuevoProducto.Profundidad,
+                    Peso = nuevoProducto.Peso,
+                    Diametro = nuevoProducto.Diametro,
+                    CantidadRuedas = nuevoProducto.CantidadRuedas,
+                    FuelleExpandible = nuevoProducto.FuelleExpandible,
+                    Stock = nuevoProducto.Stock,
+                    Disponible = nuevoProducto.Disponible,
+                    ImagenUrl = nuevoProducto.ImagenUrl ?? "/ImagenUrl/default.jpg",
+                    Imagenes = new List<string>()
+                });
         }
 
         // ============================================================
@@ -345,6 +352,8 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
+            _cache.Remove("productos_lista");
+
             var producto = await _context.Productos.FindAsync(id);
             if (producto == null)
                 return NotFound();
@@ -471,6 +480,7 @@ namespace DELICATA_ELEGANZA.Controllers
 
             return $"/ImagenUrl/{fileName}";
         }
+
         // POST: api/Productos/5/imagenes
         [HttpPost("{id}/imagenes")]
         public async Task<IActionResult> SubirImagenes(int id, [FromForm] List<IFormFile> imagenes)
@@ -511,6 +521,7 @@ namespace DELICATA_ELEGANZA.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
         // DELETE: api/Productos/{id}/imagenes/by-url
         [HttpDelete("{id}/imagenes/by-url")]
         public async Task<IActionResult> EliminarImagenPorUrl(int id, [FromBody] string url)
@@ -526,6 +537,7 @@ namespace DELICATA_ELEGANZA.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
         private bool ProductoExists(int id)
         {
             return _context.Productos.Any(p => p.id_producto == id);
