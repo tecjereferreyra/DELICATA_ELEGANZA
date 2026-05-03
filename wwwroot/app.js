@@ -2253,12 +2253,16 @@ async function guardarNuevoProducto() {
 
         mostrarToast("Producto agregado correctamente ✓", "success");
         cerrarModalCRUD("modalAgregar");
-        // Agregar al array local y re-filtrar sin refetch
-        productosData.push(normalizarProducto(nuevoProd));
-        // Recalcular _camposNormalizados para el nuevo producto
-        const ultimo = productosData[productosData.length - 1];
-        recalcularCamposBusqueda(ultimo);
-        aplicarFiltros();
+        // Recargar desde el backend para obtener nombres resueltos (Marca, Categoria, etc.)
+        fetch(`/api/Productos/${nuevoId}`)
+            .then(r => r.json())
+            .then(p => {
+                const prod = normalizarProducto(p);
+                recalcularCamposBusqueda(prod);
+                productosData.push(prod);
+                aplicarFiltros();
+            })
+            .catch(() => cargarProductos(true));
 
     } catch (err) {
         console.error(err);
@@ -2585,7 +2589,6 @@ async function guardarEdicionProducto() {
         window._imagenesGuardadasAEliminar = [];
         mostrarToast("Producto editado correctamente ✓", "success");
         cerrarModalCRUD("modalEditar");
-        // Recargar solo este producto del backend y reemplazarlo en el array
         fetch(`/api/Productos/${id}`)
             .then(r => r.json())
             .then(p => {
@@ -2595,6 +2598,15 @@ async function guardarEdicionProducto() {
                 const idx = productosData.findIndex(x => x.IdProducto === actualizado.IdProducto);
                 if (idx !== -1) productosData[idx] = actualizado;
                 else productosData.push(actualizado);
+
+                // ✅ AGREGAR ESTO: actualizar productoSeleccionado y refrescar el modal si está abierto
+                if (productoSeleccionado?.IdProducto === actualizado.IdProducto) {
+                    productoSeleccionado = actualizado;
+                    const modal = domCache.modal;
+                    if (modal && modal.classList.contains("show")) {
+                        abrirModal(actualizado);
+                    }
+                }
 
                 aplicarFiltros();
             })
