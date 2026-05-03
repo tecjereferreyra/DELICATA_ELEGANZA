@@ -67,7 +67,6 @@ function mostrarCampoModal(id) {
     if (parent) parent.style.display = "block";
 }
 let _scrollLockedAt = 0;
-let _scrollbarWidth = 0;
 
 function getScrollbarWidth() {
     return window.innerWidth - document.documentElement.clientWidth;
@@ -75,22 +74,17 @@ function getScrollbarWidth() {
 
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
-    _scrollLockedAt = window.scrollY;
-    _scrollbarWidth = getScrollbarWidth();
-    if (_scrollbarWidth > 0) {
-        document.body.style.paddingRight = _scrollbarWidth + 'px';
-    }
+    _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.body.classList.add('scroll-locked');
-    document.documentElement.style.overflow = 'hidden';
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
-    const pos = _scrollLockedAt;
     document.body.classList.remove('scroll-locked');
-    document.body.style.paddingRight = '';
-    document.documentElement.style.overflow = '';
-    window.scrollTo(0, pos);
+    const pos = _scrollLockedAt;
+    requestAnimationFrame(() => {
+        window.scrollTo({ top: pos, behavior: 'instant' });
+    });
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
@@ -419,10 +413,9 @@ function cerrarModalProducto() {
     modal.classList.remove("show");
     modal.setAttribute("aria-hidden", "true");
     modal.inert = true;
-    _cerrarModalTimeout = setTimeout(() => {
-        unlockScroll();
-        _cerrarModalTimeout = null;
-    }, 320);
+    unlockScroll();
+    // Ya no necesitamos setTimeout para display:none porque usamos visibility
+    _cerrarModalTimeout = null;
 }
 
 /* ---------------- INICIALIZACIÓN RÁPIDA ---------------- */
@@ -1325,12 +1318,10 @@ function openUserModalAsLogin() {
         }
     });
 
-    if (userModal._limpiarBackdrop) userModal._limpiarBackdrop();
-    userModal._limpiarBackdrop = registrarCierreBackdrop(userModal, () => {
+    registrarCierreBackdrop(userModal, () => {
         userModal.style.display = "none";
         unlockScroll();
     });
-
 }
 
 function openUserModalAsRegister() {
@@ -1411,12 +1402,10 @@ function openUserModalAsRegister() {
             showLoginMessage("Error de conexión al servidor.", "error");
         }
     });
-    if (userModal._limpiarBackdrop) userModal._limpiarBackdrop();
-    userModal._limpiarBackdrop = registrarCierreBackdrop(userModal, () => {
+    registrarCierreBackdrop(userModal, () => {
         userModal.style.display = "none";
         unlockScroll();
     });
-
 }
 const modalImgContainer = document.querySelector(".modal-img-container");
 const esTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -1839,12 +1828,10 @@ function openRecuperarModal() {
         unlockScroll();
     });
 
-    if (userModal._limpiarBackdrop) userModal._limpiarBackdrop();
-    userModal._limpiarBackdrop = registrarCierreBackdrop(userModal, () => {
+    registrarCierreBackdrop(userModal, () => {
         userModal.style.display = "none";
         unlockScroll();
     });
-
 }
 
 function actualizarSaludos(nombre) {
