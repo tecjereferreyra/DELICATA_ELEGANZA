@@ -77,10 +77,9 @@ function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.scrollY;
     _scrollbarWidth = getScrollbarWidth();
-
-    // Compensar el ancho del scrollbar para evitar el "salto" visual
-    document.body.style.paddingRight = _scrollbarWidth + 'px';
-    document.body.style.top = `-${_scrollLockedAt}px`;
+    if (_scrollbarWidth > 0) {
+        document.body.style.paddingRight = _scrollbarWidth + 'px';
+    }
     document.body.classList.add('scroll-locked');
 }
 
@@ -88,9 +87,7 @@ function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     const pos = _scrollLockedAt;
     document.body.classList.remove('scroll-locked');
-    document.body.style.top = '';
     document.body.style.paddingRight = '';
-    // scrollTo sincrónico (sin behavior) para que no haya delay ni flash
     window.scrollTo(0, pos);
 }
 /* ---------------- NORMALIZADOR ---------------- */
