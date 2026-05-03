@@ -81,6 +81,7 @@ function lockScroll() {
         document.body.style.paddingRight = _scrollbarWidth + 'px';
     }
     document.body.classList.add('scroll-locked');
+    document.documentElement.style.overflow = 'hidden';
 }
 
 function unlockScroll() {
@@ -88,6 +89,7 @@ function unlockScroll() {
     const pos = _scrollLockedAt;
     document.body.classList.remove('scroll-locked');
     document.body.style.paddingRight = '';
+    document.documentElement.style.overflow = '';
     window.scrollTo(0, pos);
 }
 /* ---------------- NORMALIZADOR ---------------- */
@@ -417,9 +419,10 @@ function cerrarModalProducto() {
     modal.classList.remove("show");
     modal.setAttribute("aria-hidden", "true");
     modal.inert = true;
-    unlockScroll();
-    // Ya no necesitamos setTimeout para display:none porque usamos visibility
-    _cerrarModalTimeout = null;
+    _cerrarModalTimeout = setTimeout(() => {
+        unlockScroll();
+        _cerrarModalTimeout = null;
+    }, 320);
 }
 
 /* ---------------- INICIALIZACIÓN RÁPIDA ---------------- */
