@@ -671,6 +671,8 @@ function abrirModal(prod) {
         { id: "modalStock", value: prod.Stock || prod.stock },
     ];
 
+    /* ================= AJUSTES VISUALES ================= */
+    toggleFieldsByTipo(prod.Nombre || prod.nombre || "", false, "view");
     let visibles = 0;
     camposDisponibles.forEach(campo => {
         const el = document.getElementById(campo.id);
@@ -693,12 +695,11 @@ function abrirModal(prod) {
     // Centrar el último si la cantidad es impar
     if (visibles % 2 !== 0) {
         const grid = document.querySelector(".modal-info-grid");
-        const ultimo = grid ? [...grid.querySelectorAll("p:not([hidden])")].at(-1) : null;
+        const ultimo = grid ? [...grid.querySelectorAll("p:not([hidden])")].filter(p => p.style.display !== "none").at(-1) : null;
         if (ultimo) ultimo.classList.add("centrado");
     }
 
-    /* ================= AJUSTES VISUALES ================= */
-    toggleFieldsByTipo(prod.Nombre || prod.nombre || "", false, "view");
+ 
 
     /* ================= ADMIN ================= */
     const adminBox = document.getElementById("modalAdminButtons");
