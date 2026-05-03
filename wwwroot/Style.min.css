@@ -127,7 +127,10 @@ body {
     padding-top: env(safe-area-inset-top);
 }
     body.scroll-locked {
-        overscroll-behavior-y: none;
+        position: fixed;
+        left: 0;
+        right: 0;
+        overflow-y: scroll; /* mantiene el scrollbar visible para evitar el salto de layout */
     }
 
 html:has(body.scroll-locked) {

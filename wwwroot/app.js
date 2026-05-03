@@ -67,6 +67,7 @@ function mostrarCampoModal(id) {
     if (parent) parent.style.display = "block";
 }
 let _scrollLockedAt = 0;
+let _scrollbarWidth = 0;
 
 function getScrollbarWidth() {
     return window.innerWidth - document.documentElement.clientWidth;
@@ -74,17 +75,23 @@ function getScrollbarWidth() {
 
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
-    _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
+    _scrollLockedAt = window.scrollY;
+    _scrollbarWidth = getScrollbarWidth();
+
+    // Compensar el ancho del scrollbar para evitar el "salto" visual
+    document.body.style.paddingRight = _scrollbarWidth + 'px';
+    document.body.style.top = `-${_scrollLockedAt}px`;
     document.body.classList.add('scroll-locked');
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
-    document.body.classList.remove('scroll-locked');
     const pos = _scrollLockedAt;
-    requestAnimationFrame(() => {
-        window.scrollTo({ top: pos, behavior: 'instant' });
-    });
+    document.body.classList.remove('scroll-locked');
+    document.body.style.top = '';
+    document.body.style.paddingRight = '';
+    // scrollTo sincrónico (sin behavior) para que no haya delay ni flash
+    window.scrollTo(0, pos);
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
@@ -1318,10 +1325,12 @@ function openUserModalAsLogin() {
         }
     });
 
-    registrarCierreBackdrop(userModal, () => {
+    if (userModal._limpiarBackdrop) userModal._limpiarBackdrop();
+    userModal._limpiarBackdrop = registrarCierreBackdrop(userModal, () => {
         userModal.style.display = "none";
         unlockScroll();
     });
+
 }
 
 function openUserModalAsRegister() {
@@ -1402,10 +1411,12 @@ function openUserModalAsRegister() {
             showLoginMessage("Error de conexión al servidor.", "error");
         }
     });
-    registrarCierreBackdrop(userModal, () => {
+    if (userModal._limpiarBackdrop) userModal._limpiarBackdrop();
+    userModal._limpiarBackdrop = registrarCierreBackdrop(userModal, () => {
         userModal.style.display = "none";
         unlockScroll();
     });
+
 }
 const modalImgContainer = document.querySelector(".modal-img-container");
 const esTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -1828,10 +1839,12 @@ function openRecuperarModal() {
         unlockScroll();
     });
 
-    registrarCierreBackdrop(userModal, () => {
+    if (userModal._limpiarBackdrop) userModal._limpiarBackdrop();
+    userModal._limpiarBackdrop = registrarCierreBackdrop(userModal, () => {
         userModal.style.display = "none";
         unlockScroll();
     });
+
 }
 
 function actualizarSaludos(nombre) {
