@@ -700,7 +700,12 @@ function abrirModal(prod) {
     // Centrar el último si la cantidad es impar
     if (visibles % 2 !== 0) {
         const grid = document.querySelector(".modal-info-grid");
-        const ultimo = grid ? [...grid.querySelectorAll("p:not([hidden])")].filter(p => p.style.display !== "none").at(-1) : null;
+        const esVisible = el =>
+            !el.hidden &&
+            el.style.display !== "none" &&
+            el.offsetParent !== null;
+        const todosPs = grid ? [...grid.querySelectorAll("p")] : [];
+        const ultimo = todosPs.filter(esVisible).at(-1);
         if (ultimo) ultimo.classList.add("centrado");
     }
 
@@ -2603,6 +2608,9 @@ async function guardarEdicionProducto() {
                 const idx = productosData.findIndex(x => x.IdProducto === actualizado.IdProducto);
                 if (idx !== -1) productosData[idx] = actualizado;
                 else productosData.push(actualizado);
+                try {
+                    localStorage.setItem("delicata_productos_v1", JSON.stringify(productosData));
+                } catch (e) { }
 
                 // ✅ AGREGAR ESTO: actualizar productoSeleccionado y refrescar el modal si está abierto
                 if (productoSeleccionado?.IdProducto === actualizado.IdProducto) {
