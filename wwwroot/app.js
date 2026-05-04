@@ -72,19 +72,22 @@ function getScrollbarWidth() {
     return window.innerWidth - document.documentElement.clientWidth;
 }
 
+function _preventBgScroll(e) {
+    if (e.target.closest('.modal-content, .user-modal-content')) return;
+    e.preventDefault();
+}
+
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.body.classList.add('scroll-locked');
+    document.addEventListener('touchmove', _preventBgScroll, { passive: false });
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
-    const pos = _scrollLockedAt;
-    requestAnimationFrame(() => {
-        window.scrollTo({ top: pos, behavior: 'instant' });
-    });
+    document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
