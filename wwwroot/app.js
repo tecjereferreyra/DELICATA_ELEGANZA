@@ -968,9 +968,7 @@ async function cargarProductos(forzar = false) {
 
         // ── Siempre buscar la versión actualizada en background ──
         const resp = await fetch(API_URL, {
-            headers: forzar
-                ? { "Cache-Control": "no-cache, no-store" }
-                : { "Cache-Control": "max-age=300" }
+            headers: { "Cache-Control": "no-cache" }   // siempre pedir versión fresca
         });
         if (!resp.ok) throw new Error("Error cargando productos");
 
