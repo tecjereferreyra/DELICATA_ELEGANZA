@@ -73,7 +73,7 @@ function getScrollbarWidth() {
 }
 
 function _preventBgScroll(e) {
-    if (e.target.closest('.modal-content, .user-modal-content')) return;
+    if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar')) return;
     e.preventDefault();
 }
 
