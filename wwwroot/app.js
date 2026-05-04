@@ -641,6 +641,8 @@ function cerrarModalAdmin(idModal) {
 // REEMPLAZÁ esta función en tu app.js
 
 function abrirModal(prod) {
+    const prodFresh = productosData.find(p => p.IdProducto === prod.IdProducto) || prod;
+    prod = prodFresh;
     const modal = domCache.modal;
     if (!modal) return;
 
