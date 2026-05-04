@@ -1629,7 +1629,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             categoriaActivaActual = catNorm || "todos";
             _menuCerradoRecien = true;
-            document.body.classList.remove('scroll-locked'); // FIX 1: unlock sin restaurar posición
+            document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+            document.body.classList.remove('scroll-locked');// FIX 1: unlock sin restaurar posición
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
             setTimeout(() => { _menuCerradoRecien = false; }, 1200);
