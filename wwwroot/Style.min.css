@@ -708,6 +708,12 @@ header.navbar .title {
         text-align: center
     }
 
+.modal-info-grid .centrado-solo {
+    grid-column: auto;
+    justify-self: center;
+    text-align: center
+}
+
 .ver-mas-container {
     display: flex;
     justify-content: center;

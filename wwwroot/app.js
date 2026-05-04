@@ -706,7 +706,14 @@ function abrirModal(prod) {
             el.offsetParent !== null;
         const todosPs = grid ? [...grid.querySelectorAll("p")] : [];
         const ultimo = todosPs.filter(esVisible).at(-1);
-        if (ultimo) ultimo.classList.add("centrado");
+        if (ultimo) {
+            const textoPlano = ultimo.textContent.replace(/\s+/g, " ").trim();
+            if (textoPlano.length > 20) {
+                ultimo.classList.add("centrado");      // ocupa 2 columnas
+            } else {
+                ultimo.classList.add("centrado-solo"); // se centra sin estirar
+            }
+        }
     }
 
  
