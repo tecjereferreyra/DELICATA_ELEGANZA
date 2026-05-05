@@ -691,7 +691,8 @@ function abrirModal(prod) {
         if (valido) {
             el.textContent = safeText(valor);
             el.hidden = false;
-            visibles++;
+            // Solo contar como visible si toggleFieldsByTipo no lo ocultó por display:none
+            if (el.style.display !== "none") visibles++;
         } else {
             el.hidden = true;
         }
@@ -2680,7 +2681,12 @@ function cerrarModalCRUD(id) {
     if (modalEl.classList.contains("modal-user")) {
         modalEl.style.display = "none";
     }
-    unlockScroll();            // ← AGREGAR
+    // Guardar posición antes de unlock para restaurarla después
+    const scrollY = _scrollLockedAt;
+    unlockScroll();
+    requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "instant" });
+    });
 }
 
 function resetFormAndClose(idModal, idForm) {
