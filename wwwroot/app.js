@@ -698,15 +698,16 @@ function abrirModal(prod) {
     });
 
     // Centrar el último si la cantidad es impar
-    if (visibles % 2 !== 0) {
-        const grid = document.querySelector(".modal-info-grid");
-        const esVisible = el =>
-            !el.hidden &&
-            el.style.display !== "none" &&
-            el.offsetParent !== null;
-        const todosPs = grid ? [...grid.querySelectorAll("p")] : [];
-        const ultimo = todosPs.filter(esVisible).at(-1);
-        if (ultimo) ultimo.classList.add("centrado");
+    const grid = document.querySelector(".modal-info-grid");
+    if (grid) {
+        const todosPs = [...grid.querySelectorAll("p")];
+        // Limpiar primero cualquier centrado previo
+        todosPs.forEach(p => p.classList.remove("centrado"));
+        if (visibles % 2 !== 0) {
+            const esVisible = el => !el.hidden && el.style.display !== "none";
+            const ultimo = todosPs.filter(esVisible).at(-1);
+            if (ultimo) ultimo.classList.add("centrado");
+        }
     }
 
  
