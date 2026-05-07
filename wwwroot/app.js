@@ -880,7 +880,7 @@ const COLOR_SINONIMOS = {
     "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro"],
     "naranja": ["naranja", "naranjas", "orange", "terracota"],
     "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow"],
-    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes"],
+    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute","nude","nudes", "nutes"],
 };
 
 // Genera texto extra de sinónimos para un producto dado su color

@@ -480,9 +480,8 @@ header.navbar {
     }
 
         .cat-submenu li a:hover {
-            background: var(--color-marca-oro);
-            color: #fff;
-            padding-left: 24px;
+            background: rgba(177, 151, 116, .15);
+            border-right: 2px solid var(--color-marca-oro);
         }
 .cat-dropdown:hover .cat-submenu {
     display: block;
