@@ -9,6 +9,7 @@
     .carrusel-slide img, .product-card img {
         aspect-ratio: 1/1;
         object-fit: cover;
+    
     }
 
 body, header.navbar {
@@ -125,7 +126,6 @@ body {
     margin: 0;
     padding-top: env(safe-area-inset-top);
 }
-
     body.scroll-locked {
         overscroll-behavior-y: none;
     }
@@ -184,12 +184,10 @@ input::placeholder {
     cursor: pointer;
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
-
     .carrusel-btn.oculto {
         opacity: 0;
         pointer-events: none;
     }
-
     .carrusel-btn.prev {
         left: 4px
     }
@@ -406,9 +404,10 @@ h1, h2, h3 {
 header.navbar {
     position: sticky;
     top: env(safe-area-inset-top, 0px);
-    z-index: 9999;
+    z-index: 900;
     left: 0;
     right: 0;
+    isolation: isolate;
     background: rgba(17,17,17,.97);
     border-bottom: 1px solid rgba(212,175,55,.3);
     box-shadow: 0 6px 20px rgba(0,0,0,.18);
@@ -460,7 +459,6 @@ header.navbar {
     /* Puente invisible para que el mouse no pierda el hover */
     margin-top: 4px;
 }
-
 .cat-dropdown::after {
     content: '';
     position: absolute;
@@ -471,21 +469,21 @@ header.navbar {
     background: transparent;
 }
 
-.cat-submenu li a {
-    display: block;
-    padding: 8px 18px;
-    color: #e0c97f;
-    text-decoration: none;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    transition: background 0.15s;
-}
-
-    .cat-submenu li a:hover {
-        background: #222;
-        color: #fff;
+    .cat-submenu li a {
+        display: block;
+        padding: 8px 18px;
+        color: #e0c97f;
+        text-decoration: none;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        transition: background 0.15s;
     }
 
+        .cat-submenu li a:hover {
+            background: var(--color-marca-oro);
+            color: #fff;
+            padding-left: 24px;
+        }
 .cat-dropdown:hover .cat-submenu {
     display: block;
 }
@@ -539,7 +537,6 @@ header.navbar {
     .mobile-submenu li:hover {
         color: #e0c97f;
     }
-
 header.navbar:hover {
     background: rgba(17,17,17,.96);
     box-shadow: 0 6px 26px rgba(0,0,0,.18)
@@ -747,7 +744,7 @@ header.navbar .title {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
     margin: 1rem auto 2rem;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch
@@ -805,11 +802,9 @@ header.navbar .title {
 .categories a:nth-child(6) {
     animation-delay: .8s
 }
-
 .categories a:nth-child(7) {
     animation-delay: .8s
 }
-
 .categories a:nth-child(8) {
     animation-delay: .8s
 }
@@ -885,9 +880,11 @@ header.navbar .title {
     opacity: 0;
     transform: translateY(8px);
     border: 1px solid rgba(177,151,116,.18);
-    contain: layout;
+    contain: layout paint;
     position: relative;
-    will-change: opacity;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 380px;
+    will-change: transform,opacity;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden
 }
@@ -913,12 +910,10 @@ header.navbar .title {
         transform: translateY(-2px);
         box-shadow: 0 14px 30px rgba(0,0,0,.1)
     }
-
     .product-card.is-visible {
         opacity: 1;
         transform: translateY(0);
     }
-
     .mobile-menu.active .mobile-categories li, .product-card.is-visible {
         opacity: 1;
         transform: translateY(0)
@@ -1939,28 +1934,6 @@ footer.footer {
     #modalAdminButtons button {
         min-width: 120px
     }
-
-    /* ── TOPE DE TAMAÑO: modales iguales en cualquier resolución ≥ 1025px ── */
-    .modal-content,
-    .modal-overlay .modal-content {
-        max-height: 690px;
-        overflow-y: auto;
-        overflow-x: hidden
-    }
-
-    .modal-box {
-        max-height: 690px;
-        overflow-y: auto
-    }
-
-    .modal-form-grid {
-        gap: 3px 22px;
-        margin-top: 12px
-    }
-
-        .modal-form-grid .col input {
-            padding: 7px 10px
-        }
 }
 
 @media (max-width:1024px) {
@@ -2417,7 +2390,6 @@ footer.footer {
         backface-visibility: hidden;
         animation: .3s ease-out forwards modalMobileAppear;
     }
-
     @keyframes modalMobileAppear {
         from {
             opacity: 0;
@@ -2708,6 +2680,58 @@ footer.footer {
     .modal-content {
         padding: 4px 4px 5px
     }
+}
+
+@media (min-width:1280px) and (max-width:1440px) and (max-height:820px) {
+    .modal-content {
+        width: 72%;
+        max-width: 780px;
+        max-height: 88vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 14px;
+    }
+
+    .modal-img-container {
+        height: 200px;
+    }
+
+        .modal-img-container img {
+            max-height: 250px;
+        }
+
+    #modalNombre, .modal-title {
+        font-size: 1.6rem;
+    }
+
+    .modal-info-grid {
+        gap: 4px;
+        margin: 6px auto;
+    }
+
+        .modal-extra p, .modal-info-grid p {
+            font-size: .8rem;
+            padding: 7px 10px;
+        }
+    .modal-box {
+        max-height: 85vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 16px 20px;
+    }
+
+    .modal-form-grid {
+        gap: 5px;
+    }
+
+        .modal-form-grid .col label {
+            font-size: .78rem;
+        }
+
+        .modal-form-grid .col input {
+            padding: 5px 8px;
+            font-size: .78rem;
+        }
 }
 
 @media (width:1280px) and (height:800px) {

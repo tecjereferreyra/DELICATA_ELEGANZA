@@ -82,13 +82,20 @@ function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.body.classList.add('scroll-locked');
+    // Firefox fallback: aplicar overflow directamente sin depender de :has()
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
+    // Restaurar
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+    window.scrollTo({ top: _scrollLockedAt, behavior: 'instant' });
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
