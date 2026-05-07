@@ -426,7 +426,8 @@ header.navbar {
 /* ── DROPDOWN DESKTOP ── */
 .cat-dropdown {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
 }
 
     .cat-dropdown > a {
@@ -450,10 +451,22 @@ header.navbar {
     border: 1px solid #333;
     border-radius: 8px;
     min-width: 190px;
-    z-index: 999;
+    z-index: 1000;
     padding: 6px 0;
     list-style: none;
+    margin: 0;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    /* Puente invisible para que el mouse no pierda el hover */
+    margin-top: 4px;
+}
+.cat-dropdown::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: transparent;
 }
 
     .cat-submenu li a {
@@ -478,7 +491,6 @@ header.navbar {
 .cat-dropdown:hover .cat-arrow {
     transform: rotate(180deg);
 }
-
 /* ── SUBMENU MÓVIL ── */
 .mobile-cat-row {
     display: flex;
@@ -790,6 +802,13 @@ header.navbar .title {
 .categories a:nth-child(6) {
     animation-delay: .8s
 }
+.categories a:nth-child(7) {
+    animation-delay: .8s
+}
+.categories a:nth-child(8) {
+    animation-delay: .8s
+}
+
 
 .grid-productos {
     display: grid;
