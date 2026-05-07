@@ -9,7 +9,6 @@
     .carrusel-slide img, .product-card img {
         aspect-ratio: 1/1;
         object-fit: cover;
-    
     }
 
 body, header.navbar {
@@ -126,6 +125,7 @@ body {
     margin: 0;
     padding-top: env(safe-area-inset-top);
 }
+
     body.scroll-locked {
         overscroll-behavior-y: none;
     }
@@ -184,10 +184,12 @@ input::placeholder {
     cursor: pointer;
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
+
     .carrusel-btn.oculto {
         opacity: 0;
         pointer-events: none;
     }
+
     .carrusel-btn.prev {
         left: 4px
     }
@@ -404,10 +406,9 @@ h1, h2, h3 {
 header.navbar {
     position: sticky;
     top: env(safe-area-inset-top, 0px);
-    z-index: 900;
+    z-index: 9999;
     left: 0;
     right: 0;
-    isolation: isolate;
     background: rgba(17,17,17,.97);
     border-bottom: 1px solid rgba(212,175,55,.3);
     box-shadow: 0 6px 20px rgba(0,0,0,.18);
@@ -459,6 +460,7 @@ header.navbar {
     /* Puente invisible para que el mouse no pierda el hover */
     margin-top: 4px;
 }
+
 .cat-dropdown::after {
     content: '';
     position: absolute;
@@ -469,20 +471,20 @@ header.navbar {
     background: transparent;
 }
 
-    .cat-submenu li a {
-        display: block;
-        padding: 8px 18px;
-        color: #e0c97f;
-        text-decoration: none;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        transition: background 0.15s;
-    }
+.cat-submenu li a {
+    display: block;
+    padding: 8px 18px;
+    color: #e0c97f;
+    text-decoration: none;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
 
-        .cat-submenu li a:hover {
-            background: #222;
-            color: #fff;
-        }
+    .cat-submenu li a:hover {
+        background: #222;
+        color: #fff;
+    }
 
 .cat-dropdown:hover .cat-submenu {
     display: block;
@@ -537,6 +539,7 @@ header.navbar {
     .mobile-submenu li:hover {
         color: #e0c97f;
     }
+
 header.navbar:hover {
     background: rgba(17,17,17,.96);
     box-shadow: 0 6px 26px rgba(0,0,0,.18)
@@ -802,9 +805,11 @@ header.navbar .title {
 .categories a:nth-child(6) {
     animation-delay: .8s
 }
+
 .categories a:nth-child(7) {
     animation-delay: .8s
 }
+
 .categories a:nth-child(8) {
     animation-delay: .8s
 }
@@ -880,11 +885,9 @@ header.navbar .title {
     opacity: 0;
     transform: translateY(8px);
     border: 1px solid rgba(177,151,116,.18);
-    contain: layout paint;
+    contain: layout;
     position: relative;
-    content-visibility: auto;
-    contain-intrinsic-size: 0 380px;
-    will-change: transform,opacity;
+    will-change: opacity;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden
 }
@@ -910,10 +913,12 @@ header.navbar .title {
         transform: translateY(-2px);
         box-shadow: 0 14px 30px rgba(0,0,0,.1)
     }
+
     .product-card.is-visible {
         opacity: 1;
         transform: translateY(0);
     }
+
     .mobile-menu.active .mobile-categories li, .product-card.is-visible {
         opacity: 1;
         transform: translateY(0)
@@ -1934,6 +1939,28 @@ footer.footer {
     #modalAdminButtons button {
         min-width: 120px
     }
+
+    /* ── TOPE DE TAMAÑO: modales iguales en cualquier resolución ≥ 1025px ── */
+    .modal-content,
+    .modal-overlay .modal-content {
+        max-height: 690px;
+        overflow-y: auto;
+        overflow-x: hidden
+    }
+
+    .modal-box {
+        max-height: 690px;
+        overflow-y: auto
+    }
+
+    .modal-form-grid {
+        gap: 3px 22px;
+        margin-top: 12px
+    }
+
+        .modal-form-grid .col input {
+            padding: 7px 10px
+        }
 }
 
 @media (max-width:1024px) {
@@ -2390,6 +2417,7 @@ footer.footer {
         backface-visibility: hidden;
         animation: .3s ease-out forwards modalMobileAppear;
     }
+
     @keyframes modalMobileAppear {
         from {
             opacity: 0;
