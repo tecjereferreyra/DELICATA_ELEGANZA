@@ -9,7 +9,8 @@ let productoSeleccionado = null;
 let productosRenderizados = 0;
 let _cerrarModalTimeout = null;
 let _menuCerradoRecien = false;
-let categoriaActivaActual = "todos"; // fuente de verdad del filtro activo
+let categoriaActivaActual = "todos";
+let subcategoriaActivaActual = "";
 const BLOQUE_CARGA = 12;
 const delay = 0;
 let productosFiltrados = [];
@@ -849,11 +850,12 @@ const normalizar = texto =>
 
 categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
-        if (_menuCerradoRecien) { e.preventDefault(); return; } // bloquea tap fantasma post-menú
+        if (_menuCerradoRecien) { e.preventDefault(); return; }
         e.preventDefault();
         categoriaLinks.forEach(l => l.classList.remove('active-cat'));
         e.target.classList.add('active-cat');
         categoriaActivaActual = normalizar(e.target.dataset.cat || "todos");
+        subcategoriaActivaActual = normalizar(e.target.dataset.tipo || "");
         aplicarFiltros();
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -1112,7 +1114,9 @@ const CATEGORIAS_MAP = {
     "marroquineria": "marroquineria",
     "bijouterie": "bijouterie",
     "complementos": "complementos",
-    "articulos de viaje": "articulos de viaje"
+    "articulos de viaje": "articulos de viaje",
+    "piercing": "piercing",
+    "panoleria": "panoleria"
 };
 
 const aplicarFiltros = () => {
@@ -1146,6 +1150,21 @@ const aplicarFiltros = () => {
         });
     }
 
+
+// 1b. Filtrar por subcategoría/tipo si hay una activa
+if (subcategoriaActivaActual !== "") {
+    base = base.filter(p => {
+        const tipo = normalizar(
+            p.Tipo?.Nombre ||
+            p.tipo?.Nombre ||
+            p.Tipo ||
+            p.tipo || ""
+        );
+        return tipo === subcategoriaActivaActual || tipo.includes(subcategoriaActivaActual);
+    });
+}
+
+// 2. Filtrar por búsqueda fuzzy multi-palabra (solo sobre el base ya filtrado)
     // 2. Filtrar por búsqueda fuzzy multi-palabra (solo sobre el base ya filtrado)
     if (textoBusqueda !== "") {
         base = base.filter(p => matchBusquedaFuzzy(p._camposNormalizados, textoBusqueda));
@@ -1615,11 +1634,34 @@ document.addEventListener("DOMContentLoaded", () => {
             unlockScroll();
         }
     });
-    document.querySelectorAll(".mobile-categories li").forEach(item => {
+    // CÓDIGO NUEVO (poner esto):
+
+    // Toggle flechas en items con subcategorías
+    document.querySelectorAll(".mobile-categories .has-sub").forEach(item => {
+        const row = item.querySelector(".mobile-cat-row");
+        const arrow = item.querySelector(".mobile-arrow");
+        row?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = item.classList.contains("sub-open");
+            document.querySelectorAll(".mobile-categories .has-sub").forEach(i => {
+                i.classList.remove("sub-open");
+                i.querySelector(".mobile-arrow")?.classList.remove("rotated");
+            });
+            if (!isOpen) {
+                item.classList.add("sub-open");
+                arrow?.classList.add("rotated");
+            }
+        });
+    });
+
+    // Click en items con data-cat (categorías simples y subcategorías)
+    document.querySelectorAll(".mobile-categories li[data-cat]").forEach(item => {
         item.addEventListener("click", (e) => {
-            if (_menuCerradoRecien) { e.stopPropagation(); return; } // FIX 2: bloquea ghost taps
+            if (_menuCerradoRecien) { e.stopPropagation(); return; }
             e.stopPropagation();
             const cat = item.dataset.cat;
+            const tipo = item.dataset.tipo || "";
+            if (!cat) return;
 
             mobileMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", false);
@@ -1627,17 +1669,19 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.style.backgroundColor = '';
 
             categoriaLinks.forEach(l => l.classList.remove('active-cat'));
-
             const catNorm = normalizar(cat);
-            const linkDesktop = [...categoriaLinks].find(l => normalizar(l.dataset.cat || "") === catNorm);
-            if (linkDesktop) {
-                linkDesktop.classList.add('active-cat');
-            }
+            const tipoNorm = normalizar(tipo);
+            const linkDesktop = [...categoriaLinks].find(l =>
+                normalizar(l.dataset.cat || "") === catNorm &&
+                normalizar(l.dataset.tipo || "") === tipoNorm
+            );
+            if (linkDesktop) linkDesktop.classList.add('active-cat');
 
             categoriaActivaActual = catNorm || "todos";
+            subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
             document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
-            document.body.classList.remove('scroll-locked');// FIX 1: unlock sin restaurar posición
+            document.body.classList.remove('scroll-locked');
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
             setTimeout(() => { _menuCerradoRecien = false; }, 1200);

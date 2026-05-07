@@ -109,10 +109,68 @@
 
         <ul class="mobile-categories">
             <li data-cat="todos">Todos</li>
-            <li data-cat="marroquineria">Marroquinería</li>
-            <li data-cat="bijouterie">Bijouterie</li>
-            <li data-cat="complementos">Complementos</li>
-            <li data-cat="artículos de viaje">Artículos de Viaje</li>
+
+            <!-- Marroquinería con subcategorías -->
+            <li class="has-sub">
+                <span class="mobile-cat-row">
+                    <span data-cat="marroquineria">Marroquinería</span>
+                    <i class="fa-solid fa-chevron-right mobile-arrow"></i>
+                </span>
+                <ul class="mobile-submenu">
+                    <li data-cat="marroquineria" data-tipo="carteras">Carteras</li>
+                    <li data-cat="marroquineria" data-tipo="billeteras">Billeteras H/M</li>
+                    <li data-cat="marroquineria" data-tipo="bandoleras">Bandoleras</li>
+                    <li data-cat="marroquineria" data-tipo="bolsos">Bolsos</li>
+                    <li data-cat="marroquineria" data-tipo="ficheros">Ficheros</li>
+                    <li data-cat="marroquineria" data-tipo="morral">Morral</li>
+                    <li data-cat="marroquineria" data-tipo="riñonera">Riñonera</li>
+                    <li data-cat="marroquineria" data-tipo="mochilas">Mochilas H/M</li>
+                </ul>
+            </li>
+
+            <!-- Bijouterie con subcategorías -->
+            <li class="has-sub">
+                <span class="mobile-cat-row">
+                    <span data-cat="bijouterie">Bijouterie</span>
+                    <i class="fa-solid fa-chevron-right mobile-arrow"></i>
+                </span>
+                <ul class="mobile-submenu">
+                    <li data-cat="bijouterie" data-tipo="aros">Aros</li>
+                    <li data-cat="bijouterie" data-tipo="argollas">Argollas</li>
+                    <li data-cat="bijouterie" data-tipo="cadenas">Cadenas</li>
+                    <li data-cat="bijouterie" data-tipo="pulseras">Pulseras</li>
+                    <li data-cat="bijouterie" data-tipo="collares">Collares</li>
+                    <li data-cat="bijouterie" data-tipo="cadenas con dijes">Cadenas con Dijes</li>
+                </ul>
+            </li>
+
+            <li data-cat="piercing">Piercing</li>
+
+            <!-- Complementos con subcategorías -->
+            <li class="has-sub">
+                <span class="mobile-cat-row">
+                    <span data-cat="complementos">Complementos</span>
+                    <i class="fa-solid fa-chevron-right mobile-arrow"></i>
+                </span>
+                <ul class="mobile-submenu">
+                    <li data-cat="complementos" data-tipo="paraguas">Paraguas</li>
+                    <li data-cat="complementos" data-tipo="cajas bijou">Cajas Bijou</li>
+                    <li data-cat="complementos" data-tipo="abanicos">Abanicos</li>
+                </ul>
+            </li>
+
+            <li data-cat="pañoleria">Pañolería</li>
+
+            <!-- Artículos de Viaje con subcategorías -->
+            <li class="has-sub">
+                <span class="mobile-cat-row">
+                    <span data-cat="artículos de viaje">Artículos de Viaje</span>
+                    <i class="fa-solid fa-chevron-right mobile-arrow"></i>
+                </span>
+                <ul class="mobile-submenu">
+                    <li data-cat="artículos de viaje" data-tipo="valijas">Valijas</li>
+                </ul>
+            </li>
         </ul>
     </nav>
 
@@ -131,10 +189,56 @@
     <!-- ══════════════ CATEGORÍAS ══════════════ -->
     <nav class="categories" aria-label="Categorías de productos">
         <a href="#" data-cat="todos" class="active-cat">Todos</a>
-        <a href="#" data-cat="marroquineria">Marroquinería</a>
-        <a href="#" data-cat="bijouterie">Bijouterie</a>
-        <a href="#" data-cat="complementos">Complementos</a>
-        <a href="#" data-cat="artículos de viaje">Artículos de Viaje</a>
+
+        <!-- Marroquinería con dropdown -->
+        <div class="cat-dropdown">
+            <a href="#" data-cat="marroquineria">Marroquinería <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
+            <ul class="cat-submenu">
+                <li><a href="#" data-cat="marroquineria" data-tipo="carteras">Carteras</a></li>
+                <li><a href="#" data-cat="marroquineria" data-tipo="billeteras">Billeteras Hombre/Mujer</a></li>
+                <li><a href="#" data-cat="marroquineria" data-tipo="bandoleras">Bandoleras</a></li>
+                <li><a href="#" data-cat="marroquineria" data-tipo="bolsos">Bolsos</a></li>
+                <li><a href="#" data-cat="marroquineria" data-tipo="ficheros">Ficheros</a></li>
+                <li><a href="#" data-cat="marroquineria" data-tipo="morral">Morral</a></li>
+                <li><a href="#" data-cat="marroquineria" data-tipo="riñonera">Riñonera</a></li>
+                <li><a href="#" data-cat="marroquineria" data-tipo="mochilas">Mochilas Hombre/Mujer</a></li>
+            </ul>
+        </div>
+
+        <!-- Bijouterie con dropdown -->
+        <div class="cat-dropdown">
+            <a href="#" data-cat="bijouterie">Bijouterie <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
+            <ul class="cat-submenu">
+                <li><a href="#" data-cat="bijouterie" data-tipo="aros">Aros</a></li>
+                <li><a href="#" data-cat="bijouterie" data-tipo="argollas">Argollas</a></li>
+                <li><a href="#" data-cat="bijouterie" data-tipo="cadenas">Cadenas</a></li>
+                <li><a href="#" data-cat="bijouterie" data-tipo="pulseras">Pulseras</a></li>
+                <li><a href="#" data-cat="bijouterie" data-tipo="collares">Collares</a></li>
+                <li><a href="#" data-cat="bijouterie" data-tipo="cadenas con dijes">Cadenas con Dijes</a></li>
+            </ul>
+        </div>
+
+        <a href="#" data-cat="piercing">Piercing</a>
+
+        <!-- Complementos con dropdown -->
+        <div class="cat-dropdown">
+            <a href="#" data-cat="complementos">Complementos <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
+            <ul class="cat-submenu">
+                <li><a href="#" data-cat="complementos" data-tipo="paraguas">Paraguas</a></li>
+                <li><a href="#" data-cat="complementos" data-tipo="cajas bijou">Cajas Bijou</a></li>
+                <li><a href="#" data-cat="complementos" data-tipo="abanicos">Abanicos</a></li>
+            </ul>
+        </div>
+
+        <a href="#" data-cat="pañoleria">Pañolería</a>
+
+        <!-- Artículos de Viaje con dropdown -->
+        <div class="cat-dropdown">
+            <a href="#" data-cat="artículos de viaje">Artículos de Viaje <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
+            <ul class="cat-submenu">
+                <li><a href="#" data-cat="artículos de viaje" data-tipo="valijas">Valijas</a></li>
+            </ul>
+        </div>
     </nav>
 
     <!-- ══════════════ CATÁLOGO ══════════════ -->
