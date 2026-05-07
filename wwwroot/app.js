@@ -77,24 +77,30 @@ function _preventBgScroll(e) {
     if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar')) return;
     e.preventDefault();
 }
+function _preventWheel(e) {
+    if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar')) return;
+    e.preventDefault();
+}
 
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.body.classList.add('scroll-locked');
-    // Firefox fallback: aplicar overflow directamente sin depender de :has()
-    document.documentElement.style.overflow = 'hidden';
+    // ✅ NO tocar documentElement → el header sticky sigue funcionando
     document.body.style.overflow = 'hidden';
+    const sbw = getScrollbarWidth();
+    if (sbw > 0) document.body.style.paddingRight = sbw + 'px'; // evita el layout shift
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
+    document.addEventListener('wheel', _preventWheel, { passive: false }); // bloquea scroll desktop
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
-    // Restaurar
-    document.documentElement.style.overflow = '';
     document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+    document.removeEventListener('wheel', _preventWheel, { passive: false });
     window.scrollTo({ top: _scrollLockedAt, behavior: 'instant' });
 }
 /* ---------------- NORMALIZADOR ---------------- */
@@ -1687,8 +1693,7 @@ document.addEventListener("DOMContentLoaded", () => {
             categoriaActivaActual = catNorm || "todos";
             subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
-            document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
-            document.body.classList.remove('scroll-locked');
+            unlockScroll();
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
             setTimeout(() => { _menuCerradoRecien = false; }, 1200);
@@ -2840,7 +2845,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos extra: compartimentos, cierre, capacidad, genero,
     //                  alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
+    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas","caja porta bijou", "neceser", "gondola"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);

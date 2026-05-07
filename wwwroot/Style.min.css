@@ -130,9 +130,6 @@ body {
         overscroll-behavior-y: none;
     }
 
-html:has(body.scroll-locked) {
-    overflow: hidden;
-}
 
 main {
     flex: 1;
