@@ -852,10 +852,14 @@ categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
         if (_menuCerradoRecien) { e.preventDefault(); return; }
         e.preventDefault();
+        // Buscar el elemento con data-cat más cercano (por si el click cayó en el ícono <i>)
+        const target = e.target.closest('[data-cat]') || e.target;
         categoriaLinks.forEach(l => l.classList.remove('active-cat'));
-        e.target.classList.add('active-cat');
-        categoriaActivaActual = normalizar(e.target.dataset.cat || "todos");
-        subcategoriaActivaActual = normalizar(e.target.dataset.tipo || "");
+        // Marcar el <a> padre como activo (no el <i>)
+        const linkActivo = e.currentTarget;
+        linkActivo.classList.add('active-cat');
+        categoriaActivaActual = normalizar(target.dataset.cat || linkActivo.dataset.cat || "todos");
+        subcategoriaActivaActual = normalizar(target.dataset.tipo || linkActivo.dataset.tipo || "");
         aplicarFiltros();
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -1160,7 +1164,13 @@ const aplicarFiltros = () => {
                 p.Tipo ||
                 p.tipo || ""
             );
-            return tipo === subcategoriaActivaActual || tipo.includes(subcategoriaActivaActual);
+            // Match exacto, o el tipo del producto empieza con la subcategoría del menú,
+            // o la subcategoría del menú está contenida en el tipo del producto
+            // Esto permite que "billeteras" matchee "billeteras h/m"
+            return tipo === subcategoriaActivaActual ||
+                tipo.startsWith(subcategoriaActivaActual) ||
+                tipo.includes(subcategoriaActivaActual) ||
+                subcategoriaActivaActual.includes(tipo);
         });
     }
 
@@ -2372,6 +2382,8 @@ async function abrirEditarProducto(id) {
             document.getElementById("prodMarcaEditar").value = producto.marca;
             document.getElementById("prodTipoEditar").value = producto.tipo;
             document.getElementById("prodMaterialEditar").value = producto.material;
+            // Filtrar tipos según la categoría cargada
+            filtrarTiposPorCategoria(producto.categoria, "dlTiposEditar");
 
             const elIdCat = document.getElementById("prodIdCategoriaEditar");
             const elIdMarca = document.getElementById("prodIdMarcaEditar");
@@ -2512,8 +2524,59 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
     }
 }
 
+/* ── MAPA DE TIPOS POR CATEGORÍA ── */
+const TIPOS_POR_CATEGORIA = {
+    "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
+    "bijouterie": ["Aros", "Argollas", "Cadenas", "Pulseras", "Collares", "Cadenas con Dijes"],
+    "complementos": ["Paraguas", "Cajas Bijou", "Abanicos"],
+    "artículos de viaje": ["Valijas"],
+    "piercing": ["Piercing"],
+    "pañoleria": ["Bufandas", "Chalinas", "Cuellos", "Pashminas"]
+};
+
+function filtrarTiposPorCategoria(categoriaValor, dlId) {
+    const dl = document.getElementById(dlId);
+    if (!dl) return;
+    // Buscar coincidencia normalizada en el mapa
+    const catNorm = normalizar(categoriaValor || "");
+    let tipos = null;
+    for (const [key, vals] of Object.entries(TIPOS_POR_CATEGORIA)) {
+        if (normalizar(key) === catNorm || catNorm.includes(normalizar(key)) || normalizar(key).includes(catNorm)) {
+            tipos = vals;
+            break;
+        }
+    }
+    // Si encontramos tipos para esta categoría, reemplazar las opciones del datalist
+    if (tipos) {
+        dl.innerHTML = "";
+        tipos.forEach(t => {
+            const opt = document.createElement("option");
+            opt.value = t;
+            dl.appendChild(opt);
+        });
+    }
+    // Si no hay match (categoría nueva o no mapeada) dejamos el datalist con todos los tipos del backend
+}
+
 document.getElementById("prodCategoria")?.addEventListener("change", function () {
     actualizarIdDesdeDatalist(this, "dlCategorias", "prodIdCategoria");
+    filtrarTiposPorCategoria(this.value, "dlTipos");
+    // Limpiar el campo tipo para que el admin elija uno acorde
+    const tipoInput = document.getElementById("prodTipo");
+    if (tipoInput) tipoInput.value = "";
+    toggleFieldsByTipo("", false, "form");
+});
+
+document.getElementById("prodCategoriaEditar")?.addEventListener("change", function () {
+    filtrarTiposPorCategoria(this.value, "dlTiposEditar");
+});
+
+document.getElementById("prodCategoria")?.addEventListener("input", function () {
+    filtrarTiposPorCategoria(this.value, "dlTipos");
+});
+
+document.getElementById("prodCategoriaEditar")?.addEventListener("input", function () {
+    filtrarTiposPorCategoria(this.value, "dlTiposEditar");
 });
 
 document.getElementById("prodMarca")?.addEventListener("change", function () {
