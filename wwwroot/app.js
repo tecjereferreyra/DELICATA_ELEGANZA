@@ -77,31 +77,18 @@ function _preventBgScroll(e) {
     if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar')) return;
     e.preventDefault();
 }
-function _preventWheel(e) {
-    if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar')) return;
-    e.preventDefault();
-}
 
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.body.classList.add('scroll-locked');
-    // ✅ NO tocar documentElement → el header sticky sigue funcionando
-    document.body.style.overflow = 'hidden';
-    const sbw = getScrollbarWidth();
-    if (sbw > 0) document.body.style.paddingRight = sbw + 'px'; // evita el layout shift
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
-    document.addEventListener('wheel', _preventWheel, { passive: false }); // bloquea scroll desktop
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
-    document.removeEventListener('wheel', _preventWheel, { passive: false });
-    window.scrollTo({ top: _scrollLockedAt, behavior: 'instant' });
 }
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
@@ -725,7 +712,7 @@ function abrirModal(prod) {
         }
     }
 
- 
+
 
     /* ================= ADMIN ================= */
     const adminBox = document.getElementById("modalAdminButtons");
@@ -886,7 +873,7 @@ const COLOR_SINONIMOS = {
     "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro"],
     "naranja": ["naranja", "naranjas", "orange", "terracota"],
     "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow"],
-    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute","nude","nudes", "nutes"],
+    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes"],
 };
 
 // Genera texto extra de sinónimos para un producto dado su color
@@ -1087,7 +1074,7 @@ const PALABRAS_IGNORAR = new Set([
     "milimetros", "profundidad", "peso", "g", "diametro",
     "stock", "genero", "cantidad", "ruedas", "triple",
     "imantado", "a presion"
- 
+
 ]);
 const BUSQUEDA_ALIAS = {
     "dama": "mujer",
@@ -1105,7 +1092,7 @@ function normalizarTermino(p) {
         .replace(/os$/, "o")
         .replace(/as$/, "a")
         .replace(/([^aeiou]{2,})es$/, "$1")
-        .replace(/([^aeiou])es$/, "$1"); 
+        .replace(/([^aeiou])es$/, "$1");
 
 }
 
@@ -1164,20 +1151,20 @@ const aplicarFiltros = () => {
     }
 
 
-// 1b. Filtrar por subcategoría/tipo si hay una activa
-if (subcategoriaActivaActual !== "") {
-    base = base.filter(p => {
-        const tipo = normalizar(
-            p.Tipo?.Nombre ||
-            p.tipo?.Nombre ||
-            p.Tipo ||
-            p.tipo || ""
-        );
-        return tipo === subcategoriaActivaActual || tipo.includes(subcategoriaActivaActual);
-    });
-}
+    // 1b. Filtrar por subcategoría/tipo si hay una activa
+    if (subcategoriaActivaActual !== "") {
+        base = base.filter(p => {
+            const tipo = normalizar(
+                p.Tipo?.Nombre ||
+                p.tipo?.Nombre ||
+                p.Tipo ||
+                p.tipo || ""
+            );
+            return tipo === subcategoriaActivaActual || tipo.includes(subcategoriaActivaActual);
+        });
+    }
 
-// 2. Filtrar por búsqueda fuzzy multi-palabra (solo sobre el base ya filtrado)
+    // 2. Filtrar por búsqueda fuzzy multi-palabra (solo sobre el base ya filtrado)
     // 2. Filtrar por búsqueda fuzzy multi-palabra (solo sobre el base ya filtrado)
     if (textoBusqueda !== "") {
         base = base.filter(p => matchBusquedaFuzzy(p._camposNormalizados, textoBusqueda));
@@ -1693,7 +1680,8 @@ document.addEventListener("DOMContentLoaded", () => {
             categoriaActivaActual = catNorm || "todos";
             subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
-            unlockScroll();
+            document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+            document.body.classList.remove('scroll-locked');
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
             setTimeout(() => { _menuCerradoRecien = false; }, 1200);
@@ -2845,7 +2833,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos extra: compartimentos, cierre, capacidad, genero,
     //                  alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas","caja porta bijou", "neceser", "gondola"])) {
+    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
