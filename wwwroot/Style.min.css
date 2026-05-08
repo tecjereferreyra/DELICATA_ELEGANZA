@@ -2140,7 +2140,7 @@ footer.footer {
     }
 
     .grid-productos, .productos-container {
-        grid-template-columns: repeat(auto-fill,minmax(190px,1fr));
+        grid-template-columns: repeat(3,1fr);
         gap: 10px;
         padding: 0 15px;
         align-items: stretch
@@ -2157,7 +2157,7 @@ footer.footer {
             aspect-ratio: 1/1;
             object-fit: cover;
             min-height: 180px;
-            max-height: 220px
+            max-height: 260px
         }
 
     .modal {
@@ -2565,7 +2565,7 @@ footer.footer {
     }
 
     .modal-extra p, .modal-info-grid p {
-        font-size: .62rem;
+        font-size: .79rem;
         padding: 1px;
         min-height: 30px;
         display: flex;
@@ -2719,7 +2719,7 @@ footer.footer {
     }
 
     .modal-info-grid p {
-        font-size: .65rem;
+        font-size: .79rem;
         padding: 4px 6px;
         min-height: 28px
     }
