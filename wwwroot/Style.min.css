@@ -795,7 +795,7 @@ header.navbar .title {
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    z-index: 50
+    z-index: 600;
 }
 
     .categories a {
@@ -1746,7 +1746,9 @@ footer.footer {
     padding-top: calc(5rem + env(safe-area-inset-top));
     opacity: 0;
     transform: translateY(-20px);
-    transition: .5s cubic-bezier(.4, 0, .2, 1)
+    transition: .5s cubic-bezier(.4, 0, .2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
     .mobile-menu.active {
@@ -2778,7 +2780,8 @@ footer.footer {
 
     .modal-content {
         max-height: 94vh;
-        padding: 3px
+        padding: 3px;
+        max-width:50%;
     }
 }
 

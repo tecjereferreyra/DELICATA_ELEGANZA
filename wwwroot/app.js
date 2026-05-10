@@ -74,7 +74,7 @@ function getScrollbarWidth() {
 }
 
 function _preventBgScroll(e) {
-    if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar')) return;
+    if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar, .mobile-menu')) return;
     e.preventDefault();
 }
 
@@ -857,6 +857,7 @@ function activarBloqueoClick(ms = 600) {
 }
 function _capturarClickFantasma(e) {
     if (_bloqueoClickGlobal) {
+        if (e.target.closest('.mobile-menu, .hamburger')) return;
         e.preventDefault();
         e.stopPropagation();
     }
@@ -1665,6 +1666,12 @@ document.addEventListener("DOMContentLoaded", () => {
         hamburger.setAttribute("aria-expanded", abierto);
         mobileMenu.setAttribute("aria-hidden", !abierto);
 
+        if (abierto) {
+            document.querySelectorAll(".mobile-categories .has-sub.sub-open").forEach(i => {
+                i.classList.remove("sub-open");
+                i.querySelector(".mobile-arrow")?.classList.remove("rotated");
+            });
+        }
         // Actualizar theme-color para Safari
         const metaTheme = document.querySelector('meta[name="theme-color"]');
         if (metaTheme) {
