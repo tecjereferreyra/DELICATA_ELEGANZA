@@ -802,13 +802,10 @@ function abrirModal(prod) {
 // LÍNEA 562-566 — CAMBIAR
 const cardObserver = new IntersectionObserver(
     (entries, observer) => {
-        entries.forEach((entry, index) => {
+        entries.forEach((entry) => {
             if (entry.isIntersecting) {
-                const delay = window.innerWidth < 768 ? (index % 2) * 60 : 0;
-                setTimeout(() => {
-                    entry.target.classList.add("is-visible");
-                    observer.unobserve(entry.target);
-                }, delay);
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
             }
         });
     },
@@ -1679,8 +1676,38 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".mobile-categories .has-sub").forEach(item => {
         const row = item.querySelector(".mobile-cat-row");
         const arrow = item.querySelector(".mobile-arrow");
+        const catSpan = row?.querySelector("[data-cat]");
+
         row?.addEventListener("click", (e) => {
             e.stopPropagation();
+
+            // Si el click fue directamente sobre el texto de la categoría, filtrar
+            const clickedOnText = e.target === catSpan || catSpan?.contains(e.target);
+            const clickedOnArrow = e.target === arrow || arrow?.contains(e.target);
+
+            if (clickedOnText && !clickedOnArrow) {
+                // Aplicar filtro por categoría padre (sin subcategoría)
+                const cat = catSpan.dataset.cat;
+                if (!cat) return;
+
+                mobileMenu.classList.remove("active");
+                hamburger.setAttribute("aria-expanded", false);
+                mobileMenu.setAttribute("aria-hidden", true);
+                document.body.style.backgroundColor = '';
+
+                categoriaLinks.forEach(l => l.classList.remove('active-cat'));
+                categoriaActivaActual = normalizar(cat);
+                subcategoriaActivaActual = "";
+                _menuCerradoRecien = true;
+                document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+                document.body.classList.remove('scroll-locked');
+                aplicarFiltros();
+                window.scrollTo({ top: 0, behavior: "instant" });
+                setTimeout(() => { _menuCerradoRecien = false; }, 400);
+                return;
+            }
+
+            // Si no, toggle del submenu (flecha o área vacía de la fila)
             const isOpen = item.classList.contains("sub-open");
             document.querySelectorAll(".mobile-categories .has-sub").forEach(i => {
                 i.classList.remove("sub-open");
@@ -1723,7 +1750,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.classList.remove('scroll-locked');
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
-            setTimeout(() => { _menuCerradoRecien = false; }, 300);
+            setTimeout(() => { _menuCerradoRecien = false; }, 500);
         });
     });
     const closeBtn = document.querySelector(".menu-close");
