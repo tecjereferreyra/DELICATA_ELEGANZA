@@ -445,10 +445,10 @@ namespace DELICATA_ELEGANZA.Controllers
                 File = new FileDescription(imagen.FileName, imagen.OpenReadStream()),
                 Folder = "delicata-eleganza",
                 Transformation = new Transformation()
-                    .Width(400)
-                    .Crop("limit")
-                    .Quality(75)
-                    .FetchFormat("webp")
+    .Width(800)
+    .Crop("limit")
+    .Quality(90)
+    .FetchFormat("webp")
             };
 
             var result = await _cloudinary.UploadAsync(uploadParams);
