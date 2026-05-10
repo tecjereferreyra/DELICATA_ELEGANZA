@@ -5,9 +5,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql.EntityFrameworkCore.PostgreSQL; 
 using System.IO.Compression;
 using System.Text;
-using Npgsql.EntityFrameworkCore.PostgreSQL; 
+using CloudinaryDotNet;
 var builder = WebApplication.CreateBuilder(args);
 
 // ==========================================
@@ -109,6 +110,17 @@ builder.Services.AddAuthorization();
 // ==========================================
 // BUILD
 // ==========================================
+
+
+var cloudinaryConfig = builder.Configuration.GetSection("Cloudinary");
+var account = new Account(
+    cloudinaryConfig["CloudName"],
+    cloudinaryConfig["ApiKey"],
+    cloudinaryConfig["ApiSecret"]
+);
+var cloudinary = new Cloudinary(account);
+cloudinary.Api.Secure = true;
+builder.Services.AddSingleton(cloudinary);
 var app = builder.Build();
 
 // ==========================================

@@ -5,17 +5,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
 using System;
-using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -25,11 +21,13 @@ namespace DELICATA_ELEGANZA.Controllers
     {
         private readonly DelicataContext _context;
         private readonly IMemoryCache _cache;
+        private readonly Cloudinary _cloudinary;
 
-        public ProductosController(DelicataContext context, IMemoryCache cache)
+        public ProductosController(DelicataContext context, IMemoryCache cache, Cloudinary cloudinary)
         {
             _context = context;
             _cache = cache;
+            _cloudinary = cloudinary;
         }
 
         // ============================================================
@@ -252,19 +250,7 @@ namespace DELICATA_ELEGANZA.Controllers
             producto.id_genero = await GetOrCreateGenero(productoDto.Genero);
 
             if (imagen != null && imagen.Length > 0)
-            {
-                if (!string.IsNullOrEmpty(producto.ImagenUrl))
-                {
-                    var rutaVieja = Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        "wwwroot",
-                        producto.ImagenUrl.TrimStart('/')
-                    );
-                    if (System.IO.File.Exists(rutaVieja))
-                        System.IO.File.Delete(rutaVieja);
-                }
                 producto.ImagenUrl = await ProcesarImagenAsync(imagen);
-            }
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -358,16 +344,7 @@ namespace DELICATA_ELEGANZA.Controllers
             if (producto == null)
                 return NotFound();
 
-            if (!string.IsNullOrEmpty(producto.ImagenUrl))
-            {
-                var ruta = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    producto.ImagenUrl.TrimStart('/')
-                );
-                if (System.IO.File.Exists(ruta))
-                    System.IO.File.Delete(ruta);
-            }
+          
 
             _context.Productos.Remove(producto);
             await _context.SaveChangesAsync();
@@ -463,22 +440,23 @@ namespace DELICATA_ELEGANZA.Controllers
 
         private async Task<string> ProcesarImagenAsync(IFormFile imagen)
         {
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ImagenUrl");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var fileName = $"{Guid.NewGuid()}.webp";
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            using var image = await Image.LoadAsync(imagen.OpenReadStream());
-            image.Mutate(x => x.Resize(new ResizeOptions
+            var uploadParams = new ImageUploadParams
             {
-                Size = new Size(400, 0),
-                Mode = ResizeMode.Max
-            }));
-            await image.SaveAsync(filePath, new WebpEncoder { Quality = 75 });
+                File = new FileDescription(imagen.FileName, imagen.OpenReadStream()),
+                Folder = "delicata-eleganza",
+                Transformation = new Transformation()
+                    .Width(400)
+                    .Crop("limit")
+                    .Quality(75)
+                    .FetchFormat("webp")
+            };
 
-            return $"/ImagenUrl/{fileName}";
+            var result = await _cloudinary.UploadAsync(uploadParams);
+
+            if (result.Error != null)
+                throw new Exception("Error Cloudinary: " + result.Error.Message);
+
+            return result.SecureUrl.ToString();
         }
 
         // POST: api/Productos/5/imagenes
@@ -513,10 +491,6 @@ namespace DELICATA_ELEGANZA.Controllers
             var img = await _context.ProductoImagenes.FindAsync(idImagen);
             if (img == null) return NotFound();
 
-            var ruta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
-                                    img.Url.TrimStart('/'));
-            if (System.IO.File.Exists(ruta)) System.IO.File.Delete(ruta);
-
             _context.ProductoImagenes.Remove(img);
             await _context.SaveChangesAsync();
             return NoContent();
@@ -529,9 +503,6 @@ namespace DELICATA_ELEGANZA.Controllers
             var img = await _context.ProductoImagenes
                 .FirstOrDefaultAsync(i => i.id_producto == id && i.Url == url);
             if (img == null) return NotFound();
-
-            var ruta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", img.Url.TrimStart('/'));
-            if (System.IO.File.Exists(ruta)) System.IO.File.Delete(ruta);
 
             _context.ProductoImagenes.Remove(img);
             await _context.SaveChangesAsync();

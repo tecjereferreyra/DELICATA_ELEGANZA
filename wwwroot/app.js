@@ -3032,7 +3032,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos extra: compartimentos, cierre, capacidad, genero,
     //                  alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
+    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "riñonera","Riñonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "morral", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);

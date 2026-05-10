@@ -116,7 +116,8 @@ body, header.navbar {
 }
 
 * {
-    padding: 0
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -1739,6 +1740,7 @@ footer.footer {
     position: fixed;
     padding-bottom: env(safe-area-inset-bottom,0);
     background: #111;
+    pointer-events: none;
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -1752,6 +1754,7 @@ footer.footer {
 }
 
     .mobile-menu.active {
+        pointer-events: auto;
         visibility: visible;
         opacity: 1;
         transform: translateY(0)

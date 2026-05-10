@@ -6,6 +6,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
+		<PackageReference Include="CloudinaryDotNet" Version="1.29.1" />
 		<PackageReference Include="Dapper" Version="2.1.35" />
 		<PackageReference Include="MailKit" Version="4.14.1" />
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
