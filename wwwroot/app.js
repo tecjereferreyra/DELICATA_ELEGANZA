@@ -1452,10 +1452,10 @@ const esTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0
 
 if (modalImgContainer && !esTouchDevice) {
     let isZoomActive = false;
-    let leaveTimeout = null;
     let animFrameId = null;
     let currentX = 50, currentY = 50;
     let targetX = 50, targetY = 50;
+    let currentScale = 1, targetScale = 1;
     let cachedRect = null;
 
     function getActiveImg() {
@@ -1465,71 +1465,100 @@ if (modalImgContainer && !esTouchDevice) {
 
     function lerp(a, b, t) { return a + (b - a) * t; }
 
+    function iniciarLoop() {
+        if (!animFrameId) animFrameId = requestAnimationFrame(animateLoop);
+    }
+
     function activarZoom(clientX, clientY) {
         const img = getActiveImg();
         if (!img) return;
-        clearTimeout(leaveTimeout);
-        cachedRect = modalImgContainer.getBoundingClientRect();
+        if (!cachedRect) cachedRect = modalImgContainer.getBoundingClientRect();
         isZoomActive = true;
+        targetScale = 2.8;
         if (clientX !== undefined) {
-            currentX = ((clientX - cachedRect.left) / cachedRect.width) * 100;
-            currentY = ((clientY - cachedRect.top) / cachedRect.height) * 100;
-            targetX = currentX; targetY = currentY;
+            const x = ((clientX - cachedRect.left) / cachedRect.width) * 100;
+            const y = ((clientY - cachedRect.top) / cachedRect.height) * 100;
+            // Si viene de escala 1 (sin zoom), saltar al punto actual sin lerp
+            if (currentScale < 1.05) { currentX = x; currentY = y; }
+            targetX = Math.max(18, Math.min(82, x));
+            targetY = Math.max(10, Math.min(90, y));
         }
-        img.style.transform = "scale(2.8)";
-        if (!animFrameId) animFrameId = requestAnimationFrame(animateOrigin);
+        iniciarLoop();
     }
 
-    function desactivarZoom() {
-        const img = getActiveImg();
+    function suavizarSalida() {
         isZoomActive = false;
-        cancelAnimationFrame(animFrameId);
-        animFrameId = null;
-        cachedRect = null;
-        if (img) {
-            img.style.transformOrigin = "center";
-            clearTimeout(leaveTimeout);
-            leaveTimeout = setTimeout(() => { img.style.transform = "scale(1)"; }, 80);
-        }
+        targetScale = 1;
+        iniciarLoop();
     }
 
-    function animateOrigin() {
-        if (!isZoomActive) { animFrameId = null; return; }
+    function animateLoop() {
         const img = getActiveImg();
         if (!img) { animFrameId = null; return; }
-        currentX = lerp(currentX, targetX, 0.18);
-        currentY = lerp(currentY, targetY, 0.18);
-        img.style.transformOrigin = `${currentX.toFixed(2)}% ${currentY.toFixed(2)}%`;
-        animFrameId = requestAnimationFrame(animateOrigin);
+
+        // Scale: lento y elegante
+        currentScale = lerp(currentScale, targetScale, 0.09);
+        img.style.transform = `scale(${currentScale.toFixed(3)})`;
+
+        // Origin: solo se mueve mientras hay zoom visible
+        if (currentScale > 1.02) {
+            currentX = lerp(currentX, targetX, 0.14);
+            currentY = lerp(currentY, targetY, 0.14);
+            img.style.transformOrigin = `${currentX.toFixed(2)}% ${currentY.toFixed(2)}%`;
+        }
+
+        // Verificar convergencia
+        const scaleOk = Math.abs(currentScale - targetScale) < 0.004;
+        const originOk = Math.abs(currentX - targetX) < 0.05 && Math.abs(currentY - targetY) < 0.05;
+
+        if (scaleOk && (originOk || targetScale < 1.05)) {
+            currentScale = targetScale;
+            if (targetScale <= 1) {
+                img.style.transform = "scale(1)";
+                img.style.transformOrigin = "center";
+                cachedRect = null;
+            }
+            animFrameId = null;
+            return;
+        }
+
+        animFrameId = requestAnimationFrame(animateLoop);
     }
 
     modalImgContainer.addEventListener("mousemove", (e) => {
         const sobreFlecha = e.target.closest && e.target.closest(".carrusel-btn");
         if (sobreFlecha) {
-            if (isZoomActive) desactivarZoom();
+            // Salida suave al pasar sobre flecha
+            if (isZoomActive) suavizarSalida();
             return;
         }
-        // Re-activar zoom si el mouse viene de una flecha
-        if (!isZoomActive) activarZoom(e.clientX, e.clientY);
-        cachedRect = modalImgContainer.getBoundingClientRect();
+        if (!cachedRect) cachedRect = modalImgContainer.getBoundingClientRect();
         const rawX = ((e.clientX - cachedRect.left) / cachedRect.width) * 100;
         const rawY = ((e.clientY - cachedRect.top) / cachedRect.height) * 100;
-        // Clamp: el zoom no llega a los bordes donde están los botones
         targetX = Math.max(18, Math.min(82, rawX));
         targetY = Math.max(10, Math.min(90, rawY));
+
+        if (!isZoomActive) {
+            // Volvió de una flecha: re-activar zoom suavemente
+            activarZoom(e.clientX, e.clientY);
+        } else {
+            // Seguir moviendo el origen; reactivar loop si convergió y estaba detenido
+            iniciarLoop();
+        }
     }, { passive: true });
 
     modalImgContainer.addEventListener("mouseenter", (e) => {
         if (e.target.closest && e.target.closest(".carrusel-btn")) return;
+        cachedRect = modalImgContainer.getBoundingClientRect();
         activarZoom(e.clientX, e.clientY);
     });
 
-    modalImgContainer.addEventListener("mouseleave", (e) => {
-        desactivarZoom();
+    modalImgContainer.addEventListener("mouseleave", () => {
+        suavizarSalida();
     });
 
     window.addEventListener("resize", () => {
-        if (isZoomActive) cachedRect = modalImgContainer.getBoundingClientRect();
+        if (isZoomActive || currentScale > 1) cachedRect = modalImgContainer.getBoundingClientRect();
     }, { passive: true });
 }
 /* ---------------- INICIALIZACIÓN OPTIMIZADA ---------------- */
@@ -2537,6 +2566,8 @@ const TIPO_ALIAS_MAP = {
     "morral": "Morrales",
     "morrales": "Morrales",
     "cartera": "Carteras",
+    "cartera bolso": "Bolsos",       
+    "cartera bandolera": "Bandoleras", 
     "billetera": "Billeteras H/M",
     "billeteras": "Billeteras H/M",
     "billetera hombre": "Billeteras H/M",
@@ -2580,7 +2611,6 @@ const TIPO_ALIAS_MAP = {
     "cuello": "Cuellos",
     "pashmina": "Pashminas",
 };
-
 function normalizarTipo(valor) {
     if (!valor || !valor.trim()) return valor;
     const key = valor.trim().toLowerCase()
