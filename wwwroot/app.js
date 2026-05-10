@@ -844,21 +844,7 @@ const normalizar = texto =>
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .trim();
-let _bloqueoClickGlobal = false;
-function activarBloqueoClick(ms = 600) {
-    _bloqueoClickGlobal = true;
-    document.addEventListener('click', _capturarClickFantasma, true);
-    setTimeout(() => {
-        _bloqueoClickGlobal = false;
-        document.removeEventListener('click', _capturarClickFantasma, true);
-    }, ms);
-}
-function _capturarClickFantasma(e) {
-    if (_bloqueoClickGlobal) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-}
+
 categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
         if (_menuCerradoRecien) { e.preventDefault(); return; }
@@ -1713,12 +1699,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 categoriaActivaActual = normalizar(cat);
                 subcategoriaActivaActual = "";
                 _menuCerradoRecien = true;
-                activarBloqueoClick(600);
                 document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
                 document.body.classList.remove('scroll-locked');
                 aplicarFiltros();
                 window.scrollTo({ top: 0, behavior: "instant" });
-                setTimeout(() => { _menuCerradoRecien = false; }, 500);
+                setTimeout(() => { _menuCerradoRecien = false; }, 400);
                 return;
             }
 
@@ -1761,7 +1746,6 @@ document.addEventListener("DOMContentLoaded", () => {
             categoriaActivaActual = catNorm || "todos";
             subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
-            activarBloqueoClick(600);
             document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
             document.body.classList.remove('scroll-locked');
             aplicarFiltros();
