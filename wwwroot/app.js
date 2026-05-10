@@ -1694,7 +1694,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.classList.remove('scroll-locked');
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
-            setTimeout(() => { _menuCerradoRecien = false; }, 1200);
+            setTimeout(() => { _menuCerradoRecien = false; }, 300);
         });
     });
     const closeBtn = document.querySelector(".menu-close");
@@ -2254,7 +2254,7 @@ async function guardarNuevoProducto() {
 
         const catVal = document.getElementById("prodCategoria").value;
         const marcaVal = document.getElementById("prodMarca").value;
-        const tipoVal = document.getElementById("prodTipo").value;
+        const tipoVal = normalizarTipo(document.getElementById("prodTipo").value);
         const materialVal = document.getElementById("prodMaterial").value;
 
         const fd = new FormData();
@@ -2533,7 +2533,60 @@ const TIPOS_POR_CATEGORIA = {
     "piercing": ["Piercing"],
     "pañoleria": ["Bufandas", "Chalinas", "Cuellos", "Pashminas"]
 };
+const TIPO_ALIAS_MAP = {
+    "morral": "Morrales",
+    "morrales": "Morrales",
+    "cartera": "Carteras",
+    "billetera": "Billeteras H/M",
+    "billeteras": "Billeteras H/M",
+    "billetera hombre": "Billeteras H/M",
+    "billetera mujer": "Billeteras H/M",
+    "billetera h/m": "Billeteras H/M",
+    "billetera h m": "Billeteras H/M",
+    "bandolera": "Bandoleras",
+    "bandoleras": "Bandoleras",
+    "bolso": "Bolsos",
+    "bolsos": "Bolsos",
+    "fichero": "Ficheros",
+    "ficheros": "Ficheros",
+    "rinonera": "Riñoneras",
+    "riñonera": "Riñoneras",
+    "riñoneras": "Riñoneras",
+    "mochila": "Mochilas H/M",
+    "mochilas": "Mochilas H/M",
+    "mochila hombre": "Mochilas H/M",
+    "mochila mujer": "Mochilas H/M",
+    "mochila h/m": "Mochilas H/M",
+    "aro": "Aros",
+    "argolla": "Argollas",
+    "argollas": "Argollas",
+    "cadena": "Cadenas",
+    "cadenas": "Cadenas",
+    "pulsera": "Pulseras",
+    "pulseras": "Pulseras",
+    "collar": "Collares",
+    "collares": "Collares",
+    "cadena con dije": "Cadenas con Dijes",
+    "cadenas con dije": "Cadenas con Dijes",
+    "cadena dije": "Cadenas con Dijes",
+    "paragua": "Paraguas",
+    "caja bijou": "Cajas Bijou",
+    "cajas bijou": "Cajas Bijou",
+    "abanico": "Abanicos",
+    "abanicos": "Abanicos",
+    "valija": "Valijas",
+    "bufanda": "Bufandas",
+    "chalina": "Chalinas",
+    "cuello": "Cuellos",
+    "pashmina": "Pashminas",
+};
 
+function normalizarTipo(valor) {
+    if (!valor || !valor.trim()) return valor;
+    const key = valor.trim().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return TIPO_ALIAS_MAP[key] || valor.trim();
+}
 function filtrarTiposPorCategoria(categoriaValor, dlId) {
     const dl = document.getElementById(dlId);
     if (!dl) return;
@@ -2630,7 +2683,7 @@ async function guardarEdicionProducto() {
 
         const catVal = document.getElementById("prodCategoriaEditar").value;
         const marcaVal = document.getElementById("prodMarcaEditar").value;
-        const tipoVal = document.getElementById("prodTipoEditar").value;
+        const tipoVal = normalizarTipo(document.getElementById("prodTipoEditar").value);
         const materialVal = document.getElementById("prodMaterialEditar").value;
 
         const fd = new FormData();
