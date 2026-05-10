@@ -790,7 +790,7 @@ header.navbar .title {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
     margin: 1rem auto 2rem;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
@@ -923,9 +923,9 @@ header.navbar .title {
     border: 1px solid rgba(177,151,116,.18);
     contain: style;
     position: relative;
+    z-index: 0;
     content-visibility: auto;
     contain-intrinsic-size: 0 380px;
-    will-change: transform,opacity;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden
 }
@@ -2284,11 +2284,11 @@ footer.footer {
 
     .categories {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         overflow-x: auto;
-        justify-content: flex-start;
+        justify-content: center;
         padding: 10px 15px;
-        gap: 8px;
+        gap: 13px;
         margin-bottom: 1.5rem;
         -webkit-overflow-scrolling: touch
     }

@@ -845,6 +845,23 @@ const normalizar = texto =>
         .replace(/[\u0300-\u036f]/g, '')
         .trim();
 
+// ── Bloqueo global de clicks fantasma post-cierre de menú móvil ──
+let _bloqueoClickGlobal = false;
+function activarBloqueoClick(ms = 600) {
+    _bloqueoClickGlobal = true;
+    document.addEventListener('click', _capturarClickFantasma, true);
+    setTimeout(() => {
+        _bloqueoClickGlobal = false;
+        document.removeEventListener('click', _capturarClickFantasma, true);
+    }, ms);
+}
+function _capturarClickFantasma(e) {
+    if (_bloqueoClickGlobal) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}
+
 categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
         if (_menuCerradoRecien) { e.preventDefault(); return; }
@@ -1699,11 +1716,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 categoriaActivaActual = normalizar(cat);
                 subcategoriaActivaActual = "";
                 _menuCerradoRecien = true;
+                activarBloqueoClick(600);
                 document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
                 document.body.classList.remove('scroll-locked');
                 aplicarFiltros();
                 window.scrollTo({ top: 0, behavior: "instant" });
-                setTimeout(() => { _menuCerradoRecien = false; }, 400);
+                setTimeout(() => { _menuCerradoRecien = false; }, 500);
                 return;
             }
 
@@ -1746,6 +1764,7 @@ document.addEventListener("DOMContentLoaded", () => {
             categoriaActivaActual = catNorm || "todos";
             subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
+            activarBloqueoClick(600);
             document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
             document.body.classList.remove('scroll-locked');
             aplicarFiltros();
@@ -2593,8 +2612,8 @@ const TIPO_ALIAS_MAP = {
     "morral": "Morrales",
     "morrales": "Morrales",
     "cartera": "Carteras",
-    "cartera bolso": "Bolsos",       
-    "cartera bandolera": "Bandoleras", 
+    "cartera bolso": "Bolsos",
+    "cartera bandolera": "Bandoleras",
     "billetera": "Billeteras H/M",
     "billeteras": "Billeteras H/M",
     "billetera hombre": "Billeteras H/M",
