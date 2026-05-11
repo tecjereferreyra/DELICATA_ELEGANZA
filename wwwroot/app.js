@@ -674,7 +674,7 @@ function abrirModal(prod) {
         { id: "modalCantidadRuedas", value: prod.CantidadRuedas || prod.cantidadRuedas },
         { id: "modalFuelleExpandible", value: prod.FuelleExpandible === true ? "Sí" : prod.FuelleExpandible === false ? "No" : null },
         { id: "modalTipoCierre", value: prod.TipoCierre || prod.tipoCierre },
-        { id: "modalStock", value: prod.Stock || prod.stock },
+        { id: "modalStock", value: prod.Stock ?? prod.stock },
     ];
 
     /* ================= AJUSTES VISUALES ================= */
@@ -685,7 +685,7 @@ function abrirModal(prod) {
         if (!el) return;
         const valor = campo.value;
         const valido = valor !== null && valor !== undefined &&
-            valor !== "" && valor !== "0" && valor !== "—" &&
+            valor !== "" && valor !== "—" &&
             valor !== "null" && String(valor).trim() !== "";
 
         el.classList.remove("centrado");
