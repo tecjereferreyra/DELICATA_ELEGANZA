@@ -179,6 +179,29 @@ function initDOMCache() {
         if (e.target === domCache.modal) cerrarModalProducto();
     });
 
+    // Toggle dropdown con click/tap para tablets
+    document.querySelectorAll(".cat-dropdown").forEach(dropdown => {
+        const link = dropdown.querySelector(":scope > a");
+        link?.addEventListener("click", (e) => {
+            const submenu = dropdown.querySelector(".cat-submenu");
+            if (!submenu) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains("open");
+            document.querySelectorAll(".cat-dropdown.open").forEach(d => {
+                if (d !== dropdown) d.classList.remove("open");
+            });
+            dropdown.classList.toggle("open", !isOpen);
+        });
+    });
+
+    // Cerrar al tocar fuera
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".cat-dropdown")) {
+            document.querySelectorAll(".cat-dropdown.open")
+                .forEach(d => d.classList.remove("open"));
+        }
+    });
     // ── Botones admin: listeners únicos usando productoSeleccionado ──
     document.getElementById("btnAgregarModal")?.addEventListener("click", () => {
         cerrarModalProducto();

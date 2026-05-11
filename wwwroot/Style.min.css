@@ -423,7 +423,6 @@ header.navbar {
     z-index: 900;
     left: 0;
     right: 0;
-    isolation: isolate;
     background: rgba(17,17,17,.97);
     border-bottom: 1px solid rgba(212,175,55,.3);
     box-shadow: 0 6px 20px rgba(0,0,0,.18);
@@ -499,11 +498,11 @@ header.navbar {
         color: #fff
     }
 
-.cat-dropdown:hover .cat-submenu, .has-sub.sub-open .mobile-submenu {
+.cat-dropdown:hover .cat-submenu, .cat-dropdown.open .cat-submenu, .has-sub.sub-open .mobile-submenu {
     display: block
 }
 
-.cat-dropdown:hover .cat-arrow {
+.cat-dropdown:hover .cat-arrow, .cat-dropdown.open .cat-arrow {
     transform: rotate(180deg)
 }
 
