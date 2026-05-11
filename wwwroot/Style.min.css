@@ -795,7 +795,8 @@ header.navbar .title {
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    z-index: 600;
+    z-index: 1000; 
+    transform: translateZ(0);
 }
 
     .categories a {
@@ -860,7 +861,6 @@ header.navbar .title {
     align-items: stretch;
     width: 100%;
     max-width: 1400px;
-    content-visibility: auto;
     background-color: var(--color-fondo-principal)
 }
 
@@ -926,7 +926,6 @@ header.navbar .title {
     z-index: 0;
     content-visibility: auto;
     contain-intrinsic-size: 0 380px;
-    -webkit-backface-visibility: hidden;
     backface-visibility: hidden
 }
 

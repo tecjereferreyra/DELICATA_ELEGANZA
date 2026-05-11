@@ -1564,9 +1564,8 @@ function initZoom() {
         animFrameId = requestAnimationFrame(animateLoop);
     }
 
-    // Los listeners quedan igual, ahora sí pueden ver todas las variables
-    modalImgContainer.addEventListener("mousemove", (e) => { /* igual que antes */ });
-    modalImgContainer.addEventListener("mouseenter", (e) => { /* igual que antes */ });
+    modalImgContainer.addEventListener("mousemove", (e) => { activarZoom(e.clientX, e.clientY); });
+    modalImgContainer.addEventListener("mouseenter", (e) => { activarZoom(e.clientX, e.clientY); });
     modalImgContainer.addEventListener("mouseleave", () => { suavizarSalida(); });
     window.addEventListener("resize", () => {
         if (isZoomActive || currentScale > 1) cachedRect = modalImgContainer.getBoundingClientRect();
