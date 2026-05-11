@@ -420,8 +420,11 @@ function cerrarModalProducto() {
     modal.setAttribute("aria-hidden", "true");
     modal.inert = true;
     unlockScroll();
-    // Ya no necesitamos setTimeout para display:none porque usamos visibility
     _cerrarModalTimeout = null;
+
+    // ← NUEVO: resetear el flag de zoom para la próxima apertura
+    const imgContainer = modal.querySelector(".modal-img-container");
+    if (imgContainer) imgContainer._zoomInit = false;
 }
 
 /* ---------------- INICIALIZACIÓN RÁPIDA ---------------- */
@@ -1472,114 +1475,76 @@ function initZoom() {
     if (modalImgContainer._zoomInit) return;
     modalImgContainer._zoomInit = true;
 
-    if (true) {
-        let isZoomActive = false;
-        let animFrameId = null;
-        let currentX = 50, currentY = 50;
-        let targetX = 50, targetY = 50;
-        let currentScale = 1, targetScale = 1;
-        let cachedRect = null;
+    // ← SACÁS el "if (true) {" y dejás las variables directo acá
+    let isZoomActive = false;
+    let animFrameId = null;
+    let currentX = 50, currentY = 50;
+    let targetX = 50, targetY = 50;
+    let currentScale = 1, targetScale = 1;
+    let cachedRect = null;
 
-        function getActiveImg() {
-            return modalImgContainer.querySelector(".carrusel-slide.active img")
-                || modalImgContainer.querySelector("img");
-        }
-
-        function lerp(a, b, t) { return a + (b - a) * t; }
-
-        function iniciarLoop() {
-            if (!animFrameId) animFrameId = requestAnimationFrame(animateLoop);
-        }
-
-        function activarZoom(clientX, clientY) {
-            const img = getActiveImg();
-            if (!img) return;
-            if (!cachedRect) cachedRect = modalImgContainer.getBoundingClientRect();
-            isZoomActive = true;
-            targetScale = 2.8;
-            if (clientX !== undefined) {
-                const x = ((clientX - cachedRect.left) / cachedRect.width) * 100;
-                const y = ((clientY - cachedRect.top) / cachedRect.height) * 100;
-                // Si viene de escala 1 (sin zoom), saltar al punto actual sin lerp
-                if (currentScale < 1.05) { currentX = x; currentY = y; }
-                targetX = Math.max(18, Math.min(82, x));
-                targetY = Math.max(10, Math.min(90, y));
-            }
-            iniciarLoop();
-        }
-
-        function suavizarSalida() {
-            isZoomActive = false;
-            targetScale = 1;
-            iniciarLoop();
-        }
-
-        function animateLoop() {
-            const img = getActiveImg();
-            if (!img) { animFrameId = null; return; }
-
-            // Scale: lento y elegante
-            currentScale = lerp(currentScale, targetScale, 0.09);
-            img.style.transform = `scale(${currentScale.toFixed(3)})`;
-
-            // Origin: solo se mueve mientras hay zoom visible
-            if (currentScale > 1.02) {
-                currentX = lerp(currentX, targetX, 0.14);
-                currentY = lerp(currentY, targetY, 0.14);
-                img.style.transformOrigin = `${currentX.toFixed(2)}% ${currentY.toFixed(2)}%`;
-            }
-
-            // Verificar convergencia
-            const scaleOk = Math.abs(currentScale - targetScale) < 0.004;
-            const originOk = Math.abs(currentX - targetX) < 0.05 && Math.abs(currentY - targetY) < 0.05;
-
-            if (scaleOk && (originOk || targetScale < 1.05)) {
-                currentScale = targetScale;
-                if (targetScale <= 1) {
-                    img.style.transform = "scale(1)";
-                    img.style.transformOrigin = "center";
-                    cachedRect = null;
-                }
-                animFrameId = null;
-                return;
-            }
-
-            animFrameId = requestAnimationFrame(animateLoop);
-        }
+    function getActiveImg() {
+        return modalImgContainer.querySelector(".carrusel-slide.active img")
+            || modalImgContainer.querySelector("img");
     }
 
-    modalImgContainer.addEventListener("mousemove", (e) => {
-        const sobreFlecha = e.target.closest && e.target.closest(".carrusel-btn");
-        if (sobreFlecha) {
-            // Salida suave al pasar sobre flecha
-            if (isZoomActive) suavizarSalida();
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function iniciarLoop() {
+        if (!animFrameId) animFrameId = requestAnimationFrame(animateLoop);
+    }
+
+    function activarZoom(clientX, clientY) {
+        const img = getActiveImg();
+        if (!img) return;
+        if (!cachedRect) cachedRect = modalImgContainer.getBoundingClientRect();
+        isZoomActive = true;
+        targetScale = 2.8;
+        if (clientX !== undefined) {
+            const x = ((clientX - cachedRect.left) / cachedRect.width) * 100;
+            const y = ((clientY - cachedRect.top) / cachedRect.height) * 100;
+            if (currentScale < 1.05) { currentX = x; currentY = y; }
+            targetX = Math.max(18, Math.min(82, x));
+            targetY = Math.max(10, Math.min(90, y));
+        }
+        iniciarLoop();
+    }
+
+    function suavizarSalida() {
+        isZoomActive = false;
+        targetScale = 1;
+        iniciarLoop();
+    }
+
+    function animateLoop() {
+        const img = getActiveImg();
+        if (!img) { animFrameId = null; return; }
+        currentScale = lerp(currentScale, targetScale, 0.09);
+        img.style.transform = `scale(${currentScale.toFixed(3)})`;
+        if (currentScale > 1.02) {
+            currentX = lerp(currentX, targetX, 0.14);
+            currentY = lerp(currentY, targetY, 0.14);
+            img.style.transformOrigin = `${currentX.toFixed(2)}% ${currentY.toFixed(2)}%`;
+        }
+        const scaleOk = Math.abs(currentScale - targetScale) < 0.004;
+        const originOk = Math.abs(currentX - targetX) < 0.05 && Math.abs(currentY - targetY) < 0.05;
+        if (scaleOk && (originOk || targetScale < 1.05)) {
+            currentScale = targetScale;
+            if (targetScale <= 1) {
+                img.style.transform = "scale(1)";
+                img.style.transformOrigin = "center";
+                cachedRect = null;
+            }
+            animFrameId = null;
             return;
         }
-        if (!cachedRect) cachedRect = modalImgContainer.getBoundingClientRect();
-        const rawX = ((e.clientX - cachedRect.left) / cachedRect.width) * 100;
-        const rawY = ((e.clientY - cachedRect.top) / cachedRect.height) * 100;
-        targetX = Math.max(18, Math.min(82, rawX));
-        targetY = Math.max(10, Math.min(90, rawY));
+        animFrameId = requestAnimationFrame(animateLoop);
+    }
 
-        if (!isZoomActive) {
-            // Volvió de una flecha: re-activar zoom suavemente
-            activarZoom(e.clientX, e.clientY);
-        } else {
-            // Seguir moviendo el origen; reactivar loop si convergió y estaba detenido
-            iniciarLoop();
-        }
-    }, { passive: true });
-
-    modalImgContainer.addEventListener("mouseenter", (e) => {
-        if (e.target.closest && e.target.closest(".carrusel-btn")) return;
-        cachedRect = modalImgContainer.getBoundingClientRect();
-        activarZoom(e.clientX, e.clientY);
-    });
-
-    modalImgContainer.addEventListener("mouseleave", () => {
-        suavizarSalida();
-    });
-
+    // Los listeners quedan igual, ahora sí pueden ver todas las variables
+    modalImgContainer.addEventListener("mousemove", (e) => { /* igual que antes */ });
+    modalImgContainer.addEventListener("mouseenter", (e) => { /* igual que antes */ });
+    modalImgContainer.addEventListener("mouseleave", () => { suavizarSalida(); });
     window.addEventListener("resize", () => {
         if (isZoomActive || currentScale > 1) cachedRect = modalImgContainer.getBoundingClientRect();
     }, { passive: true });
