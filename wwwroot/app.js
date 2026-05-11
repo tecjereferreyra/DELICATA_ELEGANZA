@@ -3118,7 +3118,18 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.peso, true);
         return;
     }
-
+    // ==========================================================
+    // 🛏 ALMOHADAS / ALMOHADILLAS / CANDADOS
+    //    campos: alto, ancho, profundidad, peso, genero
+    // ==========================================================
+    if (match(["almohada", "almohadilla", "almohadin", "candado"])) {
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.prof, true);
+        setVisible(campos.peso, true);
+        setVisible(campos.genero, true);
+        return;
+    }
     // ==========================================================
     // 🟡 DEFAULT — tipo no reconocido: mostrar todos los campos
     // ==========================================================

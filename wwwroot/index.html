@@ -159,7 +159,16 @@
                 </ul>
             </li>
 
-            <li data-cat="pañoleria">Pañolería</li>
+            <li class="has-sub">
+                <span class="mobile-cat-row">
+                    <span data-cat="pañoleria">Pañolería</span>
+                    <i class="fa-solid fa-chevron-right mobile-arrow"></i>
+                </span>
+                <ul class="mobile-submenu">
+                    <li data-cat="pañoleria" data-tipo="invierno">Invierno</li>
+                    <li data-cat="pañoleria" data-tipo="verano">Verano</li>
+                </ul>
+            </li>
 
             <!-- Artículos de Viaje con subcategorías -->
             <li class="has-sub">
@@ -169,6 +178,7 @@
                 </span>
                 <ul class="mobile-submenu">
                     <li data-cat="artículos de viaje" data-tipo="valijas">Valijas</li>
+                    <li data-cat="artículos de viaje" data-tipo="complementos de viaje">Complementos de viaje</li>
                 </ul>
             </li>
         </ul>
@@ -230,13 +240,20 @@
             </ul>
         </div>
 
-        <a href="#" data-cat="pañoleria">Pañolería</a>
+        <div class="cat-dropdown">
+            <a href="#" data-cat="pañoleria">Pañolería <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
+            <ul class="cat-submenu">
+                <li><a href="#" data-cat="pañoleria" data-tipo="invierno">Invierno</a></li>
+                <li><a href="#" data-cat="pañoleria" data-tipo="verano">Verano</a></li>
+            </ul>
+        </div>
 
         <!-- Artículos de Viaje con dropdown -->
         <div class="cat-dropdown">
             <a href="#" data-cat="artículos de viaje">Artículos de Viaje <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
             <ul class="cat-submenu">
                 <li><a href="#" data-cat="artículos de viaje" data-tipo="valijas">Valijas</a></li>
+                <li><a href="#" data-cat="artículos de viaje" data-tipo="complementos de viaje">Complementos de viaje</a></li>
             </ul>
         </div>
     </nav>
