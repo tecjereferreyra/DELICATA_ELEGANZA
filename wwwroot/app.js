@@ -193,6 +193,11 @@ function initDOMCache() {
             });
             dropdown.classList.toggle("open", !isOpen);
         });
+
+        dropdown.addEventListener("mouseleave", () => {
+            dropdown.classList.remove("open");
+        });
+    
     });
 
     // Cerrar al tocar fuera
@@ -1490,7 +1495,8 @@ function openUserModalAsRegister() {
         unlockScroll();
     });
 }
-const esTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+const esTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+    && window.matchMedia('(pointer: coarse)').matches;
 
 function initZoom() {
     const modalImgContainer = document.querySelector(".modal-img-container");

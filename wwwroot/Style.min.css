@@ -2288,7 +2288,8 @@ footer.footer {
     .categories {
         display: flex;
         flex-wrap: wrap;
-        overflow-x: auto;
+        overflow-x: visible;
+        overflow-y: visible;
         justify-content: center;
         padding: 10px 15px;
         gap: 13px;
