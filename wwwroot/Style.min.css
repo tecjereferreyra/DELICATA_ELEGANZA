@@ -795,7 +795,7 @@ header.navbar .title {
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    z-index: 1000; 
+    z-index: 600; 
     transform: translateZ(0);
 }
 
