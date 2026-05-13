@@ -125,7 +125,8 @@ html {
     font-size: clamp(13px, 1.8vw, 16px);
     overflow-y: scroll;
     overflow-x: hidden;
-    scrollbar-gutter: stable
+    scrollbar-gutter: stable;
+    padding-top: env(safe-area-inset-top);
 }
 
 body {
