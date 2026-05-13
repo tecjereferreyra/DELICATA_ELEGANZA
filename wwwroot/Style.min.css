@@ -133,7 +133,7 @@ body {
     font-family: Cinzel,Poppins,sans-serif;
     color: var(--color-texto-oscuro);
     flex-direction: column;
-    padding-top: env(safe-area-inset-top)
+    padding-top: 0;
 }
 
     body.scroll-locked {
@@ -419,7 +419,7 @@ h1, h2, h3 {
 
 header.navbar {
     position: sticky;
-    top: env(safe-area-inset-top,0);
+    top: 0;
     z-index: 900;
     left: 0;
     right: 0;
@@ -429,7 +429,7 @@ header.navbar {
     justify-content: space-between;
     align-items: center;
     padding: 1.2rem 2rem;
-    padding-top: calc(1.2rem + env(safe-area-inset-top));
+    padding-top: 1.2rem;
     background-clip: padding-box;
     transition: opacity .4s
 }
