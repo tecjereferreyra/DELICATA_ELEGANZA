@@ -419,8 +419,7 @@ h1, h2, h3 {
 
 header.navbar {
     position: sticky;
-    top: env(safe-area-inset-top, 0);
-    padding-top: calc(1.2rem + env(safe-area-inset-top, 0));
+    top: 0;
     z-index: 900;
     left: 0;
     right: 0;
@@ -429,9 +428,8 @@ header.navbar {
     box-shadow: 0 6px 20px rgba(0,0,0,.18);
     justify-content: space-between;
     align-items: center;
-    padding-right: 2rem;
-    padding-bottom: 1.2rem;
-    padding-left: 2rem;
+    padding: 1.2rem 2rem;
+    padding-top: 1.2rem;
     background-clip: padding-box;
     transition: opacity .4s
 }
