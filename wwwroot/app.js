@@ -90,6 +90,33 @@ function unlockScroll() {
     document.body.classList.remove('scroll-locked');
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
 }
+(function fixStickyNavbarChromeIOS() {
+    if (!/CriOS/.test(navigator.userAgent)) return; // solo Chrome en iOS
+
+    const navbar = document.querySelector('header.navbar');
+    if (!navbar) return;
+
+    // Convertir de sticky a fixed
+    navbar.style.position = 'fixed';
+    navbar.style.top = '0';
+    navbar.style.left = '0';
+    navbar.style.right = '0';
+
+    // Compensar el espacio que el header fixed deja de ocupar
+    function syncPadding() {
+        document.body.style.paddingTop = navbar.offsetHeight + 'px';
+    }
+
+    // Esperar a que el DOM esté listo y fuentes cargadas para medir bien
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncPadding);
+    } else {
+        syncPadding();
+    }
+
+    // Re-calcular si cambia la orientación (landscape/portrait)
+    window.addEventListener('resize', syncPadding, { passive: true });
+})();
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
     return {
