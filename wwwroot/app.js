@@ -1597,8 +1597,14 @@ function initZoom() {
         animFrameId = requestAnimationFrame(animateLoop);
     }
 
-    modalImgContainer.addEventListener("mousemove", (e) => { activarZoom(e.clientX, e.clientY); });
-    modalImgContainer.addEventListener("mouseenter", (e) => { activarZoom(e.clientX, e.clientY); });
+    modalImgContainer.addEventListener("mousemove", (e) => {
+        if (e.target.closest(".carrusel-btn")) { suavizarSalida(); return; }
+        activarZoom(e.clientX, e.clientY);
+    });
+    modalImgContainer.addEventListener("mouseenter", (e) => {
+        if (e.target.closest(".carrusel-btn")) return;
+        activarZoom(e.clientX, e.clientY);
+    });
     modalImgContainer.addEventListener("mouseleave", () => { suavizarSalida(); });
     window.addEventListener("resize", () => {
         if (isZoomActive || currentScale > 1) cachedRect = modalImgContainer.getBoundingClientRect();
