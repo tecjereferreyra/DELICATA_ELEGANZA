@@ -2907,16 +2907,21 @@ footer.footer {
 }
 @media (min-width: 1400px) and (min-height: 820px) {
     .modal-content {
-        width: min(90vw, 1100px);
-        max-height: 82vh;
+        width: min(90vw, 1200px);
+        max-height: 86vh;
         display: grid;
-        grid-template-columns: 340px 1fr;
+        grid-template-columns: 450px 1fr;
         grid-template-rows: auto;
         column-gap: 24px;
         align-items: start;
         padding: 20px 28px;
     }
-
+    .carrusel-btn.next{
+        right:12px;
+    }
+    .carrusel-btn.prev{
+        left:12px;
+    }
     .modal-img-container {
         grid-column: 1;
         grid-row: 1 / 5;
@@ -2926,6 +2931,7 @@ footer.footer {
     }
 
     #modalNombre {
+        margin:20px;
         grid-column: 2;
         grid-row: 1;
     }
@@ -2934,7 +2940,7 @@ footer.footer {
         grid-column: 2;
         grid-row: 2;
         width: 100%;
-        margin: 6px 0;
+        margin: 20px 0;
     }
 
     .modal-extra {
