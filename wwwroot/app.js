@@ -91,31 +91,33 @@ function unlockScroll() {
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
 }
 (function fixStickyNavbarChromeIOS() {
-    if (!/CriOS/.test(navigator.userAgent)) return; // solo Chrome en iOS
+    if (!/CriOS/.test(navigator.userAgent)) return;
 
     const navbar = document.querySelector('header.navbar');
     if (!navbar) return;
 
-    // Convertir de sticky a fixed
     navbar.style.position = 'fixed';
     navbar.style.top = '0';
     navbar.style.left = '0';
     navbar.style.right = '0';
+    navbar.style.willChange = 'transform';
 
-    // Compensar el espacio que el header fixed deja de ocupar
     function syncPadding() {
-        document.body.style.paddingTop = navbar.offsetHeight + 'px';
+        const h = navbar.getBoundingClientRect().height;
+        document.body.style.paddingTop = h + 'px';
     }
 
-    // Esperar a que el DOM esté listo y fuentes cargadas para medir bien
+    // Solo una vez al cargar, NO en cada resize
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', syncPadding);
+        document.addEventListener('DOMContentLoaded', syncPadding, { once: true });
     } else {
         syncPadding();
     }
 
-    // Re-calcular si cambia la orientación (landscape/portrait)
-    window.addEventListener('resize', syncPadding, { passive: true });
+    // Solo en cambio de orientación (no en resize genérico que se dispara con scroll)
+    window.addEventListener('orientationchange', () => {
+        setTimeout(syncPadding, 300);
+    }, { passive: true });
 })();
 /* ---------------- NORMALIZADOR ---------------- */
 function normalizarProducto(p) {
@@ -1531,7 +1533,6 @@ function initZoom() {
     if (modalImgContainer._zoomInit) return;
     modalImgContainer._zoomInit = true;
 
-    // ← SACÁS el "if (true) {" y dejás las variables directo acá
     let isZoomActive = false;
     let animFrameId = null;
     let currentX = 50, currentY = 50;
@@ -1548,6 +1549,10 @@ function initZoom() {
 
     function iniciarLoop() {
         if (!animFrameId) animFrameId = requestAnimationFrame(animateLoop);
+    }
+
+    function esControlCarrusel(e) {
+        return e.target.closest(".carrusel-btn") || e.target.closest(".carrusel-dots") || e.target.closest(".dot");
     }
 
     function activarZoom(clientX, clientY) {
@@ -1598,11 +1603,11 @@ function initZoom() {
     }
 
     modalImgContainer.addEventListener("mousemove", (e) => {
-        if (e.target.closest(".carrusel-btn")) { suavizarSalida(); return; }
+        if (esControlCarrusel(e)) { suavizarSalida(); return; }
         activarZoom(e.clientX, e.clientY);
     });
     modalImgContainer.addEventListener("mouseenter", (e) => {
-        if (e.target.closest(".carrusel-btn")) return;
+        if (esControlCarrusel(e)) return;
         activarZoom(e.clientX, e.clientY);
     });
     modalImgContainer.addEventListener("mouseleave", () => { suavizarSalida(); });
