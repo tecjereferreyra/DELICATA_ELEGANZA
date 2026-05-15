@@ -58,7 +58,7 @@ body, header.navbar {
     src: url('/fonts/cinzel-v26-latin-regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
-    font-display: swap
+    font-display: block;
 }
 
 @font-face {
@@ -66,7 +66,7 @@ body, header.navbar {
     src: url('/fonts/cinzel-v26-latin-600.woff2') format('woff2');
     font-weight: 600;
     font-style: normal;
-    font-display: swap
+    font-display: block;
 }
 
 @font-face {
@@ -2903,5 +2903,54 @@ footer.footer {
     .search-input:hover {
         box-shadow: 0 3px 10px rgba(0,0,0,.05) !important;
         transform: none !important
+    }
+}
+@media (min-width: 1200px) and (min-height: 750px) {
+    .modal-content {
+        width: min(90vw, 1100px);
+        max-height: 82vh;
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        grid-template-rows: auto;
+        column-gap: 24px;
+        align-items: start;
+        padding: 20px 28px;
+    }
+
+    .modal-img-container {
+        grid-column: 1;
+        grid-row: 1 / 5;
+        height: clamp(260px, 55vh, 480px);
+        width: 100%;
+        align-self: center;
+    }
+
+    #modalNombre {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .modal-info-grid {
+        grid-column: 2;
+        grid-row: 2;
+        width: 100%;
+        margin: 6px 0;
+    }
+
+    .modal-extra {
+        grid-column: 2;
+        grid-row: 3;
+        width: 100%;
+        margin: 0;
+    }
+
+    .modal-buttons-wrapper {
+        grid-column: 2;
+        grid-row: 4;
+        align-self: end;
+    }
+
+    .close {
+        grid-column: 2;
     }
 }
