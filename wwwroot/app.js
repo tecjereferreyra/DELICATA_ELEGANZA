@@ -101,22 +101,29 @@ function unlockScroll() {
     navbar.style.left = '0';
     navbar.style.right = '0';
     navbar.style.willChange = 'transform';
+    navbar.style.transform = 'translateZ(0)';
 
     function syncPadding() {
+        // Forzar reflow para leer altura real con fuentes cargadas
         const h = navbar.getBoundingClientRect().height;
         document.body.style.paddingTop = h + 'px';
+        // Una vez medido, sacar willChange para no consumir memoria
+        navbar.style.willChange = 'auto';
     }
 
-    // Solo una vez al cargar, NO en cada resize
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', syncPadding, { once: true });
-    } else {
+    // Esperar a fuentes y layout completo
+    if (document.readyState === 'complete') {
         syncPadding();
+    } else {
+        window.addEventListener('load', syncPadding, { once: true });
     }
 
-    // Solo en cambio de orientación (no en resize genérico que se dispara con scroll)
+    // Solo al rotar pantalla
     window.addEventListener('orientationchange', () => {
-        setTimeout(syncPadding, 300);
+        navbar.style.willChange = 'transform';
+        setTimeout(() => {
+            syncPadding();
+        }, 400);
     }, { passive: true });
 })();
 /* ---------------- NORMALIZADOR ---------------- */
