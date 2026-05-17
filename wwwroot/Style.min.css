@@ -1919,15 +1919,16 @@ footer.footer {
 .vidriera-carousel {
     position: relative;
     width: 100%;
-    max-width: 1200px;
+    max-width: 600px;
     margin: 0 auto 1rem;
     overflow: hidden;
     border-radius: 14px;
     box-shadow: 0 4px 24px rgba(0,0,0,.18);
-    background: var(--color-fondo-principal);
+    background: #1a1410; 
     contain: layout style;
-    aspect-ratio: 16/9; 
+    aspect-ratio: 3/4; 
 }
+
 
 .vidriera-track-wrapper {
     width: 100%;
@@ -1949,14 +1950,13 @@ footer.footer {
 
     .vidriera-slide img {
         width: 100%;
-        height: 100%; 
-        object-fit: cover; 
+        height: 100%;
+        object-fit: contain; 
         object-position: center;
         display: block;
         pointer-events: none;
         user-select: none;
     }
-
 /* Botones prev/next */
 .vidriera-btn {
     position: absolute;
