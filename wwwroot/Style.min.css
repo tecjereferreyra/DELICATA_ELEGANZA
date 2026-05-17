@@ -2031,7 +2031,12 @@ footer.footer {
         font-size: .9rem;
     }
 }
-
+@media (min-width: 768px) {
+    .vidriera-carousel {
+        aspect-ratio: 16 / 6; 
+        max-width: 900px; 
+    }
+}
 @media (prefers-reduced-motion:reduce) {
     *, ::after, ::before {
         animation-duration: .5s;
@@ -3023,101 +3028,9 @@ footer.footer {
         transform: none !important
     }
 }
-@media (min-width:1400px) and (min-height:820px) {
-    .modal-img-container .carrusel-btn.next, .modal-img-container .carrusel-btn.prev {
-        position: static !important;
-        top: auto !important;
-        transform: none !important;
-        align-self: center
-    }
-
+@media (min-width: 1200px) {
     .modal-content {
-        width: min(90vw,1200px);
-        max-height: 86vh;
-        display: grid;
-        grid-template-columns: 450px 1fr;
-        grid-template-rows: auto;
-        column-gap: 24px;
-        align-items: start;
-        padding: 20px 28px
-    }
-
-    .modal-img-container {
-        grid-column: 1;
-        grid-row: 1/5;
-        height: auto;
-        width: 100%;
-        align-self: start;
-        overflow: visible
-    }
-
-        .modal-img-container .carrusel-container {
-            display: grid;
-            grid-template-rows: clamp(260px,55vh,480px) 48px;
-            grid-template-columns: 48px 1fr 48px;
-            gap: 10px 0;
-            height: auto !important;
-            width: 100%
-        }
-
-        .modal-img-container .carrusel-wrapper {
-            grid-row: 1;
-            grid-column: 1/-1;
-            height: 100%;
-            overflow: hidden;
-            border-radius: 18px
-        }
-
-        .modal-img-container .carrusel-btn.prev {
-            left: auto !important;
-            grid-row: 2;
-            grid-column: 1;
-            justify-self: center
-        }
-
-        .modal-img-container .carrusel-btn.next {
-            right: auto !important;
-            grid-row: 2;
-            grid-column: 3;
-            justify-self: center
-        }
-
-        .modal-img-container .carrusel-dots {
-            display: flex !important;
-            grid-row: 2;
-            grid-column: 2;
-            justify-content: center;
-            align-items: center;
-            visibility: visible
-        }
-
-    #modalNombre {
-        margin: 20px;
-        grid-column: 2;
-        grid-row: 1
-    }
-
-    .modal-info-grid {
-        grid-column: 2;
-        grid-row: 2;
-        width: 100%;
-        margin: 40px 0
-    }
-
-    .modal-extra {
-        grid-column: 2;
-        grid-row: 3;
-        width: 100%;
-        margin: 0
-    }
-
-    .modal-buttons-wrapper {
-        grid-column: 2;
-        grid-row: 4;
-        align-self: end
-    }
-
-    .close {
-        grid-column: 2
+        width: 75%;
+        max-width: 700px; 
     }
 }
