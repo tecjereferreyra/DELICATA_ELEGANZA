@@ -1918,7 +1918,7 @@ footer.footer {
 /* ══ CARRUSEL VIDRIERA ══ */
 .vidriera-carousel {
     position: relative;
-    width: 100%;
+    width: 90%;
     max-width: 600px;
     margin: 0 auto 1rem;
     overflow: hidden;
@@ -1927,6 +1927,7 @@ footer.footer {
     background: #1a1410; 
     contain: layout style;
     aspect-ratio: 3/4; 
+    margin:auto;
 }
 
 
@@ -2022,7 +2023,6 @@ footer.footer {
 @media (max-width: 600px) {
     .vidriera-carousel {
         border-radius: 8px;
-        margin: 0 12px .75rem;
     }
 
     .vidriera-btn {
@@ -2032,12 +2032,6 @@ footer.footer {
     }
 }
 
-@media (min-width: 601px) and (max-width: 1232px) {
-    .vidriera-carousel {
-        margin-left: 16px;
-        margin-right: 16px;
-    }
-}
 @media (prefers-reduced-motion:reduce) {
     *, ::after, ::before {
         animation-duration: .5s;
