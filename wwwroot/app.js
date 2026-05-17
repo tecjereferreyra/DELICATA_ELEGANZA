@@ -325,6 +325,61 @@ function abrirModalProducto() {
     });
 
 }
+// ══ CARRUSEL VIDRIERA ══
+(function () {
+    const TOTAL = 6;       // cantidad de fotos
+    const DELAY = 4500;    // ms entre slides
+    let current = 0;
+    let timer = null;
+    let startX = 0;
+    let isDragging = false;
+
+    const track = document.getElementById('vidreiraTrack');
+    const dotsContainer = document.getElementById('vidrieraDots');
+    const carousel = track?.closest('.vidriera-carousel');
+    if (!track || !dotsContainer) return;
+
+    // Crear dots
+    const dots = Array.from({ length: TOTAL }, (_, i) => {
+        const d = document.createElement('button');
+        d.className = 'vidriera-dot' + (i === 0 ? ' active' : '');
+        d.setAttribute('aria-label', `Foto ${i + 1}`);
+        d.addEventListener('click', () => goTo(i));
+        dotsContainer.appendChild(d);
+        return d;
+    });
+
+    function goTo(idx) {
+        current = (idx + TOTAL) % TOTAL;
+        track.style.transform = `translate3d(-${current * 100}%,0,0)`;
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    }
+
+    function next() { goTo(current + 1); }
+    function prev() { goTo(current - 1); }
+    function startAuto() { timer = setInterval(next, DELAY); }
+    function stopAuto() { clearInterval(timer); }
+
+    // Botones
+    carousel.querySelector('.vidriera-prev').addEventListener('click', () => { stopAuto(); prev(); startAuto(); });
+    carousel.querySelector('.vidriera-next').addEventListener('click', () => { stopAuto(); next(); startAuto(); });
+
+    // Pausa en hover (desktop)
+    carousel.addEventListener('mouseenter', stopAuto);
+    carousel.addEventListener('mouseleave', startAuto);
+
+    // Swipe táctil
+    carousel.addEventListener('touchstart', e => { startX = e.touches[0].clientX; isDragging = true; stopAuto(); }, { passive: true });
+    carousel.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) diff > 0 ? next() : prev();
+        isDragging = false;
+        startAuto();
+    }, { passive: true });
+
+    startAuto();
+})();
 /* ---------------- CARRUSEL MODAL ---------------- */
 let carruselActual = 0;
 function renderCarrusel(imagenes, altTexto, esParcial = false) {

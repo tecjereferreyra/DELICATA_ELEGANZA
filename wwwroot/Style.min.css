@@ -1915,7 +1915,123 @@ footer.footer {
         opacity: 1
     }
 }
+/* ══ CARRUSEL VIDRIERA ══ */
+.vidriera-carousel {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 1rem;
+    overflow: hidden;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.18);
+    aspect-ratio: 16 / 7;
+    background: #1a1a1a;
+    contain: layout style;
+}
 
+.vidriera-track-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.vidriera-track {
+    display: flex;
+    height: 100%;
+    will-change: transform;
+    transition: transform .5s cubic-bezier(.4,0,.2,1);
+}
+
+.vidriera-slide {
+    flex: 0 0 100%;
+    height: 100%;
+}
+
+    .vidriera-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+        pointer-events: none;
+        user-select: none;
+    }
+
+/* Botones prev/next */
+.vidriera-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: background .2s, opacity .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: .75;
+}
+
+    .vidriera-btn:hover {
+        background: rgba(0,0,0,.75);
+        opacity: 1;
+    }
+
+.vidriera-prev {
+    left: 10px;
+}
+
+.vidriera-next {
+    right: 10px;
+}
+
+/* Dots */
+.vidriera-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+.vidriera-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.5);
+    border: none;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+    padding: 0;
+}
+
+    .vidriera-dot.active {
+        background: #fff;
+        transform: scale(1.3);
+    }
+
+/* Mobile: más alto en pantallas angostas */
+@media (max-width: 600px) {
+    .vidriera-carousel {
+        aspect-ratio: 4 / 3;
+        border-radius: 8px;
+        margin: 0 0 .75rem;
+    }
+
+    .vidriera-btn {
+        width: 32px;
+        height: 32px;
+        font-size: .9rem;
+    }
+}
 @media (prefers-reduced-motion:reduce) {
     *, ::after, ::before {
         animation-duration: .5s;
@@ -2210,8 +2326,8 @@ footer.footer {
             height: auto;
             aspect-ratio: 1/1;
             object-fit: cover;
-            min-height: 180px;
-            max-height: 260px
+            min-height: 260px;
+            max-height: 285px;
         }
 
     .modal {

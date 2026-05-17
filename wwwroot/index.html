@@ -195,7 +195,34 @@
                inputmode="search">
         <button id="btnBuscar" class="search-btn">Buscar</button>
     </section>
-
+    <!-- ══════════════ CARRUSEL VIDRIERA ══════════════ -->
+    <section class="vidriera-carousel" aria-label="Fotos de la vidriera del local">
+        <div class="vidriera-track-wrapper">
+            <div class="vidriera-track" id="vidreiraTrack">
+                <div class="vidriera-slide">
+                    <img src="/vidriera/foto1.jpg" alt="Vidriera Delicata Eleganza" loading="eager" decoding="async" fetchpriority="high">
+                </div>
+                <div class="vidriera-slide">
+                    <img src="/vidriera/foto2.jpg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
+                </div>
+                <div class="vidriera-slide">
+                    <img src="/vidriera/foto3.jpg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
+                </div>
+                <div class="vidriera-slide">
+                    <img src="/vidriera/foto4.jpg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
+                </div>
+                <div class="vidriera-slide">
+                    <img src="/vidriera/foto5.jpg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
+                </div>
+                <div class="vidriera-slide">
+                    <img src="/vidriera/foto6.jpg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
+                </div>
+            </div>
+        </div>
+        <button class="vidriera-btn vidriera-prev" aria-label="Foto anterior">&#10094;</button>
+        <button class="vidriera-btn vidriera-next" aria-label="Foto siguiente">&#10095;</button>
+        <div class="vidriera-dots" id="vidrieraDots"></div>
+    </section>
     <!-- ══════════════ CATEGORÍAS ══════════════ -->
     <nav class="categories" aria-label="Categorías de productos">
         <a href="#" data-cat="todos" class="active-cat">Todos</a>
