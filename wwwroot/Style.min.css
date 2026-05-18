@@ -21,7 +21,8 @@ body, html {
 
     .carrusel-slide img, .product-card img {
         aspect-ratio: 1/1;
-        object-fit: cover
+        object-fit: contain;
+        background: #fff;
     }
 
 body, header.navbar {
@@ -660,7 +661,7 @@ header.navbar .title {
 
 .greeting {
     margin-right: 2px;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     font-size: 1rem
 }
 
@@ -970,7 +971,6 @@ header.navbar .title {
         border-radius: 22px 22px 0 0;
         margin-bottom: 0;
         transition: transform .3s;
-        background: #f0f0f0;
         display: block
     }
 
@@ -2200,7 +2200,7 @@ footer.footer {
 
         .product-card img {
             height: 140px;
-            object-fit: cover
+            object-fit: contain;
         }
 
         .product-card h3, .product-card p {
@@ -2333,7 +2333,7 @@ footer.footer {
             width: 100%;
             height: auto;
             aspect-ratio: 1/1;
-            object-fit: cover;
+            object-fit: contain;
             min-height: 260px;
             max-height: 285px;
         }
@@ -2476,7 +2476,7 @@ footer.footer {
         width: 100%;
         height: auto;
         aspect-ratio: 1/1;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 10px
     }
 
@@ -2739,7 +2739,7 @@ footer.footer {
         width: 100%;
         height: auto;
         aspect-ratio: 1/1;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 8px
     }
 
@@ -2777,7 +2777,7 @@ footer.footer {
     }
 
     .modal-img-container {
-        height: 128px;
+        height: 160px;
         margin-bottom: 0
     }
 
@@ -3034,6 +3034,6 @@ footer.footer {
 @media (min-width: 1200px) {
     .modal-content {
         width: 85%;
-        max-width: 800px; 
+        max-width: 1000px; 
     }
 }
