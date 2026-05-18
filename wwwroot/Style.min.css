@@ -22,7 +22,7 @@ body, html {
     .carrusel-slide img, .product-card img {
         aspect-ratio: 1/1;
         object-fit: contain;
-        background: #fff;
+        background: #fff !important;
     }
 
 body, header.navbar {
