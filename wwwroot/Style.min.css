@@ -3033,7 +3033,7 @@ footer.footer {
 }
 @media (min-width: 1200px) {
     .modal-content {
-        width: 75%;
-        max-width: 700px; 
+        width: 85%;
+        max-width: 800px; 
     }
 }
