@@ -78,16 +78,32 @@ function _preventBgScroll(e) {
     e.preventDefault();
 }
 
+function _preventWheel(e) {
+    if (e.target.closest('.modal-box, .modal-content, .user-modal-content, .mobile-menu')) return;
+    e.preventDefault();
+}
+
+const _preventKeyScroll = (e) => {
+    const scrollKeys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+    if (scrollKeys.includes(e.key) && !e.target.closest('.modal-box, .modal-content, .user-modal-content')) {
+        e.preventDefault();
+    }
+};
+
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.body.classList.add('scroll-locked');
+    document.addEventListener('wheel', _preventWheel, { passive: false });
+    document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
+    document.removeEventListener('wheel', _preventWheel);
+    document.removeEventListener('keydown', _preventKeyScroll);
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
 }
 (function fixStickyNavbarChromeIOS() {
