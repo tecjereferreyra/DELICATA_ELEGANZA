@@ -1923,10 +1923,10 @@ footer.footer {
     overflow: hidden;
     border-radius: 14px;
     box-shadow: 0 4px 24px rgba(0,0,0,.18);
-    background: #1a1410; 
+    background: var(--color-fondo-principal);
     contain: layout style;
-    aspect-ratio: 3/4; 
-    margin:auto;
+    aspect-ratio: 3/4;
+    margin: auto;
 }
 
 
@@ -2030,13 +2030,18 @@ footer.footer {
         font-size: .9rem;
     }
     .vidriera-slide img {
-        object-fit: contain;
+        object-fit: cover;
     }
 }
 @media (min-width: 768px) {
     .vidriera-carousel {
-        aspect-ratio: 16 / 9; 
-        max-width: 900px;
+        aspect-ratio: 4 / 3;
+        max-width: 1000px;
+        width: 95%;
+    }
+
+    .vidriera-slide img {
+        object-fit: contain;
     }
 }
 @media (prefers-reduced-motion:reduce) {
@@ -2080,7 +2085,7 @@ footer.footer {
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
-        gap: 10px
+        gap: 3.2px;
     }
 
     .modal-actions-row, .modal-admin-row {
@@ -2776,7 +2781,7 @@ footer.footer {
     }
 
     .modal-img-container {
-        height: 160px;
+        height: 200px;
         margin-bottom: 0
     }
 
@@ -2860,7 +2865,7 @@ footer.footer {
     }
 
     .modal-img-container {
-        height: clamp(150px, 18vw, 240px);
+        height: clamp(150px, 25vw, 350px);
         margin-bottom: 6px;
     }
 
@@ -2874,7 +2879,7 @@ footer.footer {
     }
 
     .modal-info-grid {
-        gap: 4px;
+        gap: 6px;
         margin: 5px auto;
     }
 
@@ -2936,7 +2941,7 @@ footer.footer {
 
     #modalNombre {
         font-size: 1.1rem;
-        margin-bottom: 4px
+        margin-bottom: 2px;
     }
 
     .modal-content {

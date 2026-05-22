@@ -74,7 +74,7 @@ function getScrollbarWidth() {
 }
 
 function _preventBgScroll(e) {
-    const scrollable = e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar, .mobile-menu');
+    const scrollable = e.target.closest('.modal-content, .user-modal-content, .modal-overlay, .mobile-menu');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
@@ -88,7 +88,7 @@ function _preventBgScroll(e) {
 }
 
 function _preventWheel(e) {
-    const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .mobile-menu');
+    const scrollable = e.target.closest('.modal-overlay, .modal-content, .user-modal-content, .mobile-menu');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
@@ -103,7 +103,7 @@ function _preventWheel(e) {
 
 const _preventKeyScroll = (e) => {
     const scrollKeys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
-    if (scrollKeys.includes(e.key) && !e.target.closest('.modal-box, .modal-content, .user-modal-content')) {
+    if (scrollKeys.includes(e.key) && !e.target.closest('.modal-overlay, .modal-content, .user-modal-content')) {
         e.preventDefault();
     }
 };
