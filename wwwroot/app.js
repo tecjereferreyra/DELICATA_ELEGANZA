@@ -273,7 +273,7 @@ function initDOMCache() {
         dropdown.addEventListener("mouseleave", () => {
             dropdown.classList.remove("open");
         });
-    
+
     });
 
     // Cerrar al tocar fuera
@@ -1865,8 +1865,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 subcategoriaActivaActual = "";
                 _menuCerradoRecien = true;
                 activarBloqueoClick(600);
-                document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
-                document.body.classList.remove('scroll-locked');
+                unlockScroll();
                 aplicarFiltros();
                 window.scrollTo({ top: 0, behavior: "instant" });
                 setTimeout(() => { _menuCerradoRecien = false; }, 500);
@@ -1913,8 +1912,7 @@ document.addEventListener("DOMContentLoaded", () => {
             subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
             activarBloqueoClick(600);
-            document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
-            document.body.classList.remove('scroll-locked');
+            unlockScroll();
             aplicarFiltros();
             window.scrollTo({ top: 0, behavior: "instant" });
             setTimeout(() => { _menuCerradoRecien = false; }, 500);
@@ -2542,6 +2540,7 @@ async function guardarNuevoProducto() {
 
         mostrarToast("Producto agregado correctamente ✓", "success");
         _fkCargadas = false;
+        const _savedScrollAgregar = _scrollLockedAt;
         cerrarModalCRUD("modalAgregar");
         // Recargar desde el backend para obtener nombres resueltos (Marca, Categoria, etc.)
         fetch(`/api/Productos/${nuevoId}`)
@@ -2551,6 +2550,7 @@ async function guardarNuevoProducto() {
                 recalcularCamposBusqueda(prod);
                 productosData.push(prod);
                 aplicarFiltros();
+                requestAnimationFrame(() => window.scrollTo({ top: _savedScrollAgregar, behavior: "instant" }));
             })
             .catch(() => cargarProductos(true));
 
@@ -2986,6 +2986,7 @@ async function guardarEdicionProducto() {
         window._imagenesGuardadasAEliminar = [];
         mostrarToast("Producto editado correctamente ✓", "success");
         _fkCargadas = false;
+        const _savedScrollEditar = _scrollLockedAt;
         cerrarModalCRUD("modalEditar");
         fetch(`/api/Productos/${id}`)
             .then(r => r.json())
@@ -3010,6 +3011,7 @@ async function guardarEdicionProducto() {
                 }
 
                 aplicarFiltros();
+                requestAnimationFrame(() => window.scrollTo({ top: _savedScrollEditar, behavior: "instant" }));
             })
             .catch(() => cargarProductos(true));
 
@@ -3038,6 +3040,7 @@ function confirmarEliminarProducto() {
 
     document.activeElement?.blur();
 
+    const _savedScrollEliminarProd = _scrollLockedAt;
     fetch(`${API_URL}/${idProdEliminar}`, {
         method: "DELETE"
     })
@@ -3052,6 +3055,7 @@ function confirmarEliminarProducto() {
             productosData = productosData.filter(p => p.IdProducto !== idProdEliminar);
             idProdEliminar = null;
             aplicarFiltros(); // re-renderiza con los datos ya en memoria
+            requestAnimationFrame(() => window.scrollTo({ top: _savedScrollEliminarProd, behavior: "instant" }));
         })
         .catch(err => {
             console.error("Error eliminando:", err);
@@ -3094,6 +3098,7 @@ function confirmarEliminar() {
         return;
     }
 
+    const _savedScrollEliminar = _scrollLockedAt;
     mostrarToast("Eliminando producto...", "info");
 
     fetch(`/api/Productos/${idProdEliminar}`, {
@@ -3109,6 +3114,7 @@ function confirmarEliminar() {
             productosData = productosData.filter(p => p.IdProducto !== idProdEliminar);
             idProdEliminar = null;
             aplicarFiltros();
+            requestAnimationFrame(() => window.scrollTo({ top: _savedScrollEliminar, behavior: "instant" }));
         })
         .catch(err => {
             console.error("Error eliminando:", err);
@@ -3272,9 +3278,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.genero, true);
         return;
     }
-    // ==========================================================
-    // 🟡 DEFAULT — tipo no reconocido: mostrar todos los campos
-    // ==========================================================
+
     Object.values(campos).forEach(el => setVisible(el, true));
 }
 // Mantener el servidor de Render despierto
