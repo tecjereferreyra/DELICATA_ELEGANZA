@@ -74,12 +74,30 @@ function getScrollbarWidth() {
 }
 
 function _preventBgScroll(e) {
-    if (e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar, .mobile-menu')) return;
+    const scrollable = e.target.closest('.modal-content, .user-modal-content, #modalAgregar, #modalEditar, .mobile-menu');
+    if (scrollable) {
+        const atTop = scrollable.scrollTop === 0;
+        const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
+        const touchY = e.touches ? e.touches[0].clientY : 0;
+        if ((atTop && touchY > 0) || (atBottom && touchY < 0)) {
+            e.preventDefault();
+        }
+        return;
+    }
     e.preventDefault();
 }
 
 function _preventWheel(e) {
-    if (e.target.closest('.modal-box, .modal-content, .user-modal-content, .mobile-menu')) return;
+    const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .mobile-menu');
+    if (scrollable) {
+        const atTop = scrollable.scrollTop === 0;
+        const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
+        const goingDown = e.deltaY > 0;
+        if ((goingDown && atBottom) || (!goingDown && atTop)) {
+            e.preventDefault();
+        }
+        return;
+    }
     e.preventDefault();
 }
 
@@ -90,6 +108,10 @@ const _preventKeyScroll = (e) => {
     }
 };
 
+function _restoreScroll() {
+    window.scrollTo(0, _scrollLockedAt);
+}
+
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
@@ -97,6 +119,7 @@ function lockScroll() {
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
+    window.addEventListener('scroll', _restoreScroll, { passive: true });
 }
 
 function unlockScroll() {
@@ -105,6 +128,7 @@ function unlockScroll() {
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+    window.removeEventListener('scroll', _restoreScroll);
 }
 (function fixStickyNavbarChromeIOS() {
     if (!/CriOS/.test(navigator.userAgent)) return;
@@ -343,7 +367,7 @@ function abrirModalProducto() {
 }
 // ══ CARRUSEL VIDRIERA ══
 (function () {
-    const TOTAL = 4;       // cantidad de fotos
+    const TOTAL = 3;       // cantidad de fotos
     const DELAY = 4300;    // ms entre slides
     let current = 0;
     let timer = null;
@@ -2517,6 +2541,7 @@ async function guardarNuevoProducto() {
         window._archivosExtraAgregar = [];
 
         mostrarToast("Producto agregado correctamente ✓", "success");
+        _fkCargadas = false;
         cerrarModalCRUD("modalAgregar");
         // Recargar desde el backend para obtener nombres resueltos (Marca, Categoria, etc.)
         fetch(`/api/Productos/${nuevoId}`)
@@ -2726,7 +2751,7 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 /* ── MAPA DE TIPOS POR CATEGORÍA ── */
 const TIPOS_POR_CATEGORIA = {
     "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
-    "bijouterie": ["Aros", "Argollas", "Cadenas", "Pulseras", "Collares", "Cadenas con Dijes"],
+    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas con Dijes"],
     "complementos": ["Paraguas", "Cajas Bijou", "Abanicos"],
     "artículos de viaje": ["Valijas"],
     "piercing": ["Piercing"],
@@ -2960,6 +2985,7 @@ async function guardarEdicionProducto() {
         }
         window._imagenesGuardadasAEliminar = [];
         mostrarToast("Producto editado correctamente ✓", "success");
+        _fkCargadas = false;
         cerrarModalCRUD("modalEditar");
         fetch(`/api/Productos/${id}`)
             .then(r => r.json())
