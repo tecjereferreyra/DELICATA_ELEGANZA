@@ -1456,16 +1456,16 @@ header.navbar .title {
 .modal-box {
     width: 94%;
     max-width: 860px;
-    max-height: none; 
-    overflow-y: visible; 
-    background: linear-gradient(180deg,#fefdfb,#faf4ea);
+    max-height: 90dvh; 
+    overflow-y: auto; 
+    background: linear-gradient(180deg, #fefdfb, #faf4ea);
     border-radius: 22px;
     padding: 22px 30px;
     box-shadow: 0 10px 35px rgba(0,0,0,.22);
     transition: transform .55s cubic-bezier(.16, 1, .3, 1), opacity .55s;
     transform: translateY(25px) scale(.97);
     opacity: 0;
-    margin: auto 0; 
+    margin: auto 0;
 }
 
 .modal-overlay.active .modal-box, .modal-overlay.active .modal-content {
@@ -1739,7 +1739,11 @@ footer.footer {
 
 .mobile-menu {
     position: fixed;
-    padding-bottom: env(safe-area-inset-bottom,0);
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    height: 100dvh; 
+    padding-bottom: env(safe-area-inset-bottom, 0);
     background: #111;
     pointer-events: none;
     z-index: 1000;
@@ -1947,15 +1951,15 @@ footer.footer {
     flex: 0 0 100%;
     height: 100%;
 }
-
     .vidriera-slide img {
         width: 100%;
         height: 100%;
-        object-fit: cover; 
+        object-fit: cover;
         object-position: center;
         display: block;
         pointer-events: none;
         user-select: none;
+        border-radius: 14px; 
     }
 /* Botones prev/next */
 .vidriera-btn {
