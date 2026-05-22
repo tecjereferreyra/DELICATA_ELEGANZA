@@ -368,7 +368,7 @@ function abrirModalProducto() {
 // ══ CARRUSEL VIDRIERA ══
 (function () {
     const TOTAL = 3;       // cantidad de fotos
-    const DELAY = 4300;    // ms entre slides
+    const DELAY = 5000;    // ms entre slides
     let current = 0;
     let timer = null;
     let startX = 0;
