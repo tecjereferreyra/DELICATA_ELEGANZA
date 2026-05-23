@@ -1456,8 +1456,8 @@ header.navbar .title {
 .modal-box {
     width: 94%;
     max-width: 860px;
-    max-height: 90dvh; 
-    overflow-y: auto; 
+    max-height: 90dvh;
+    overflow-y: auto;
     background: linear-gradient(180deg, #fefdfb, #faf4ea);
     border-radius: 22px;
     padding: 22px 30px;
@@ -1466,6 +1466,7 @@ header.navbar .title {
     transform: translateY(25px) scale(.97);
     opacity: 0;
     margin: auto 0;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.active .modal-box, .modal-overlay.active .modal-content {
@@ -1926,7 +1927,6 @@ footer.footer {
     margin: 0 auto 1rem;
     overflow: hidden;
     border-radius: 14px;
-    box-shadow: 0 4px 24px rgba(0,0,0,.18);
     background: var(--color-fondo-principal);
     contain: layout style;
     aspect-ratio: 3/4;
@@ -2035,6 +2035,7 @@ footer.footer {
     }
     .vidriera-slide img {
         object-fit: contain;
+        border-radius: 8px;
     }
 }
 @media (min-width: 768px) {
@@ -2046,6 +2047,7 @@ footer.footer {
 
     .vidriera-slide img {
         object-fit: contain;
+        border-radius: 14px;
     }
 }
 @media (prefers-reduced-motion:reduce) {
@@ -2522,9 +2524,13 @@ footer.footer {
 
     header.navbar {
         padding: .8rem 1rem;
-        justify-content: center
+        justify-content: center;
+        position: fixed; 
+        top: 0;
+        left: 0;
+        right: 0; 
+        z-index: 900;
     }
-
     .user-box {
         position: absolute;
         right: 16px;

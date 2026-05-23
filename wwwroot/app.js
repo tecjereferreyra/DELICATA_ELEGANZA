@@ -73,13 +73,22 @@ function getScrollbarWidth() {
     return window.innerWidth - document.documentElement.clientWidth;
 }
 
+
+let _touchStartY = 0;
+
+
+document.addEventListener('touchstart', (e) => {
+    _touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
 function _preventBgScroll(e) {
-    const scrollable = e.target.closest('.modal-content, .user-modal-content, .modal-overlay, .mobile-menu');
+    const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .modal-overlay, .mobile-menu');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
-        const touchY = e.touches ? e.touches[0].clientY : 0;
-        if ((atTop && touchY > 0) || (atBottom && touchY < 0)) {
+  
+        const deltaY = _touchStartY - e.touches[0].clientY;
+        if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
             e.preventDefault();
         }
         return;
@@ -88,7 +97,7 @@ function _preventBgScroll(e) {
 }
 
 function _preventWheel(e) {
-    const scrollable = e.target.closest('.modal-overlay, .modal-content, .user-modal-content, .mobile-menu');
+    const scrollable = e.target.closest('.modal-box, .modal-overlay, .modal-content, .user-modal-content, .mobile-menu');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
@@ -130,40 +139,38 @@ function unlockScroll() {
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
     window.removeEventListener('scroll', _restoreScroll);
 }
-(function fixStickyNavbarChromeIOS() {
-    if (!/CriOS/.test(navigator.userAgent)) return;
+(function fixNavbarMobile() {
+    // Solo aplicar en pantallas mobile (767px o menos)
+    if (window.innerWidth > 767) return;
 
     const navbar = document.querySelector('header.navbar');
     if (!navbar) return;
 
-    navbar.style.position = 'fixed';
-    navbar.style.top = '0';
-    navbar.style.left = '0';
-    navbar.style.right = '0';
+    // Forzar GPU layer para evitar el parpadeo en Safari iOS
     navbar.style.willChange = 'transform';
     navbar.style.transform = 'translateZ(0)';
+    navbar.style.webkitTransform = 'translateZ(0)';
 
     function syncPadding() {
-        // Forzar reflow para leer altura real con fuentes cargadas
         const h = navbar.getBoundingClientRect().height;
         document.body.style.paddingTop = h + 'px';
-        // Una vez medido, sacar willChange para no consumir memoria
         navbar.style.willChange = 'auto';
     }
 
-    // Esperar a fuentes y layout completo
     if (document.readyState === 'complete') {
         syncPadding();
     } else {
         window.addEventListener('load', syncPadding, { once: true });
     }
 
-    // Solo al rotar pantalla
     window.addEventListener('orientationchange', () => {
         navbar.style.willChange = 'transform';
-        setTimeout(() => {
-            syncPadding();
-        }, 400);
+        setTimeout(() => { syncPadding(); }, 400);
+    }, { passive: true });
+
+    // Recalcular si cambia el tamaño de pantalla (teclado virtual, etc.)
+    window.addEventListener('resize', () => {
+        if (window.innerWidth <= 767) syncPadding();
     }, { passive: true });
 })();
 /* ---------------- NORMALIZADOR ---------------- */
