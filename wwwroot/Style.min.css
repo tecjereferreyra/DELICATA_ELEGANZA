@@ -244,7 +244,74 @@ input::placeholder {
     transform: translateX(-50%);
     content: ""
 }
+/* ══ COLOR SWATCHES MODAL ══ */
+.modal-color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 8px 10px 4px;
+    padding: 10px 14px;
+    background: #faf6f1;
+    border: 1px solid rgba(177, 151, 116, .45);
+    border-radius: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
 
+    .modal-color-swatches::before {
+        content: "Color:";
+        font-family: Cinzel, serif;
+        font-size: .82rem;
+        font-weight: 600;
+        color: #2a2a2a;
+        margin-right: 4px;
+        white-space: nowrap;
+    }
+
+.color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(177, 151, 116, .4);
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    position: relative;
+    flex-shrink: 0;
+}
+
+    .color-swatch:hover {
+        transform: scale(1.15);
+        box-shadow: 0 3px 10px rgba(0,0,0,.2);
+    }
+
+    .color-swatch.activo {
+        border-color: var(--color-marca-oro);
+        box-shadow: 0 0 0 3px rgba(177, 151, 116, .35);
+        transform: scale(1.1);
+    }
+
+    .color-swatch[title]::after {
+        content: attr(title);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #111;
+        color: #fff;
+        font-size: .72rem;
+        font-family: Poppins, sans-serif;
+        padding: 3px 8px;
+        border-radius: 6px;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity .2s;
+        z-index: 10;
+    }
+
+    .color-swatch:hover::after {
+        opacity: 1;
+    }
 .modal-img-container .carrusel-slide {
     display: none;
     height: 100%;

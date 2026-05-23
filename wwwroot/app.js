@@ -943,14 +943,15 @@ function abrirModal(prod) {
         }, { signal: btnCarrito._abortCarrito.signal });
     }
 
-    // Abrir el modal DESPUÉS de armar todo el contenido,
-    // así el fade-in del modal cubre cualquier re-render del carrusel
+   
     if (prod._imagenesCache) {
         // Ya tenemos todas las imágenes en caché: renderizar directo y abrir
         renderCarrusel(prod._imagenesCache, safeText(prod.Nombre || prod.nombre));
+        renderSwatchesColor(prod); 
         abrirModalProducto();
     } else {
         renderCarrusel([imagenPrincipal], safeText(prod.Nombre || prod.nombre), true);
+        renderSwatchesColor(prod);   // ← AGREGAR
         abrirModalProducto();
         const idAbierto = prod.IdProducto; // ← línea nueva
         fetch(`/api/Productos/${prod.IdProducto}`)
@@ -1067,8 +1068,85 @@ const COLOR_SINONIMOS = {
     "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow"],
     "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes"],
 };
+const COLOR_CSS = {
+    "negro": "#111", "negra": "#111", "negras": "#111", "negros": "#111",
+    "blanco": "#f5f5f5", "blanca": "#f5f5f5", "marfil": "#fffff0", "crema": "#fffdd0",
+    "rojo": "#d32f2f", "roja": "#d32f2f", "bordo": "#7b1f2e", "bordeau": "#7b1f2e",
+    "azul": "#1565c0", "marino": "#0d2b6b", "celeste": "#64b5f6", "navy": "#0d2b6b",
+    "verde": "#2e7d32", "oliva": "#6b6b2a", "militar": "#4a5240", "kaki": "#8b8040",
+    "marron": "#6d4c41", "café": "#6d4c41", "tabaco": "#7a5230", "cognac": "#9b5e28",
+    "camel": "#c19a6b", "cuero": "#8b5a2b",
+    "rosa": "#f48fb1", "fucsia": "#c2185b", "salmon": "#ff8a65",
+    "lila": "#ba68c8", "violeta": "#7e57c2", "morado": "#6a1b9a",
+    "gris": "#757575", "plata": "#b0bec5", "plateado": "#b0bec5",
+    "dorado": "#c9a84c", "oro": "#c9a84c",
+    "naranja": "#ef6c00", "terracota": "#c0522a",
+    "amarillo": "#f9a825", "ocre": "#cc8800",
+    "beige": "#d4b896", "nude": "#d4b49c", "arena": "#c2a882",
+    "multicolor": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
+};
 
-// Genera texto extra de sinónimos para un producto dado su color
+function colorACSS(nombreColor) {
+    if (!nombreColor || nombreColor === "—") return "#ccc";
+    const norm = nombreColor.toLowerCase().trim();
+    // Buscar coincidencia directa
+    if (COLOR_CSS[norm]) return COLOR_CSS[norm];
+    // Buscar si alguna clave está contenida en el nombre
+    for (const [key, val] of Object.entries(COLOR_CSS)) {
+        if (norm.includes(key)) return val;
+    }
+    return "#ccc"; // fallback gris neutro
+}
+function renderSwatchesColor(prodActual) {
+    const swatchBox = document.getElementById("modalColorSwatches");
+    if (!swatchBox) return;
+
+    // Buscar variantes: mismo Nombre Y mismo Modelo
+    const nombreNorm = normalizar(prodActual.Nombre || "");
+    const modeloNorm = normalizar(prodActual.Modelo || "");
+
+    const variantes = productosData.filter(p =>
+        normalizar(p.Nombre || "") === nombreNorm &&
+        normalizar(p.Modelo || "") === modeloNorm
+    );
+
+    // Si solo hay una variante (este mismo producto), ocultar swatches
+    if (variantes.length <= 1) {
+        swatchBox.style.display = "none";
+        swatchBox.innerHTML = "";
+        return;
+    }
+
+    swatchBox.style.display = "flex";
+    swatchBox.innerHTML = "";
+
+    variantes.forEach(variante => {
+        const colorNombre = variante.Color || variante.color || "—";
+        const colorCSS = colorACSS(colorNombre);
+        const esActivo = variante.IdProducto === prodActual.IdProducto;
+
+        const swatch = document.createElement("button");
+        swatch.className = "color-swatch" + (esActivo ? " activo" : "");
+        swatch.title = colorNombre;
+        swatch.setAttribute("aria-label", `Color ${colorNombre}`);
+        swatch.setAttribute("type", "button");
+
+        // Soporte para gradiente (multicolor)
+        if (colorCSS.startsWith("linear-gradient")) {
+            swatch.style.background = colorCSS;
+        } else {
+            swatch.style.background = colorCSS;
+        }
+
+        // Al hacer click, abrir ese producto en el modal
+        swatch.addEventListener("click", () => {
+            if (variante.IdProducto === productoSeleccionado?.IdProducto) return;
+            abrirModal(variante);
+        });
+
+        swatchBox.appendChild(swatch);
+    });
+}
 function expandirConSinonimos(color) {
     if (!color || color === "—") return "";
     const colorNorm = normalizar(color);
