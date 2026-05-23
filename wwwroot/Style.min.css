@@ -124,8 +124,6 @@ body, header.navbar {
 html {
     scroll-behavior: auto;
     font-size: clamp(13px, 1.8vw, 16px);
-    overflow-y: scroll;
-    scrollbar-gutter: stable;
 }
 
 body {
@@ -134,7 +132,9 @@ body {
     color: var(--color-texto-oscuro);
     flex-direction: column;
     padding-top: 0;
-    overflow-x: clip; 
+    overflow-x: clip;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
 }
 
 main {
@@ -2524,13 +2524,9 @@ footer.footer {
 
     header.navbar {
         padding: .8rem 1rem;
-        justify-content: center;
-        position: fixed; 
-        top: 0;
-        left: 0;
-        right: 0; 
-        z-index: 900;
+        justify-content: center
     }
+
     .user-box {
         position: absolute;
         right: 16px;
