@@ -1067,6 +1067,7 @@ const COLOR_SINONIMOS = {
     "naranja": ["naranja", "naranjas", "orange", "terracota"],
     "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow"],
     "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes"],
+    "acero": ["acero", "acero inoxidable", "plateado", "plata", "steel"],
 };
 const COLOR_CSS = {
     "negro": "#111", "negra": "#111", "negras": "#111", "negros": "#111",
@@ -1172,12 +1173,13 @@ function recalcularCamposBusqueda(prod) {
     const diamStr = prod.Diametro && prod.Diametro !== "—" ? String(prod.Diametro) : null;
 
     // Indexar cada color por separado (ej: "verde/negro" → "verde" y "negro")
-    const coloresPartes = prod.Color && prod.Color !== "—"
-        ? prod.Color.split(/[\/,]/).map(c => c.trim()).filter(Boolean)
-        : [];
+    // Color como frase completa (no partir en tokens para evitar falsos positivos)
+    const colorNorm = prod.Color && prod.Color !== "—"
+        ? normalizar(prod.Color.replace(/-/g, " "))
+        : "";
 
     prod._camposNormalizados = [
-        prod.Nombre, prod.Modelo, prod.Color, ...coloresPartes,
+        prod.Nombre, prod.Modelo, colorNorm,
         prod.Marca, prod.Material, prod.Tipo,
         prod.Capacidad, prod.Categoria,
         prod.Genero, prod.TipoCierre,
@@ -1204,7 +1206,8 @@ function recalcularCamposBusqueda(prod) {
         diamStr ? diamStr + "mm" : null,
         diamStr ? diamStr + " mm" : null,
         altoStr, anchoStr, profStr, pesoStr, diamStr,
-        // ← expandirConSinonimos ELIMINADO: causaba falsos positivos de color
+        // Sinónimos solo para material (no color, para evitar falsos positivos)
+        prod.Material && prod.Material !== "—" ? expandirConSinonimos(prod.Material) : null,
     ].filter(v => v && v !== "—" && v !== "null" && String(v).trim() !== "")
         .join(" ")
         .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/-/g, " ");
@@ -1238,9 +1241,13 @@ async function cargarProductos(forzar = false) {
     isLoadingProductos = true;
 
     try {
-        // ── Mostrar caché local inmediatamente si existe ──
         const cacheKey = "delicata_productos_v1";
-        const cachedRaw = !forzar && localStorage.getItem(cacheKey);
+        const cacheTsKey = "delicata_productos_ts";
+        const MAX_AGE = 5 * 60 * 1000; // 5 minutos
+        const ahora = Date.now();
+        const ts = parseInt(localStorage.getItem(cacheTsKey) || "0");
+        const cacheVigente = !forzar && (ahora - ts) < MAX_AGE && !!localStorage.getItem(cacheKey);
+        const cachedRaw = cacheVigente ? localStorage.getItem(cacheKey) : null;
 
         if (cachedRaw) {
             try {
@@ -1271,6 +1278,7 @@ async function cargarProductos(forzar = false) {
         // Guardar en localStorage para la próxima visita
         try {
             localStorage.setItem(cacheKey, JSON.stringify(nuevos));
+            localStorage.setItem(cacheTsKey, String(Date.now()));
         } catch (e) {
             // localStorage lleno — no es crítico
         }
