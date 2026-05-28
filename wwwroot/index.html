@@ -68,6 +68,97 @@
                 animation: none;
             }
         }
+        /* ── Cola de productos ── */
+        .cola-header {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .cola-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .cola-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border: 1px solid rgba(0,0,0,.1);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+
+        .cola-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 1px solid rgba(0,0,0,.2);
+        }
+
+        .cola-nombre {
+            font-weight: 600;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cola-color {
+            color: #555;
+            font-size: 12px;
+        }
+
+        .cola-stock {
+            color: #888;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .cola-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+        }
+
+        .cola-btn-editar,
+        .cola-btn-quitar {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: background .15s;
+        }
+
+            .cola-btn-editar:hover {
+                background: rgba(0,0,0,.08);
+            }
+
+            .cola-btn-quitar:hover {
+                background: rgba(220,38,38,.12);
+            }
+        /* Botón "+ Agregar a la cola" */
+        .btn-cola {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 2px solid var(--color-marca-oro, #c9a84c);
+            background: transparent;
+            color: var(--color-marca-oro, #c9a84c);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background .15s, color .15s;
+        }
+
+            .btn-cola:hover {
+                background: var(--color-marca-oro, #c9a84c);
+                color: #fff;
+            }
     </style>
 </head>
 <body>
@@ -129,7 +220,7 @@
                     <i class="fa-solid fa-chevron-right mobile-arrow"></i>
                 </span>
                 <ul class="mobile-submenu">
-                    
+
                     <li data-cat="bijouterie" data-tipo="aros">Aros</li>
                     <li data-cat="bijouterie" data-tipo="cadenas">Cadenas</li>
                     <li data-cat="bijouterie" data-tipo="cadenas con dijes">Cadenas con Dijes</li>
@@ -213,7 +304,7 @@
         <div class="cat-dropdown">
             <a href="#" data-cat="bijouterie">Bijouterie <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
             <ul class="cat-submenu">
-               
+
                 <li><a href="#" data-cat="bijouterie" data-tipo="aros">Aros</a></li>
                 <li><a href="#" data-cat="bijouterie" data-tipo="cadenas">Cadenas</a></li>
                 <li><a href="#" data-cat="bijouterie" data-tipo="cadenas con dijes">Cadenas con Dijes</a></li>
@@ -271,7 +362,7 @@
                 <div class="vidriera-slide">
                     <img src="/Vidriera/Foto3.jpeg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
                 </div>
-                
+
             </div>
         </div>
         <button class="vidriera-btn vidriera-prev" aria-label="Foto anterior">&#10094;</button>
@@ -363,7 +454,10 @@
                 </div>
                 <div class="col">
                     <label>Color</label>
-                    <input id="prodColor" name="color" type="text" required>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <span id="colorSwatchPreviewAgregar" style="display:none;width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.2);flex-shrink:0;"></span>
+                        <input id="prodColor" name="color" type="text" placeholder="Ej: rojo, verde, vison…" style="flex:1;">
+                    </div>
                 </div>
                 <div class="col">
                     <label>Categoría</label>
@@ -460,8 +554,12 @@
             </form>
 
 
-            <div class="modal-buttons">
+            <!-- Cola de productos -->
+            <div id="colaProductosAgregar" style="display:none;margin:0 0 12px;padding:12px 16px;background:rgba(0,0,0,.04);border-radius:8px;border:1px solid rgba(0,0,0,.08);"></div>
+
+            <div class="modal-buttons" style="flex-wrap:wrap;gap:8px;">
                 <button class="btn-cancel" onclick="resetFormAndClose('modalAgregar','formAgregar')">Cancelar</button>
+                <button type="button" class="btn-cola" onclick="agregarProductoACola()">+ Agregar a la cola</button>
                 <button class="btn-save" onclick="guardarNuevoProducto()">Guardar</button>
             </div>
         </div>

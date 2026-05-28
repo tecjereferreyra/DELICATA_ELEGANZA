@@ -86,7 +86,7 @@ function _preventBgScroll(e) {
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
-  
+
         const deltaY = _touchStartY - e.touches[0].clientY;
         if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
             e.preventDefault();
@@ -97,7 +97,7 @@ function _preventBgScroll(e) {
 }
 
 function _preventWheel(e) {
- const scrollable = e.target.closest('.modal-box, .modal-overlay, .modal-content, .user-modal-content, .mobile-menu');
+    const scrollable = e.target.closest('.modal-box, .modal-overlay, .modal-content, .user-modal-content, .mobile-menu');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
@@ -943,11 +943,11 @@ function abrirModal(prod) {
         }, { signal: btnCarrito._abortCarrito.signal });
     }
 
-   
+
     if (prod._imagenesCache) {
         // Ya tenemos todas las imágenes en caché: renderizar directo y abrir
         renderCarrusel(prod._imagenesCache, safeText(prod.Nombre || prod.nombre));
-        renderSwatchesColor(prod); 
+        renderSwatchesColor(prod);
         abrirModalProducto();
     } else {
         renderCarrusel([imagenPrincipal], safeText(prod.Nombre || prod.nombre), true);
@@ -1083,18 +1083,25 @@ const COLOR_CSS = {
     "naranja": "#ef6c00", "terracota": "#c0522a",
     "amarillo": "#f9a825", "ocre": "#cc8800",
     "beige": "#d4b896", "nude": "#d4b49c", "arena": "#c2a882",
+    "vison": "#c4a882", "bisón": "#c4a882", "bison": "#c4a882",
+    "tiza": "#f0ece4", "perla": "#f0e8d8", "champagne": "#f5e6c8",
     "multicolor": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
 };
 
 function colorACSS(nombreColor) {
     if (!nombreColor || nombreColor === "—") return "#ccc";
-    const norm = nombreColor.toLowerCase().trim();
+    // Si hay múltiples colores separados por / o coma, usar el primero para el swatch
+    const primero = nombreColor.split(/[\/,]/).map(c => c.trim()).filter(Boolean)[0] || nombreColor;
+    const norm = primero.toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     // Buscar coincidencia directa
     if (COLOR_CSS[norm]) return COLOR_CSS[norm];
     // Buscar si alguna clave está contenida en el nombre
     for (const [key, val] of Object.entries(COLOR_CSS)) {
         if (norm.includes(key)) return val;
     }
+    // Intentar usar el valor directamente como color CSS válido (ej: "teal", "coral")
+    if (typeof CSS !== "undefined" && CSS.supports && CSS.supports("color", norm)) return norm;
     return "#ccc"; // fallback gris neutro
 }
 function renderSwatchesColor(prodActual) {
@@ -1164,8 +1171,13 @@ function recalcularCamposBusqueda(prod) {
     const pesoStr = prod.Peso && prod.Peso !== "—" ? String(prod.Peso) : null;
     const diamStr = prod.Diametro && prod.Diametro !== "—" ? String(prod.Diametro) : null;
 
+    // Indexar cada color por separado (ej: "verde/negro" → "verde" y "negro")
+    const coloresPartes = prod.Color && prod.Color !== "—"
+        ? prod.Color.split(/[\/,]/).map(c => c.trim()).filter(Boolean)
+        : [];
+
     prod._camposNormalizados = [
-        prod.Nombre, prod.Modelo, prod.Color,
+        prod.Nombre, prod.Modelo, prod.Color, ...coloresPartes,
         prod.Marca, prod.Material, prod.Tipo,
         prod.Capacidad, prod.Categoria,
         prod.Genero, prod.TipoCierre,
@@ -1392,6 +1404,7 @@ const CATEGORIAS_MAP = {
 const aplicarFiltros = () => {
     const textoBusqueda = normalizarBusqueda(   // ← envolver con esta función
         normalizar(domCache.searchInput?.value || "")
+            .replace(/[\/,]+/g, " ")   // tratar / y , como separadores de palabra
             .replace(/-/g, " ")
             .replace(/\balt\.?\b/gi, "alto")
             .replace(/\blrg\.?\b/gi, "largo")
@@ -2469,11 +2482,185 @@ function getDataIdFromDatalist(datalistId, selectedValue) {
     return option.dataset.id;
 }
 
+// ══ COLA DE PRODUCTOS ══
+// Cada entrada es un snapshot completo de los campos del formulario
+window._colaProductos = [];
+
+/* ─── Leer snapshot del formulario actual ─── */
+function _leerSnapshotFormulario() {
+    const val = id => document.getElementById(id)?.value?.trim() ?? "";
+    const checked = id => document.getElementById(id)?.checked ?? false;
+    // Imagen principal (File object si se seleccionó, null si no)
+    const imgInput = document.getElementById("prodImagen");
+    const archivo = imgInput && imgInput.files[0] ? imgInput.files[0] : null;
+    // Imágenes extra
+    const archivosExtra = [...(window._archivosExtraAgregar || [])].filter(Boolean);
+
+    return {
+        Nombre: val("prodNombre"),
+        Modelo: val("prodModelo"),
+        Color: val("prodColor"),
+        Categoria: val("prodCategoria"),
+        Marca: val("prodMarca"),
+        Tipo: val("prodTipo"),
+        Material: val("prodMaterial"),
+        Compartimentos: val("prodCompartimentos"),
+        Capacidad: val("prodCapacidad"),
+        Alto: val("prodAlto"),
+        Ancho: val("prodAncho"),
+        Profundidad: val("prodProfundidad"),
+        Peso: val("prodPeso"),
+        Genero: val("prodGenero"),
+        Diametro: val("prodDiametro"),
+        CantidadRuedas: val("prodCantidadRuedas"),
+        TipoCierre: val("prodTipoCierre"),
+        FuelleExpandible: checked("prodFuelleExpandible"),
+        Stock: val("prodStock"),
+        _archivo: archivo,
+        _archivosExtra: archivosExtra,
+        // Snapshot de qué columnas eran visibles (para validación)
+        _tipoNombre: val("prodNombre"),
+    };
+}
+
+/* ─── Cargar snapshot al formulario ─── */
+function _cargarSnapshotAlFormulario(snap) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ""; };
+    set("prodNombre", snap.Nombre);
+    set("prodModelo", snap.Modelo);
+    set("prodColor", snap.Color);
+    set("prodCategoria", snap.Categoria);
+    set("prodMarca", snap.Marca);
+    set("prodTipo", snap.Tipo);
+    set("prodMaterial", snap.Material);
+    set("prodCompartimentos", snap.Compartimentos);
+    set("prodCapacidad", snap.Capacidad);
+    set("prodAlto", snap.Alto);
+    set("prodAncho", snap.Ancho);
+    set("prodProfundidad", snap.Profundidad);
+    set("prodPeso", snap.Peso);
+    set("prodGenero", snap.Genero);
+    set("prodDiametro", snap.Diametro);
+    set("prodCantidadRuedas", snap.CantidadRuedas);
+    set("prodTipoCierre", snap.TipoCierre);
+    set("prodStock", snap.Stock);
+    const fuelle = document.getElementById("prodFuelleExpandible");
+    if (fuelle) fuelle.checked = !!snap.FuelleExpandible;
+    // Actualizar swatch
+    _actualizarPreviewColorAgregar();
+    // Re-aplicar toggleFields
+    toggleFieldsByTipo(snap.Nombre, false, "form");
+}
+
+/* ─── Preview de color en tiempo real ─── */
+function _actualizarPreviewColorAgregar() {
+    const input = document.getElementById("prodColor");
+    const preview = document.getElementById("colorSwatchPreviewAgregar");
+    if (!input || !preview) return;
+    const css = colorACSS(input.value.trim());
+    preview.style.background = css;
+    preview.style.display = input.value.trim() ? "inline-block" : "none";
+}
+
+/* ─── Agregar producto actual a la cola ─── */
+function agregarProductoACola() {
+    const snap = _leerSnapshotFormulario();
+
+    // Validación mínima
+    if (!snap.Nombre) { mostrarToast("El nombre es obligatorio", "error"); return; }
+    if (!snap.Color) { mostrarToast("El color es obligatorio", "error"); return; }
+    if (!snap.Stock) { mostrarToast("El stock es obligatorio", "error"); return; }
+
+    window._colaProductos.push(snap);
+    _renderColaProductos();
+
+    // Limpiar solo Color y Stock para facilitar el siguiente (mantiene nombre/modelo/etc)
+    const colorEl = document.getElementById("prodColor");
+    if (colorEl) { colorEl.value = ""; _actualizarPreviewColorAgregar(); }
+    const stockEl = document.getElementById("prodStock");
+    if (stockEl) stockEl.value = "";
+    // Limpiar imagen (no se puede clonar un File entre productos distintos automáticamente)
+    const imgEl = document.getElementById("prodImagen");
+    if (imgEl) imgEl.value = "";
+    const prevPrinc = document.getElementById("imgPreviewAgregar");
+    if (prevPrinc) { prevPrinc.src = ""; prevPrinc.style.display = "none"; }
+    const wrapPrinc = document.getElementById("wrapPreviewPrincipalAgregar");
+    if (wrapPrinc) wrapPrinc.style.display = "none";
+    const prevGrid = document.getElementById("previewGridAgregar");
+    if (prevGrid) prevGrid.innerHTML = "";
+    window._archivosExtraAgregar = [];
+
+    mostrarToast(`Producto "${snap.Nombre} – ${snap.Color}" agregado a la cola`, "success");
+    document.getElementById("prodColor")?.focus();
+}
+
+/* ─── Renderizar cola visual ─── */
+function _renderColaProductos() {
+    const contenedor = document.getElementById("colaProductosAgregar");
+    if (!contenedor) return;
+
+    if (window._colaProductos.length === 0) {
+        contenedor.style.display = "none";
+        contenedor.innerHTML = "";
+        // Actualizar label del botón guardar
+        const btnGuardar = document.querySelector("#modalAgregar .btn-save");
+        if (btnGuardar) btnGuardar.textContent = "Guardar";
+        return;
+    }
+
+    contenedor.style.display = "block";
+    contenedor.innerHTML = `
+        <div class="cola-header">
+            <strong>Cola de productos (${window._colaProductos.length})</strong>
+            <small style="color:#888;margin-left:8px;">Se guardarán todos al hacer clic en "Guardar todos"</small>
+        </div>
+        <div class="cola-lista" id="colaListaItems"></div>
+    `;
+
+    const lista = document.getElementById("colaListaItems");
+    window._colaProductos.forEach((snap, i) => {
+        const colorCss = colorACSS(snap.Color);
+        const item = document.createElement("div");
+        item.className = "cola-item";
+        item.innerHTML = `
+            <span class="cola-dot" style="background:${colorCss};"></span>
+            <span class="cola-nombre">${snap.Nombre}</span>
+            <span class="cola-color">${snap.Color}</span>
+            <span class="cola-stock">Stock: ${snap.Stock}</span>
+            <div class="cola-actions">
+                <button type="button" class="cola-btn-editar" title="Editar este producto" onclick="_editarItemCola(${i})">✏️</button>
+                <button type="button" class="cola-btn-quitar" title="Quitar de la cola" onclick="_quitarItemCola(${i})">✕</button>
+            </div>
+        `;
+        lista.appendChild(item);
+    });
+
+    // Actualizar label del botón guardar
+    const btnGuardar = document.querySelector("#modalAgregar .btn-save");
+    if (btnGuardar) btnGuardar.textContent = `Guardar todos (${window._colaProductos.length + 1})`;
+}
+
+function _quitarItemCola(idx) {
+    window._colaProductos.splice(idx, 1);
+    _renderColaProductos();
+}
+
+/* Editar un item de la cola: carga sus datos al formulario y lo quita de la cola */
+function _editarItemCola(idx) {
+    const snap = window._colaProductos[idx];
+    _cargarSnapshotAlFormulario(snap);
+    window._colaProductos.splice(idx, 1);
+    _renderColaProductos();
+    // Scroll al tope del modal
+    document.querySelector("#modalAgregar .modal-box")?.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function abrirFormularioNuevo() {
     const modalAgregar = document.getElementById("modalAgregar");
     if (!modalAgregar) return;
 
     productoSeleccionado = null;
+    window._colaProductos = [];
 
     const form = document.getElementById("formAgregar");
     form.reset();
@@ -2490,10 +2677,9 @@ function abrirFormularioNuevo() {
     });
 
     const preview = document.getElementById("imgPreviewAgregar");
-    if (preview) {
-        preview.src = "";
-        preview.style.display = "none";
-    }
+    if (preview) { preview.src = ""; preview.style.display = "none"; }
+    const wrapPrinc = document.getElementById("wrapPreviewPrincipalAgregar");
+    if (wrapPrinc) wrapPrinc.style.display = "none";
 
     const inputImg = document.getElementById("prodImagen");
     if (inputImg) inputImg.value = "";
@@ -2504,6 +2690,19 @@ function abrirFormularioNuevo() {
     if (prevGrid) prevGrid.innerHTML = "";
     window._archivosExtraAgregar = [];
 
+    // Reset cola
+    _renderColaProductos();
+    const swatchPrev = document.getElementById("colorSwatchPreviewAgregar");
+    if (swatchPrev) swatchPrev.style.display = "none";
+
+    // Listener en tiempo real del input de color
+    const colorInput = document.getElementById("prodColor");
+    if (colorInput) colorInput.oninput = _actualizarPreviewColorAgregar;
+
+    // Botón guardar: resetear label
+    const btnGuardar = document.querySelector("#modalAgregar .btn-save");
+    if (btnGuardar) btnGuardar.textContent = "Guardar";
+
     abrirModalAdmin("modalAgregar");
 
     requestIdleCallback(() => {
@@ -2511,16 +2710,16 @@ function abrirFormularioNuevo() {
     }, { timeout: 1000 });
 }
 
+
+/* ─── appendIfVisible (usada por guardar/editar) ─── */
 function appendIfVisible(fd, inputId, fieldName, fallback = undefined) {
     const el = document.getElementById(inputId);
     if (!el) {
         if (fallback !== undefined) fd.append(fieldName, fallback);
         return;
     }
-
     const col = el.closest(".col");
     const visible = col ? (col.style.display !== "none") : true;
-
     if (visible) {
         const val = el.value?.trim();
         if (val !== "") {
@@ -2529,123 +2728,119 @@ function appendIfVisible(fd, inputId, fieldName, fallback = undefined) {
             fd.append(fieldName, fallback);
         }
     } else {
-        if (fallback !== undefined) {
-            fd.append(fieldName, fallback);
-        }
+        if (fallback !== undefined) fd.append(fieldName, fallback);
     }
 }
 
+/* ─── Construir FormData desde un snapshot ─── */
+function _snapToFormData(snap) {
+    const fd = new FormData();
+    fd.append("Nombre", snap.Nombre || "");
+    fd.append("Modelo", snap.Modelo || "");
+    fd.append("Color", snap.Color || "");
+    fd.append("Categoria", snap.Categoria || "");
+    fd.append("Marca", snap.Marca || "");
+    fd.append("Tipo", normalizarTipo(snap.Tipo || ""));
+    fd.append("Material", snap.Material || "");
+    fd.append("Stock", snap.Stock || "0");
+    if (snap.Compartimentos) fd.append("Compartimentos", snap.Compartimentos);
+    if (snap.Capacidad) fd.append("Capacidad", snap.Capacidad);
+    if (snap.Alto) fd.append("Alto", snap.Alto);
+    if (snap.Ancho) fd.append("Ancho", snap.Ancho);
+    if (snap.Profundidad) fd.append("Profundidad", snap.Profundidad);
+    if (snap.Peso) fd.append("Peso", snap.Peso);
+    if (snap.Genero) fd.append("Genero", snap.Genero);
+    if (snap.Diametro) fd.append("Diametro", snap.Diametro);
+    if (snap.CantidadRuedas) fd.append("CantidadRuedas", snap.CantidadRuedas);
+    if (snap.TipoCierre) fd.append("TipoCierre", snap.TipoCierre);
+    fd.append("FuelleExpandible", snap.FuelleExpandible ? "true" : "false");
+    if (snap._archivo) fd.append("imagen", snap._archivo);
+    return fd;
+}
+
+/* ─── Enviar un snapshot al backend ─── */
+async function _enviarSnapshot(snap) {
+    const fd = _snapToFormData(snap);
+    const res = await fetch("/api/Productos", { method: "POST", body: fd });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(traducirErrorBackend(text));
+    }
+    const nuevoProd = await res.json();
+    const nuevoId = nuevoProd.id_producto ?? nuevoProd.idProducto ?? nuevoProd.IdProducto;
+
+    // Imágenes extra
+    const extras = (snap._archivosExtra || []).filter(Boolean);
+    if (extras.length > 0 && nuevoId) {
+        const fdImg = new FormData();
+        extras.forEach(f => fdImg.append("imagenes", f));
+        await fetch(`/api/Productos/${nuevoId}/imagenes`, { method: "POST", body: fdImg })
+            .catch(e => console.warn("Error subiendo imágenes extra:", e));
+    }
+    return nuevoId;
+}
+
+/* ─── Guardar: el formulario actual + toda la cola ─── */
 async function guardarNuevoProducto() {
-    try {
-        // ── Validación client-side (un solo alert con todos los errores) ──
-        const datosValidar = {
-            Nombre: document.getElementById("prodNombre")?.value.trim() ?? "",
-            Modelo: document.getElementById("prodModelo")?.value.trim() ?? "",
-            Color: document.getElementById("prodColor")?.value.trim() ?? "",
-            Marca: document.getElementById("prodMarca")?.value.trim() ?? "",
-            Categoria: document.getElementById("prodCategoria")?.value.trim() ?? "",
-            Material: document.getElementById("prodMaterial")?.value.trim() ?? "",
-            Tipo: document.getElementById("prodTipo")?.value.trim() ?? "",
-            Stock: document.getElementById("prodStock")?.value.trim() ?? "",
-            Alto: document.getElementById("prodAlto")?.value.trim() ?? "",
-            Ancho: document.getElementById("prodAncho")?.value.trim() ?? "",
-            Capacidad: document.getElementById("prodCapacidad")?.value.trim() ?? "",
-            Compartimentos: document.getElementById("prodCompartimentos")?.value.trim() ?? "",
-            Profundidad: document.getElementById("prodProfundidad")?.value.trim() ?? "",
-            Peso: document.getElementById("prodPeso")?.value.trim() ?? "",
-            Genero: document.getElementById("prodGenero")?.value.trim() ?? "",
-            Diametro: document.getElementById("prodDiametro")?.value.trim() ?? "",
-            CantidadRuedas: document.getElementById("prodCantidadRuedas")?.value.trim() ?? "",
-            TipoCierre: document.getElementById("prodTipoCierre")?.value.trim() ?? "",
-        };
-        if (!validarCampos(datosValidar, false)) return;
+    // 1. Leer snapshot del formulario actual
+    const snapActual = _leerSnapshotFormulario();
 
-        const catVal = document.getElementById("prodCategoria").value;
-        const marcaVal = document.getElementById("prodMarca").value;
-        const tipoVal = normalizarTipo(document.getElementById("prodTipo").value);
-        const materialVal = document.getElementById("prodMaterial").value;
+    // 2. Validación mínima del formulario actual
+    if (!snapActual.Nombre) { mostrarToast("El nombre es obligatorio", "error"); return; }
+    if (!snapActual.Color) { mostrarToast("El color es obligatorio", "error"); return; }
+    if (!snapActual.Stock) { mostrarToast("El stock es obligatorio", "error"); return; }
 
-        const fd = new FormData();
+    // 3. Armar lista completa: cola acumulada + el formulario actual al final
+    const todos = [...(window._colaProductos || []), snapActual];
+    const total = todos.length;
 
-        fd.append("Categoria", catVal);
-        fd.append("Marca", marcaVal);
-        fd.append("Tipo", tipoVal);
-        fd.append("Material", materialVal);
+    mostrarToast(total > 1 ? `Guardando ${total} productos...` : "Guardando producto...", "info");
 
-        fd.append("Nombre", document.getElementById("prodNombre").value);
-        fd.append("Modelo", document.getElementById("prodModelo").value);
-        fd.append("Color", document.getElementById("prodColor").value);
+    const _savedScroll = _scrollLockedAt;
+    const nuevosIds = [];
+    const errores = [];
 
-        appendIfVisible(fd, "prodCompartimentos", "Compartimentos", "0");
-        const capVal = document.getElementById("prodCapacidad")?.value.trim();
-        if (capVal) fd.append("Capacidad", capVal);
-
-        appendIfVisible(fd, "prodAlto", "Alto", "0");
-        appendIfVisible(fd, "prodAncho", "Ancho", "");
-        appendIfVisible(fd, "prodProfundidad", "Profundidad", "");
-        appendIfVisible(fd, "prodDiametro", "Diametro", "");
-        appendIfVisible(fd, "prodPeso", "Peso", "");
-        const generoVal = document.getElementById("prodGenero")?.value.trim();
-        if (generoVal) fd.append("Genero", generoVal);
-        appendIfVisible(fd, "prodCantidadRuedas", "CantidadRuedas", "");
-        appendIfVisible(fd, "prodTipoCierre", "TipoCierre", "");
-        const fuelleVal = document.getElementById("prodFuelleExpandible")?.checked;
-        const fuelleCol = document.getElementById("prodFuelleExpandible")?.closest(".col");
-        if (fuelleCol?.style.display !== "none") {
-            fd.append("FuelleExpandible", fuelleVal ? "true" : "false");
+    for (let i = 0; i < todos.length; i++) {
+        const snap = todos[i];
+        try {
+            const id = await _enviarSnapshot(snap);
+            if (id) nuevosIds.push(id);
+        } catch (err) {
+            errores.push(`"${snap.Nombre} – ${snap.Color}": ${err.message}`);
+            console.error("Error guardando producto de cola:", err);
         }
-        fd.append("Stock", document.getElementById("prodStock").value);
+    }
 
-        const archivo = document.getElementById("prodImagen").files[0];
-        if (archivo) fd.append("imagen", archivo);
+    // 4. Feedback
+    if (errores.length === 0) {
+        mostrarToast(total > 1 ? `${total} productos guardados ✓` : "Producto guardado ✓", "success");
+    } else {
+        mostrarToast(`${errores.length} error(es): ${errores[0]}`, "error");
+    }
 
-        mostrarToast("Guardando producto...", "info");
+    // 5. Reset y cerrar
+    window._colaProductos = [];
+    _renderColaProductos();
+    _fkCargadas = false;
+    cerrarModalCRUD("modalAgregar");
 
-        const res = await fetch("/api/Productos", {
-            method: "POST",
-            body: fd
-        });
-
-        if (!res.ok) {
-            const text = await res.text();
-            mostrarToast("Error al agregar: " + traducirErrorBackend(text), "error");
-            return;
-        }
-
-        const nuevoProd = await res.json(); // el backend devuelve el producto creado
-        const nuevoId = nuevoProd.id_producto ?? nuevoProd.idProducto ?? nuevoProd.IdProducto;
-
-        // Subir imágenes extra al endpoint dedicado
-        const archivosExtra = (window._archivosExtraAgregar || []).filter(f => f !== null);
-        if (archivosExtra.length > 0 && nuevoId) {
-            const fdImagenes = new FormData();
-            archivosExtra.forEach(f => fdImagenes.append("imagenes", f));
-            await fetch(`/api/Productos/${nuevoId}/imagenes`, { method: "POST", body: fdImagenes })
-                .catch(e => console.warn("Error subiendo imágenes extra:", e));
-        }
-        window._archivosExtraAgregar = [];
-
-        mostrarToast("Producto agregado correctamente ✓", "success");
-        _fkCargadas = false;
-        const _savedScrollAgregar = _scrollLockedAt;
-        cerrarModalCRUD("modalAgregar");
-        // Recargar desde el backend para obtener nombres resueltos (Marca, Categoria, etc.)
-        fetch(`/api/Productos/${nuevoId}`)
-            .then(r => r.json())
-            .then(p => {
+    // 6. Inyectar los productos nuevos al array local y re-renderizar
+    if (nuevosIds.length > 0) {
+        for (const id of nuevosIds) {
+            try {
+                const p = await fetch(`/api/Productos/${id}`).then(r => r.json());
                 const prod = normalizarProducto(p);
                 recalcularCamposBusqueda(prod);
                 productosData.push(prod);
-                aplicarFiltros();
-                requestAnimationFrame(() => window.scrollTo({ top: _savedScrollAgregar, behavior: "instant" }));
-            })
-            .catch(() => cargarProductos(true));
-
-    } catch (err) {
-        console.error(err);
-        alert("Error inesperado.");
+            } catch (e) { /* si falla uno, el reload general lo va a buscar */ }
+        }
+        aplicarFiltros();
+        requestAnimationFrame(() => window.scrollTo({ top: _savedScroll, behavior: "instant" }));
+    } else if (errores.length === 0) {
+        cargarProductos(true);
     }
 }
+
 
 async function abrirEditarProducto(id) {
     await cargarOpcionesDatalist();
