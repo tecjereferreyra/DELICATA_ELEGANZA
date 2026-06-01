@@ -3042,7 +3042,7 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 const TIPOS_POR_CATEGORIA = {
     "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
     "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas con Dijes"],
-    "complementos": ["Paraguas", "Cajas Bijou", "Abanicos"],
+    "complementos": ["Paraguas", "Cajas Bijou", "Abanicos", "Cintos"],
     "artículos de viaje": ["Valijas"],
     "piercing": ["Piercing"],
     "pañoleria": ["Bufandas", "Chalinas", "Cuellos", "Pashminas"]
@@ -3090,6 +3090,14 @@ const TIPO_ALIAS_MAP = {
     "cajas bijou": "Cajas Bijou",
     "abanico": "Abanicos",
     "abanicos": "Abanicos",
+    "cinto": "Cintos",
+    "cintos": "Cintos",
+    "cinta": "Cintos",
+    "cintas": "Cintos",
+    "correa": "Cintos",
+    "correas": "Cintos",
+    "cenidor": "Cintos",
+    "cenidores": "Cintos",
     "valija": "Valijas",
     "bufanda": "Bufandas",
     "chalina": "Chalinas",
@@ -3507,7 +3515,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🪭 ABANICOS / APLIQUES / TIARAS / CORONAS
     //    campos extra: genero, alto, ancho, peso
     // ==========================================================
-    if (match(["abanico", "aplique", "tiara", "corona"])) {
+    if (match(["abanico", "aplique", "tiara", "corona", "cinto", "cinta", "correa", "cenidor"])) {
         setVisible(campos.genero, true);
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
