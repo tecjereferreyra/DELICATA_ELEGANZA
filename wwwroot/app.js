@@ -1054,39 +1054,140 @@ categoriaLinks.forEach(link => {
     });
 });
 const COLOR_SINONIMOS = {
-    "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "oscuro", "oscuras", "oscuros"],
-    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "blanquito"],
-    "rojo": ["rojo", "roja", "rojos", "rojas", "red", "bordo", "bordeau", "granate"],
-    "azul": ["azul", "azules", "blue", "marino", "celeste", "navy"],
-    "verde": ["verde", "verdes", "green", "oliva", "militar", "kaki", "verde francia"],
-    "marron": ["marron", "marrones", "marron", "cafe", "tabaco", "cognac", "camel", "cuero"],
-    "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon"],
-    "lila": ["lila", "lilas", "violeta", "violetas", "morado", "morada", "purple"],
-    "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada"],
-    "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro"],
-    "naranja": ["naranja", "naranjas", "orange", "terracota"],
-    "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow"],
-    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes"],
-    "acero": ["acero", "acero inoxidable", "plateado", "plata", "steel"],
+    "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche"],
+    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "perla", "nieve", "ivory", "blanquito"],
+    "rojo": ["rojo", "roja", "rojos", "rojas", "red", "bordo", "bordeau", "granate", "carmesi", "carmesí", "escarlata", "cereza", "vino", "sangre"],
+    "azul": ["azul", "azules", "blue", "marino", "celeste", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo"],
+    "verde": ["verde", "verdes", "green", "oliva", "militar", "kaki", "esmeralda", "menta", "sage", "botella", "musgo", "selva", "lima", "verde francia"],
+    "marron": ["marron", "marrón", "marrones", "cafe", "café", "tabaco", "cognac", "camel", "cuero", "chocolate", "tierra", "havana", "walnut", "tobacco", "avellana"],
+    "suela": ["suela", "teja", "madera", "castano", "castaño", "castañas", "nuez", "roble", "cobre", "cobre viejo"],
+    "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon", "salmón", "palo de rosa", "flamingo", "blush", "magenta", "hot pink"],
+    "lila": ["lila", "lilas", "violeta", "violetas", "morado", "morada", "purple", "lavanda", "lavender", "malva", "orquidea", "orquídea", "amatista"],
+    "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada", "antracita", "grafito", "piedra", "humo", "ceniza"],
+    "acero": ["acero", "acero inoxidable", "steel", "inox", "inoxidable", "metalico", "metálico", "cromado"],
+    "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro", "champagne", "bronce"],
+    "naranja": ["naranja", "naranjas", "orange", "oxido", "óxido", "mango", "calabaza", "ladrillo", "brick"],
+    "terracota": ["terracota", "terracotta", "coral", "teja clara", "ocre rojo", "arcilla", "canyon"],
+    "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow", "ocre", "mostaza", "limón", "limon", "canario", "miel"],
+    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes", "vison", "visón", "bisón", "bison", "taupe", "natural", "crudo", "ecru", "lino", "caqui claro"],
+    "rosa_palo": ["rosa palo", "nude rosa", "piel", "skin", "durazno", "peach", "albaricoque", "apricot", "melocoton", "melocotón"],
+    "turquesa": ["turquesa", "turquoise", "agua", "aqua", "aguamarina", "tiffany", "verde agua", "aqua marine"],
+    "bordeaux": ["bordeaux", "bordo", "burdeos", "vino tinto", "marsala", "granate oscuro"],
+    "multicolor": ["multicolor", "estampado", "colores", "tie dye", "tie-dye", "multicolores"],
 };
+
 const COLOR_CSS = {
-    "negro": "#111", "negra": "#111", "negras": "#111", "negros": "#111",
-    "blanco": "#f5f5f5", "blanca": "#f5f5f5", "marfil": "#fffff0", "crema": "#fffdd0",
-    "rojo": "#d32f2f", "roja": "#d32f2f", "bordo": "#7b1f2e", "bordeau": "#7b1f2e",
-    "azul": "#1565c0", "marino": "#0d2b6b", "celeste": "#64b5f6", "navy": "#0d2b6b",
-    "verde": "#2e7d32", "oliva": "#6b6b2a", "militar": "#4a5240", "kaki": "#8b8040",
-    "marron": "#6d4c41", "café": "#6d4c41", "tabaco": "#7a5230", "cognac": "#9b5e28",
-    "camel": "#c19a6b", "cuero": "#8b5a2b",
-    "rosa": "#f48fb1", "fucsia": "#c2185b", "salmon": "#ff8a65",
-    "lila": "#ba68c8", "violeta": "#7e57c2", "morado": "#6a1b9a",
-    "gris": "#757575", "plata": "#b0bec5", "plateado": "#b0bec5",
-    "dorado": "#c9a84c", "oro": "#c9a84c",
-    "naranja": "#ef6c00", "terracota": "#c0522a",
-    "amarillo": "#f9a825", "ocre": "#cc8800",
-    "beige": "#d4b896", "nude": "#d4b49c", "arena": "#c2a882",
-    "vison": "#c4a882", "bisón": "#c4a882", "bison": "#c4a882",
-    "tiza": "#f0ece4", "perla": "#f0e8d8", "champagne": "#f5e6c8",
+    // Negro
+    "negro": "#111", "negra": "#111", "negros": "#111", "negras": "#111",
+    "ebano": "#111", "carbon": "#1a1a1a", "carbón": "#1a1a1a", "noche": "#0d0d0d",
+
+    // Blanco
+    "blanco": "#f5f5f5", "blanca": "#f5f5f5", "blancos": "#f5f5f5", "blancas": "#f5f5f5",
+    "white": "#f5f5f5", "marfil": "#fffff0", "crema": "#fffdd0", "tiza": "#f0ece4",
+    "perla": "#f0e8d8", "nieve": "#fafafa", "ivory": "#fffff0",
+
+    // Rojo
+    "rojo": "#c62828", "roja": "#c62828", "rojos": "#c62828", "rojas": "#c62828",
+    "red": "#c62828", "escarlata": "#d50000", "carmesi": "#b71c1c", "carmesí": "#b71c1c",
+    "cereza": "#880e4f", "sangre": "#7b0000",
+
+    // Bordeaux / Vino
+    "bordo": "#6d1b2e", "bordeau": "#6d1b2e", "bordeaux": "#6d1b2e",
+    "burdeos": "#6d1b2e", "vino": "#6d1b2e", "vino tinto": "#6d1b2e",
+    "granate": "#7b2d3a", "granate oscuro": "#5c1a26", "marsala": "#955251",
+
+    // Azul
+    "azul": "#1565c0", "azules": "#1565c0", "blue": "#1565c0",
+    "marino": "#0d2b6b", "navy": "#0d2b6b", "celeste": "#64b5f6",
+    "cobalto": "#1a3a8f", "zafiro": "#003153", "klein": "#002fa7",
+    "royal": "#1a3a8f", "indigo": "#3949ab", "índigo": "#3949ab",
+    "petroleo": "#00454a", "petróleo": "#00454a",
+
+    // Verde
+    "verde": "#2e7d32", "verdes": "#2e7d32", "green": "#2e7d32",
+    "oliva": "#6b6b2a", "militar": "#4a5240", "kaki": "#8b8040",
+    "esmeralda": "#004d40", "menta": "#80cbc4", "sage": "#7d9b76",
+    "botella": "#1b4d2e", "musgo": "#556b2f", "selva": "#1a3a26",
+    "lima": "#8bc34a", "verde francia": "#267f00",
+
+    // Marrón / Café
+    "marron": "#6d4c41", "marrón": "#6d4c41", "marrones": "#6d4c41",
+    "cafe": "#6d4c41", "café": "#6d4c41", "tabaco": "#7a5230",
+    "cognac": "#9b5e28", "camel": "#c19a6b", "cuero": "#8b5a2b",
+    "chocolate": "#4e342e", "tierra": "#795548", "havana": "#5d3a1a",
+    "walnut": "#5c4033", "tobacco": "#7a5230", "avellana": "#9e7b5a",
+
+    // Suela / Tonos cálidos terrosos oscuros
+    "suela": "#8B5E3C", "teja": "#b05c34", "madera": "#8b6347",
+    "castano": "#7b4f2e", "castaño": "#7b4f2e", "nuez": "#7a4e2d",
+    "roble": "#8c6239", "cobre": "#b87333", "cobre viejo": "#a06535",
+
+    // Rosa / Fucsia
+    "rosa": "#e91e8c", "rosas": "#e91e8c", "pink": "#e91e8c",
+    "fucsia": "#c2185b", "salmon": "#ff8a65", "salmón": "#ff8a65",
+    "palo de rosa": "#d4a0a0", "flamingo": "#fc8eac", "blush": "#f4a7b9",
+    "magenta": "#e040fb", "hot pink": "#ff4081",
+
+    // Rosa palo / Nude rosado
+    "rosa palo": "#e8c5b0", "nude rosa": "#e0b49a", "piel": "#d4a882",
+    "skin": "#d4a882", "durazno": "#ffb347", "peach": "#ffcba4",
+    "albaricoque": "#f4a460", "apricot": "#f4a460",
+    "melocoton": "#ff8c69", "melocotón": "#ff8c69",
+
+    // Lila / Violeta / Morado
+    "lila": "#ba68c8", "lilas": "#ba68c8", "violeta": "#7e57c2",
+    "violetas": "#7e57c2", "morado": "#6a1b9a", "morada": "#6a1b9a",
+    "purple": "#6a1b9a", "lavanda": "#b39ddb", "lavender": "#b39ddb",
+    "malva": "#9c4f96", "orquidea": "#da70d6", "orquídea": "#da70d6",
+    "amatista": "#9b59b6",
+
+    // Gris
+    "gris": "#757575", "grises": "#757575", "grey": "#757575", "gray": "#757575",
+    "plata": "#b0bec5", "plateado": "#b0bec5", "plateada": "#b0bec5",
+    "antracita": "#3d3d3d", "grafito": "#4a4a4a",
+    "piedra": "#9e9e8f", "humo": "#8d8d8d", "ceniza": "#ababab",
+
+    // Acero (familia separada del gris)
+    "acero": "#8da9bc", "acero inoxidable": "#8da9bc", "steel": "#8da9bc",
+    "inox": "#9eb4c4", "inoxidable": "#9eb4c4",
+    "metalico": "#a0aab4", "metálico": "#a0aab4", "cromado": "#b8c4cc",
+
+    // Dorado / Bronce
+    "dorado": "#c9a84c", "dorada": "#c9a84c", "dorados": "#c9a84c", "doradas": "#c9a84c",
+    "gold": "#c9a84c", "oro": "#c9a84c", "champagne": "#f5e6c8", "bronce": "#8c6a2f",
+
+    // Naranja
+    "naranja": "#ef6c00", "naranjas": "#ef6c00", "orange": "#ef6c00",
+    "oxido": "#bf4e0a", "óxido": "#bf4e0a", "mango": "#e67e22",
+    "calabaza": "#d35400", "ladrillo": "#b94a2c", "brick": "#b94a2c",
+
+    // Terracota / Coral
+    "terracota": "#c0522a", "terracotta": "#c0522a", "coral": "#e8735a",
+    "teja clara": "#c1603a", "ocre rojo": "#b5451b", "arcilla": "#c1694f",
+    "canyon": "#c96a40",
+
+    // Amarillo
+    "amarillo": "#f9a825", "amarilla": "#f9a825", "amarillos": "#f9a825", "amarillas": "#f9a825",
+    "yellow": "#f9a825", "ocre": "#cc8800", "mostaza": "#c9a227",
+    "limón": "#d4e157", "limon": "#d4e157", "canario": "#ffe082", "miel": "#e6ac00",
+
+    // Beige / Nude neutro
+    "beige": "#d4b896", "beis": "#d4b896", "nude": "#d4b49c", "arena": "#c2a882",
+    "tostado": "#b8915a", "tostada": "#b8915a", "nute": "#ceb49a", "nutes": "#ceb49a",
+    "vison": "#c4a882", "visón": "#c4a882", "bisón": "#c4a882", "bison": "#c4a882",
+    "taupe": "#b09880", "natural": "#d2b48c", "crudo": "#c8b89a",
+    "ecru": "#c8b89a", "lino": "#cdc2a8", "caqui claro": "#c2b280",
+
+    // Turquesa
+    "turquesa": "#00897b", "turquoise": "#00897b", "agua": "#00acc1",
+    "aqua": "#00bcd4", "aguamarina": "#00bfa5", "tiffany": "#0abfbc",
+    "verde agua": "#4db6ac", "aqua marine": "#7fffd4",
+
+    // Multicolor
     "multicolor": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
+    "estampado": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
+    "tie dye": "linear-gradient(135deg,#e91e63,#9c27b0,#3f51b5,#00bcd4,#4caf50)",
+    "tie-dye": "linear-gradient(135deg,#e91e63,#9c27b0,#3f51b5,#00bcd4,#4caf50)",
 };
 
 function colorACSS(nombreColor) {
