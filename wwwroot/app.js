@@ -3671,12 +3671,70 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🛏 ALMOHADAS / ALMOHADILLAS / CANDADOS
     //    campos: alto, ancho, profundidad, peso, genero
     // ==========================================================
+    // ==========================================================
+    // 🛏 ALMOHADAS / ALMOHADILLAS / CANDADOS
+    //    campos: alto, ancho, profundidad, peso, genero
+    // ==========================================================
     if (match(["almohada", "almohadilla", "almohadin", "candado"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
         setVisible(campos.peso, true);
         setVisible(campos.genero, true);
+        return;
+    }
+
+    // ==========================================================
+    // ⚖️ BALANZA PARA VALIJAS
+    //    campos: alto, ancho, profundidad, peso
+    // ==========================================================
+    if (match(["balanza"])) {
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.prof, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+
+    // ==========================================================
+    // 🫙 BOLSAS DE VACÍO
+    //    campos: alto, ancho, profundidad, peso, capacidad
+    //    (va ANTES del bloque genérico de "bolsa" para tener prioridad)
+    // ==========================================================
+    if (match(["vacio", "vacío"])) {
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.prof, true);
+        setVisible(campos.peso, true);
+        setVisible(campos.cap, true);
+        return;
+    }
+
+    // ==========================================================
+    // 🔌 BOMBA ELÉCTRICA / MANUAL DE VACÍO
+    //    campos: alto, ancho, profundidad, peso
+    // ==========================================================
+    if (match(["bomba"])) {
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.prof, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+    // ==========================================================
+    // 🔒 PORTA VALORES
+    //    campos: compartimentos, capacidad, alto, ancho,
+    //            profundidad, peso, genero, cierre
+    // ==========================================================
+    if (match(["porta valores", "portavalores"])) {
+        setVisible(campos.comp, true);
+        setVisible(campos.cap, true);
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.prof, true);
+        setVisible(campos.peso, true);
+        setVisible(campos.genero, true);
+        setVisible(campos.cierre, true);
         return;
     }
 
