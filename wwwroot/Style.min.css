@@ -312,6 +312,98 @@ input::placeholder {
     .color-swatch:hover::after {
         opacity: 1;
     }
+/* ── Cola de productos ── */
+.cola-header {
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.cola-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cola-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.cola-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,.2);
+}
+
+.cola-nombre {
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cola-color {
+    color: #555;
+    font-size: 12px;
+}
+
+.cola-stock {
+    color: #888;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.cola-actions {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.cola-btn-editar,
+.cola-btn-quitar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: background .15s;
+}
+
+    .cola-btn-editar:hover {
+        background: rgba(0,0,0,.08);
+    }
+
+    .cola-btn-quitar:hover {
+        background: rgba(220,38,38,.12);
+    }
+/* Botón "+ Agregar a la cola" */
+.btn-cola {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 2px solid var(--color-marca-oro, #c9a84c);
+    background: transparent;
+    color: var(--color-marca-oro, #c9a84c);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .15s, color .15s;
+}
+
+    .btn-cola:hover {
+        background: var(--color-marca-oro, #c9a84c);
+        color: #fff;
+    }
+
 .modal-img-container .carrusel-slide {
     display: none;
     height: 100%;
@@ -2800,6 +2892,10 @@ footer.footer {
     .search-btn {
         min-width: auto;
         padding: .7rem 1rem
+    }
+    .btn-cola {
+        width: 100%;
+        margin-bottom: 4px;
     }
 }
 

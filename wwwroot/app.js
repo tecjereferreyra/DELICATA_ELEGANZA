@@ -3022,7 +3022,9 @@ async function abrirEditarProducto(id) {
             if (fuelleInput) fuelleInput.checked = producto.fuelleExpandible === true;
             document.getElementById("prodTipoCierreEditar").value = producto.tipoCierre ?? "";
             document.getElementById("prodStockEditar").value = producto.stock;
-
+            // ← AGREGAR: limpiar input file para que no persista el archivo del producto anterior
+            const inputPrincipalReset = document.getElementById("prodImagenEditar");
+            if (inputPrincipalReset) inputPrincipalReset.value = "";
             const previewEditar = document.getElementById("imgPreviewEditar");
             if (previewEditar) {
                 const ruta = producto.imagen;
