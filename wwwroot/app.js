@@ -3144,11 +3144,11 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 /* ── MAPA DE TIPOS POR CATEGORÍA ── */
 const TIPOS_POR_CATEGORIA = {
     "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
-    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas con Dijes"],
+    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas","Dijes"],
     "complementos": ["Paraguas", "Cajas Bijou", "Abanicos", "Cintos"],
-    "artículos de viaje": ["Valijas"],
+    "artículos de viaje": ["Valijas", "Complementos de viaje"],
     "piercing": ["Piercing"],
-    "pañoleria": ["Bufandas", "Chalinas", "Cuellos", "Pashminas"]
+    "pañoleria": ["Invierno", "Verano"]
 };
 const TIPO_ALIAS_MAP = {
     "morral": "Morrales",

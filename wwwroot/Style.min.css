@@ -1081,7 +1081,7 @@ header.navbar .title {
     position: relative;
     z-index: 0;
     content-visibility: auto;
-    contain-intrinsic-size: 0 380px;
+    contain-intrinsic-size: auto 380px;
     backface-visibility: hidden
 }
 
