@@ -2628,7 +2628,7 @@ function _leerSnapshotFormulario() {
         _archivo: archivo,
         _archivosExtra: archivosExtra,
         // Snapshot de qué columnas eran visibles (para validación)
-        _tipoNombre: val("prodNombre"),
+        _tipoNombre: val("prodTipo"),
     };
 }
 
