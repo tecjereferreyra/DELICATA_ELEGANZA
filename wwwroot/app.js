@@ -3636,7 +3636,9 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         "helix", "clapton", "nostril",
         "argolla",
         "piedrita", "dije", "septum",
-        "bull"
+        "bull",
+        "industrial",
+        "flecha"
     ])) {
         setVisible(campos.genero, true);
         setVisible(campos.diametro, true);
@@ -3648,7 +3650,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🧣 CHALINAS / BUFANDAS / CUELLOS / CUELLITOS / SACOS
     //    campos extra: genero, ancho, alto, peso
     // ==========================================================
-    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina"])) {
+    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina","bufandon", "maxi bufanda","megabufanda"])) {
         setVisible(campos.genero, true);
         setVisible(campos.ancho, true);
         setVisible(campos.alto, true);
