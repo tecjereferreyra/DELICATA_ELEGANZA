@@ -1447,7 +1447,7 @@ function palabraMatchFuzzy(palabra, textoNormalizado) {
         return tokens.some(token => token.includes(palabra));
     }
     // Palabras de 1-3 letras: sin tolerancia. De 4 en adelante: tolerancia 1.
-    const maxDist = palabra.length <= 3 ? 0 : 1;
+    const maxDist = palabra.length <= 5 ? 0 : 1;
     if (maxDist === 0) return false;
     return tokens.some(token => {
         if (Math.abs(token.length - palabra.length) > maxDist + 1) return false;
@@ -3699,6 +3699,18 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     // ==========================================================
+    // 🔌 BOMBA ELÉCTRICA / MANUAL DE VACÍO
+    //    campos: alto, ancho, profundidad, peso
+    // ==========================================================
+    if (match(["bomba"])) {
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.prof, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+
+    // ==========================================================
     // 🫙 BOLSAS DE VACÍO
     //    campos: alto, ancho, profundidad, peso, capacidad
     //    (va ANTES del bloque genérico de "bolsa" para tener prioridad)
@@ -3709,18 +3721,6 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.prof, true);
         setVisible(campos.peso, true);
         setVisible(campos.cap, true);
-        return;
-    }
-
-    // ==========================================================
-    // 🔌 BOMBA ELÉCTRICA / MANUAL DE VACÍO
-    //    campos: alto, ancho, profundidad, peso
-    // ==========================================================
-    if (match(["bomba"])) {
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
-        setVisible(campos.peso, true);
         return;
     }
     // ==========================================================
