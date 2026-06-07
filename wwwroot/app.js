@@ -82,11 +82,13 @@ document.addEventListener('touchstart', (e) => {
 }, { passive: true });
 
 function _preventBgScroll(e) {
+    // Si hay más de un toque activo es un gesto de pinch/zoom: NUNCA bloquearlo
+    if (e.touches && e.touches.length > 1) return;
+
     const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .modal-overlay, .mobile-menu');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
-
         const deltaY = _touchStartY - e.touches[0].clientY;
         if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
             e.preventDefault();
@@ -124,20 +126,23 @@ function _restoreScroll() {
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
+    document.body.style.top = `-${_scrollLockedAt}px`; // compensa el salto visual
     document.body.classList.add('scroll-locked');
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
-    window.addEventListener('scroll', _restoreScroll, { passive: true });
+  
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
+    document.body.style.top = '';
+    window.scrollTo(0, _scrollLockedAt); // restaurar posición solo al CERRAR
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
-    window.removeEventListener('scroll', _restoreScroll);
+   
 }
 (function fixStickyNavbarChromeIOS() {
     if (!/CriOS/.test(navigator.userAgent)) return;
@@ -2460,12 +2465,22 @@ function validarCampos(data, esEditar = false) {
     function campoVisible(id) {
         const el = document.getElementById(id);
         if (!el) return false;
+
+        // Verificar que el propio elemento no esté oculto
+        if (el.style.display === "none") return false;
+
+        // Verificar el .col contenedor
         const col = el.closest(".col");
-        return !col || col.style.display !== "none";
+        if (col && col.style.display === "none") return false;
+
+        // Si no hay .col, verificar el padre directo como fallback
+        const parent = el.parentElement;
+        if (parent && parent.style.display === "none") return false;
+
+        return true; // solo es visible si ningún contenedor está oculto
     }
 
-    // Material y Tipo: obligatorios solo al CREAR
-    // En edición ya están cargados, no forzar re-completar
+    
     if (!esEditar) {
         if (campoVisible("prodMaterial") && !data.Material?.trim())
             errores.push("• El material es obligatorio.");
@@ -2628,7 +2643,7 @@ function _leerSnapshotFormulario() {
         _archivo: archivo,
         _archivosExtra: archivosExtra,
         // Snapshot de qué columnas eran visibles (para validación)
-        _tipoNombre: val("prodTipo"),
+        _tipoNombre: val("prodNombre"),
     };
 }
 
@@ -2852,16 +2867,16 @@ function _snapToFormData(snap) {
     fd.append("Tipo", normalizarTipo(snap.Tipo || ""));
     fd.append("Material", snap.Material || "");
     fd.append("Stock", snap.Stock || "0");
-    fd.append("Compartimentos", snap.Compartimentos || "");
-    fd.append("Capacidad", snap.Capacidad || "");
-    fd.append("Alto", snap.Alto || "");
-    fd.append("Ancho", snap.Ancho || "");
-    fd.append("Profundidad", snap.Profundidad || "");
-    fd.append("Peso", snap.Peso || "");
-    fd.append("Genero", snap.Genero || "");
-    fd.append("Diametro", snap.Diametro || "");
-    fd.append("CantidadRuedas", snap.CantidadRuedas || "");
-    fd.append("TipoCierre", snap.TipoCierre || "");
+    if (snap.Compartimentos) fd.append("Compartimentos", snap.Compartimentos);
+    if (snap.Capacidad) fd.append("Capacidad", snap.Capacidad);
+    if (snap.Alto) fd.append("Alto", snap.Alto);
+    if (snap.Ancho) fd.append("Ancho", snap.Ancho);
+    if (snap.Profundidad) fd.append("Profundidad", snap.Profundidad);
+    if (snap.Peso) fd.append("Peso", snap.Peso);
+    if (snap.Genero) fd.append("Genero", snap.Genero);
+    if (snap.Diametro) fd.append("Diametro", snap.Diametro);
+    if (snap.CantidadRuedas) fd.append("CantidadRuedas", snap.CantidadRuedas);
+    if (snap.TipoCierre) fd.append("TipoCierre", snap.TipoCierre);
     fd.append("FuelleExpandible", snap.FuelleExpandible ? "true" : "false");
     if (snap._archivo) fd.append("imagen", snap._archivo);
     return fd;
@@ -3144,7 +3159,7 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 /* ── MAPA DE TIPOS POR CATEGORÍA ── */
 const TIPOS_POR_CATEGORIA = {
     "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
-    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas", "Dijes"],
+    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas","Dijes"],
     "complementos": ["Paraguas", "Cajas Bijou", "Abanicos", "Cintos"],
     "artículos de viaje": ["Valijas", "Complementos de viaje"],
     "piercing": ["Piercing"],
@@ -3564,13 +3579,22 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         }
         const col = elem.closest(".col");
         if (col) col.style.display = visible ? "" : "none";
+
+        // NUEVO: limpiar valor al ocultar para no enviar datos residuales
+        if (!visible) {
+            if (elem.type === "checkbox") {
+                elem.checked = false;
+            } else {
+                elem.value = "";
+            }
+        }
     }
 
     // 👉 Ocultar TODO primero
     Object.values(campos).forEach(el => setVisible(el, false));
 
     if (!norm) {
-        Object.values(campos).forEach(el => setVisible(el, false));
+        Object.values(campos).forEach(el => setVisible(el, true));
         return;
     }
 
@@ -3650,7 +3674,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🧣 CHALINAS / BUFANDAS / CUELLOS / CUELLITOS / SACOS
     //    campos extra: genero, ancho, alto, peso
     // ==========================================================
-    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina", "bufandon", "maxi bufanda", "megabufanda"])) {
+    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina","bufandon", "maxi bufanda","megabufanda"])) {
         setVisible(campos.genero, true);
         setVisible(campos.ancho, true);
         setVisible(campos.alto, true);
