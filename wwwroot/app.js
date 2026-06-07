@@ -2852,16 +2852,16 @@ function _snapToFormData(snap) {
     fd.append("Tipo", normalizarTipo(snap.Tipo || ""));
     fd.append("Material", snap.Material || "");
     fd.append("Stock", snap.Stock || "0");
-    if (snap.Compartimentos) fd.append("Compartimentos", snap.Compartimentos);
-    if (snap.Capacidad) fd.append("Capacidad", snap.Capacidad);
-    if (snap.Alto) fd.append("Alto", snap.Alto);
-    if (snap.Ancho) fd.append("Ancho", snap.Ancho);
-    if (snap.Profundidad) fd.append("Profundidad", snap.Profundidad);
-    if (snap.Peso) fd.append("Peso", snap.Peso);
-    if (snap.Genero) fd.append("Genero", snap.Genero);
-    if (snap.Diametro) fd.append("Diametro", snap.Diametro);
-    if (snap.CantidadRuedas) fd.append("CantidadRuedas", snap.CantidadRuedas);
-    if (snap.TipoCierre) fd.append("TipoCierre", snap.TipoCierre);
+    fd.append("Compartimentos", snap.Compartimentos || "");
+    fd.append("Capacidad", snap.Capacidad || "");
+    fd.append("Alto", snap.Alto || "");
+    fd.append("Ancho", snap.Ancho || "");
+    fd.append("Profundidad", snap.Profundidad || "");
+    fd.append("Peso", snap.Peso || "");
+    fd.append("Genero", snap.Genero || "");
+    fd.append("Diametro", snap.Diametro || "");
+    fd.append("CantidadRuedas", snap.CantidadRuedas || "");
+    fd.append("TipoCierre", snap.TipoCierre || "");
     fd.append("FuelleExpandible", snap.FuelleExpandible ? "true" : "false");
     if (snap._archivo) fd.append("imagen", snap._archivo);
     return fd;
@@ -3144,7 +3144,7 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 /* ── MAPA DE TIPOS POR CATEGORÍA ── */
 const TIPOS_POR_CATEGORIA = {
     "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
-    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas","Dijes"],
+    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas", "Dijes"],
     "complementos": ["Paraguas", "Cajas Bijou", "Abanicos", "Cintos"],
     "artículos de viaje": ["Valijas", "Complementos de viaje"],
     "piercing": ["Piercing"],
@@ -3570,7 +3570,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     Object.values(campos).forEach(el => setVisible(el, false));
 
     if (!norm) {
-        Object.values(campos).forEach(el => setVisible(el, true));
+        Object.values(campos).forEach(el => setVisible(el, false));
         return;
     }
 
@@ -3650,7 +3650,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🧣 CHALINAS / BUFANDAS / CUELLOS / CUELLITOS / SACOS
     //    campos extra: genero, ancho, alto, peso
     // ==========================================================
-    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina","bufandon", "maxi bufanda","megabufanda"])) {
+    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina", "bufandon", "maxi bufanda", "megabufanda"])) {
         setVisible(campos.genero, true);
         setVisible(campos.ancho, true);
         setVisible(campos.alto, true);
