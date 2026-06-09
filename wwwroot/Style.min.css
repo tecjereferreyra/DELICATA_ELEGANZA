@@ -142,7 +142,6 @@ main {
     min-height: 60vh
 }
 body.scroll-locked {
-    position: fixed;
     left: 0;
     right: 0;
     overflow-y: scroll; 

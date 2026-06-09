@@ -126,23 +126,19 @@ function _restoreScroll() {
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
-    document.body.style.top = `-${_scrollLockedAt}px`; // compensa el salto visual
-    document.body.classList.add('scroll-locked');
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
-  
+    document.body.classList.add('scroll-locked');
 }
 
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
-    document.body.style.top = '';
-    window.scrollTo(0, _scrollLockedAt); // restaurar posición solo al CERRAR
+    window.scrollTo(0, _scrollLockedAt);
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
-   
 }
 (function fixStickyNavbarChromeIOS() {
     if (!/CriOS/.test(navigator.userAgent)) return;
@@ -3279,11 +3275,21 @@ document.getElementById("prodMarca")?.addEventListener("change", function () {
 
 document.getElementById("prodTipo")?.addEventListener("change", function () {
     actualizarIdDesdeDatalist(this, "dlTipos", "prodIdTipo");
-    toggleFieldsByTipo(this.value, false, "form");
+    const nombre = document.getElementById("prodNombre")?.value ?? "";
+    toggleFieldsByTipo(nombre || this.value, false, "form");
 });
 
 document.getElementById("prodTipo")?.addEventListener("input", function () {
+    const nombre = document.getElementById("prodNombre")?.value ?? "";
+    toggleFieldsByTipo(nombre || this.value, false, "form");
+});
+
+document.getElementById("prodNombre")?.addEventListener("input", function () {
     toggleFieldsByTipo(this.value, false, "form");
+});
+
+document.getElementById("prodNombreEditar")?.addEventListener("input", function () {
+    toggleFieldsByTipo(this.value, true, "edit");
 });
 
 document.getElementById("prodMaterial")?.addEventListener("change", function () {
