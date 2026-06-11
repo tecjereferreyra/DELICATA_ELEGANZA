@@ -2826,7 +2826,7 @@ function abrirFormularioNuevo() {
     abrirModalAdmin("modalAgregar");
 
     requestIdleCallback(() => {
-        cargarOpcionesDatalist(true).catch(console.warn);
+        cargarOpcionesDatalist().catch(console.warn);
     }, { timeout: 1000 });
 }
 
@@ -2963,7 +2963,7 @@ async function guardarNuevoProducto() {
 
 
 async function abrirEditarProducto(id) {
-    await cargarOpcionesDatalist(true);
+    await cargarOpcionesDatalist();
 
     fetch(`/api/Productos/${id}`)
         .then(r => {
@@ -2973,31 +2973,30 @@ async function abrirEditarProducto(id) {
         .then(p => {
             const producto = {
                 id: p.IdProducto ?? p.idProducto ?? p.id_producto ?? "",
-                nombre: p.Nombre ?? p.nombre ?? "",
-                modelo: p.Modelo ?? p.modelo ?? "",
-                color: p.Color ?? p.color ?? "",
-                idCategoria: p.IdCategoria ?? p.idCategoria ?? p.id_categoria ?? "",
-                idMarca: p.IdMarca ?? p.idMarca ?? p.id_marca ?? "",
-                idTipo: p.IdTipo ?? p.idTipo ?? p.id_tipo ?? "",
-                idMaterial: p.IdMaterial ?? p.idMaterial ?? p.id_material ?? "",
-                categoria: p.Categoria ?? p.categoria ?? "",
-                marca: p.Marca ?? p.marca ?? "",
-                tipo: p.Tipo ?? p.tipo ?? "",
-                material: p.Material ?? p.material ?? "",
-                compartimentos: p.Compartimentos ?? p.compartimentos ?? "",
-                capacidad: p.Capacidad ?? p.capacidad ?? "",
-                alto: p.Alto ?? p.alto ?? "",
-                ancho: p.Ancho ?? p.ancho ?? "",
-                profundidad: p.Profundidad ?? p.profundidad ?? "",
-                peso: p.Peso ?? p.peso ?? "",
-                genero: p.Genero ?? p.genero ?? "",
-                diametro: p.Diametro ?? p.diametro ?? "",
-                cantidadRuedas: p.CantidadRuedas ?? p.cantidadRuedas ?? "",
-                fuelleExpandible: p.FuelleExpandible ?? p.fuelleExpandible ?? false,
-                tipoCierre: p.TipoCierre ?? p.tipoCierre ?? "",
-                stock: p.Stock ?? p.stock ?? "",
-                disponible: p.Disponible ?? p.disponible ?? false,
-                imagen: p.ImagenUrl ?? p.imagenUrl ?? ""
+                nombre: p.nombre ?? "",
+                modelo: p.modelo ?? "",
+                color: p.color ?? "",
+                idCategoria: p.idCategoria ?? p.id_categoria ?? "",
+                idMarca: p.idMarca ?? p.id_marca ?? "",
+                idTipo: p.idTipo ?? p.id_tipo ?? "",
+                idMaterial: p.idMaterial ?? p.id_material ?? "",
+                categoria: p.categoria ?? "",
+                marca: p.marca ?? "",
+                tipo: p.tipo ?? "",
+                material: p.material ?? "",
+                compartimentos: p.compartimentos ?? "",
+                capacidad: p.capacidad ?? "",
+                alto: p.alto ?? "",
+                ancho: p.ancho ?? "",
+                profundidad: p.profundidad ?? "",
+                peso: p.peso ?? "",
+                genero: p.genero ?? "",
+                diametro: p.diametro ?? "",
+                cantidadRuedas: p.cantidadRuedas ?? "",
+                tipoCierre: p.tipoCierre ?? "",
+                stock: p.stock ?? "",
+                disponible: p.disponible ?? false,
+                imagen: p.imagenUrl ?? ""
             };
 
             document.getElementById("prodIdEditar").value = producto.id;
@@ -3099,8 +3098,8 @@ async function abrirEditarProducto(id) {
 
 let _fkCargadas = false;
 
-async function cargarOpcionesDatalist(forzar = false) {
-    if (_fkCargadas && !forzar) return; // ya cargado, no volver a fetchear
+async function cargarOpcionesDatalist() {
+    if (_fkCargadas) return; // ya cargado, no volver a fetchear
     try {
         const [categorias, marcas, tipos, materiales, tiposCierre, capacidades, generos] = await Promise.all([
             fetch("/api/Categorias").then(res => res.json()),
@@ -3549,65 +3548,6 @@ async function cargarFKs() {
     // Delegamos en cargarOpcionesDatalist que ya tiene caché y maneja ambos sets de datalists
     await cargarOpcionesDatalist();
 }
-/* -------- ETIQUETAS VISUALES DEL MODAL (modo view) -------- */
-function aplicarEtiquetasModal(norm) {
-    const setLabel = (id, label) => {
-        const el = document.getElementById(id);
-        if (el) el.dataset.label = label;
-    };
-
-    // Resetear a valores por defecto primero
-    setLabel("modalAlto", "Alto");
-    setLabel("modalAncho", "Ancho");
-    setLabel("modalProfundidad", "Profundidad");
-    setLabel("modalPeso", "Peso");
-    setLabel("modalDiametro", "Diámetro");
-
-    if (!norm) return;
-    const match = (list) => list.some(w => norm.includes(w));
-
-    // BOLSO / VALIJA → etiquetas por defecto (Alto, Ancho, Profundidad, Peso) → ya están
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero",
-        "rinonera", "necesser", "mochila", "morral", "bag", "minibag",
-        "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser",
-        "gondola", "valija", "trolley", "set valijas"])) {
-        return; // etiquetas por defecto ya OK
-    }
-
-    // CADENA / COLLAR
-    if (match(["cadena", "collar"])) {
-        setLabel("modalAlto", "Largo");
-        setLabel("modalAncho", "Grosor");
-        return;
-    }
-
-    // PULSERA / BRAZALETE
-    if (match(["pulsera", "pandora", "brazalete"])) {
-        setLabel("modalAlto", "Largo");
-        setLabel("modalAncho", "Grosor");
-        return;
-    }
-
-    // DIJE / COLGANTE / PENDIENTE
-    if (match(["dije", "colgante", "pendiente"])) {
-        setLabel("modalAlto", "Medidas");
-        setLabel("modalAncho", "Medidas");
-        return;
-    }
-
-    // AROS / PIERCING / ARGOLLA → sin cambio (Diámetro ya es default)
-    if (match(["aro", "piercing", "expansor", "espansor", "helix", "clapton",
-        "nostril", "argolla", "septum", "bull", "industrial", "flecha", "piedrita"])) {
-        return;
-    }
-
-    // PAÑOLERÍA → Largo / Ancho / Peso
-    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado",
-        "pashmina", "bufandon", "maxi bufanda", "megabufanda"])) {
-        setLabel("modalAlto", "Largo");
-        return;
-    }
-}
 function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     const raw = (nombre || "").toString();
 
@@ -3658,9 +3598,6 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
 
     // 👉 Ocultar TODO primero
     Object.values(campos).forEach(el => setVisible(el, false));
-
-    // Actualizar etiquetas visuales del modal
-    if (isView) aplicarEtiquetasModal(norm);
 
     if (!norm) {
         Object.values(campos).forEach(el => setVisible(el, true));
@@ -3755,7 +3692,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 📿 COLLARES / CADENAS / PULSERAS
     //    campos extra: genero, ancho, alto, peso
     // ==========================================================
-    if (match(["collar", "cadena", "pulsera", "pandora", "brazalete", "cadena con dije", "cadena con dijes"])) {
+    if (match(["collar", "cadena", "pulsera", "pandora", "brazalete"])) {
         setVisible(campos.genero, true);
         setVisible(campos.ancho, true);
         setVisible(campos.alto, true);
