@@ -852,7 +852,18 @@ function abrirModal(prod) {
     ];
 
     /* ================= AJUSTES VISUALES ================= */
+    // toggleFieldsByTipo también renombra data-label según el tipo de producto
     toggleFieldsByTipo(prod.Nombre || prod.nombre || "", false, "view");
+
+    // Ajustar unidades de Ancho en modal vista si el label fue renombrado a "Grosor"
+    const modalAnchoEl = document.getElementById("modalAncho");
+    if (modalAnchoEl && modalAnchoEl.getAttribute("data-label") === "Grosor") {
+        const idx = camposDisponibles.findIndex(c => c.id === "modalAncho");
+        if (idx !== -1 && prod.Ancho && prod.Ancho !== "—") {
+            camposDisponibles[idx].value = prod.Ancho + " mm";
+        }
+    }
+
     let visibles = 0;
     camposDisponibles.forEach(campo => {
         const el = document.getElementById(campo.id);
@@ -2476,7 +2487,7 @@ function validarCampos(data, esEditar = false) {
         return true; // solo es visible si ningún contenedor está oculto
     }
 
-    
+
     if (!esEditar) {
         if (campoVisible("prodMaterial") && !data.Material?.trim())
             errores.push("• El material es obligatorio.");
@@ -3155,7 +3166,7 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 /* ── MAPA DE TIPOS POR CATEGORÍA ── */
 const TIPOS_POR_CATEGORIA = {
     "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
-    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas","Dijes"],
+    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas", "Dijes"],
     "complementos": ["Paraguas", "Cajas Bijou", "Abanicos", "Cintos"],
     "artículos de viaje": ["Valijas", "Complementos de viaje"],
     "piercing": ["Piercing"],
@@ -3577,6 +3588,30 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         fuelle: get("FuelleExpandible"),   // ← AGREGAR
     };
 
+    // Renombra el label visible del campo (tanto en formulario como en modal vista)
+    function renameLabel(elem, nuevoLabel) {
+        if (!elem) return;
+        if (isView) {
+            // En modal vista el label está en data-label del <p>
+            elem.setAttribute("data-label", nuevoLabel);
+        } else {
+            // En formularios el label está en el <label> hermano dentro del .col
+            const col = elem.closest(".col");
+            if (col) {
+                const lbl = col.querySelector("label");
+                if (lbl) lbl.textContent = nuevoLabel;
+            }
+        }
+    }
+
+    // Restaura los labels originales de los campos dimensionales
+    function resetLabels() {
+        renameLabel(campos.alto, isView ? "Alto" : "Alto (cm)");
+        renameLabel(campos.ancho, isView ? "Ancho" : "Ancho (cm)");
+        renameLabel(campos.prof, isView ? "Profundidad" : "Profundidad (cm)");
+        renameLabel(campos.diametro, isView ? "Diámetro" : "Diámetro (mm)");
+    }
+
     function setVisible(elem, visible) {
         if (!elem) return;
         if (isView) {
@@ -3596,7 +3631,8 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         }
     }
 
-    // 👉 Ocultar TODO primero
+    // 👉 Restaurar labels originales y Ocultar TODO primero
+    resetLabels();
     Object.values(campos).forEach(el => setVisible(el, false));
 
     if (!norm) {
@@ -3659,19 +3695,42 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // ==========================================================
     // 💍 AROS / PIERCING / EXPANSOR / HELIX / CLAPTON /
     //    NOSTRIL / ARGOLLA / PIEDRITA / DIJE / BULL
-    //    campos extra: genero, diametro, peso
+    //
+    //  • Dije circular / Aro / Argolla / Piercing → solo Diámetro
+    //  • Dije (rectangular, forma, genérico) → Alto=Alto, Ancho=Largo
+    //  • Cadenas / Collares / Pulseras → Alto=Largo, Ancho=Grosor
     // ==========================================================
+
+    // Cadena / collar / pulsera
+    if (match(["collar", "cadena", "pulsera", "pandora", "brazalete"])) {
+        renameLabel(campos.alto, isView ? "Largo" : "Largo (cm)");
+        renameLabel(campos.ancho, isView ? "Grosor" : "Grosor (mm)");
+        setVisible(campos.genero, true);
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+
+    // Dije circular, aro, argolla, piercing → solo diámetro
     if (match([
         "aro", "piercing", "expansor", "espansor",
         "helix", "clapton", "nostril",
-        "argolla",
-        "piedrita", "dije", "septum",
-        "bull",
-        "industrial",
-        "flecha"
+        "argolla", "septum", "bull", "industrial", "flecha",
+        "dije circular", "dije redondo", "medallón", "medallon"
     ])) {
         setVisible(campos.genero, true);
         setVisible(campos.diametro, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+
+    // Dije (genérico / rectangular / con forma) → Alto + Largo (ancho)
+    if (match(["dije", "piedrita"])) {
+        renameLabel(campos.ancho, isView ? "Largo" : "Largo (cm)");
+        setVisible(campos.genero, true);
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
         setVisible(campos.peso, true);
         return;
     }
@@ -3680,19 +3739,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🧣 CHALINAS / BUFANDAS / CUELLOS / CUELLITOS / SACOS
     //    campos extra: genero, ancho, alto, peso
     // ==========================================================
-    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina","bufandon", "maxi bufanda","megabufanda"])) {
-        setVisible(campos.genero, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.peso, true);
-        return;
-    }
-
-    // ==========================================================
-    // 📿 COLLARES / CADENAS / PULSERAS
-    //    campos extra: genero, ancho, alto, peso
-    // ==========================================================
-    if (match(["collar", "cadena", "pulsera", "pandora", "brazalete"])) {
+    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina", "bufandon", "maxi bufanda", "megabufanda"])) {
         setVisible(campos.genero, true);
         setVisible(campos.ancho, true);
         setVisible(campos.alto, true);
