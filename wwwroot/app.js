@@ -3710,10 +3710,8 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     // Dije circular, aro, argolla, piercing → solo diámetro
+    // Dije circular → solo diámetro
     if (match([
-        "aro", "piercing", "expansor", "espansor",
-        "helix", "clapton", "nostril",
-        "argolla", "septum", "bull", "industrial", "flecha",
         "dije circular", "dije redondo", "medallón", "medallon"
     ])) {
         setVisible(campos.genero, true);
@@ -3722,9 +3720,12 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         return;
     }
 
-    // Dije (genérico / rectangular / con forma) → Alto + Largo (ancho)
-    if (match(["dije", "piedrita"])) {
-        renameLabel(campos.ancho, isView ? "Largo" : "Largo (cm)");
+    // Aros / Piercing → alto y ancho (sin profundidad)
+    if (match([
+        "aro", "piercing", "expansor", "espansor",
+        "helix", "clapton", "nostril",
+        "argolla", "septum", "bull", "industrial", "flecha"
+    ])) {
         setVisible(campos.genero, true);
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
@@ -3743,10 +3744,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.peso, true);
         return;
     }
-    // ==========================================================
-    // 🛏 ALMOHADAS / ALMOHADILLAS / CANDADOS
-    //    campos: alto, ancho, profundidad, peso, genero
-    // ==========================================================
+   
     // ==========================================================
     // 🛏 ALMOHADAS / ALMOHADILLAS / CANDADOS
     //    campos: alto, ancho, profundidad, peso, genero
