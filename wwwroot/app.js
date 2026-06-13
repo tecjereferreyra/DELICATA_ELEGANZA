@@ -3027,6 +3027,7 @@ async function abrirEditarProducto(id) {
             if (elIdMarca) elIdMarca.value = producto.idMarca;
             if (elIdTipo) elIdTipo.value = producto.idTipo;
             if (elIdMaterial) elIdMaterial.value = producto.idMaterial;
+            toggleFieldsByTipo(producto.nombre || "", true, "edit");
 
             document.getElementById("prodCompartimentosEditar").value = producto.compartimentos;
             document.getElementById("prodCapacidadEditar").value = producto.capacidad;
@@ -3041,7 +3042,6 @@ async function abrirEditarProducto(id) {
             if (fuelleInput) fuelleInput.checked = producto.fuelleExpandible === true;
             document.getElementById("prodTipoCierreEditar").value = producto.tipoCierre ?? "";
             document.getElementById("prodStockEditar").value = producto.stock;
-            // ← AGREGAR: limpiar input file para que no persista el archivo del producto anterior
             const inputPrincipalReset = document.getElementById("prodImagenEditar");
             if (inputPrincipalReset) inputPrincipalReset.value = "";
             const previewEditar = document.getElementById("imgPreviewEditar");
@@ -3098,7 +3098,7 @@ async function abrirEditarProducto(id) {
             if (inputImgExtraEdit2) inputImgExtraEdit2.value = "";
 
             abrirModalAdmin("modalEditar");
-            toggleFieldsByTipo(producto.nombre || "", true, "edit");
+           
 
         })
         .catch(err => console.error("Error al abrir edición:", err));
@@ -3709,16 +3709,8 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         return;
     }
 
-    // Dije circular, aro, argolla, piercing → solo diámetro
-    // Dije circular → solo diámetro
-    if (match([
-        "dije circular", "dije redondo", "medallón", "medallon"
-    ])) {
-        setVisible(campos.genero, true);
-        setVisible(campos.diametro, true);
-        setVisible(campos.peso, true);
-        return;
-    }
+  
+   
 
     // Aros / Piercing → alto y ancho (sin profundidad)
     if (match([
@@ -3812,8 +3804,26 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         return;
     }
 
+    // Dije circular / redondo → solo diámetro
+    if (match(["dije circular", "dije redondo", "medallon", "medallón"])) {
+        setVisible(campos.genero, true);
+        setVisible(campos.diametro, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+
+    // Dije genérico / charm → alto y ancho
+    if (match(["dije", "charm"])) {
+        setVisible(campos.genero, true);
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+
     Object.values(campos).forEach(el => setVisible(el, true));
 }
+
 // Mantener el servidor de Render despierto
 function keepAliveRender() {
     fetch("https://delicata-eleganza.onrender.com/api/Productos?limit=1", {
