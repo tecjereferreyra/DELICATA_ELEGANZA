@@ -3821,7 +3821,10 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         return;
     }
 
-    Object.values(campos).forEach(el => setVisible(el, true));
+    setVisible(campos.alto, true);
+    setVisible(campos.ancho, true);
+    setVisible(campos.prof, true);
+    setVisible(campos.peso, true);
 }
 
 // Mantener el servidor de Render despierto
