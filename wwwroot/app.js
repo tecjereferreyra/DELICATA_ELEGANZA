@@ -3640,12 +3640,20 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // Devuelve true si alguna palabra de la lista aparece en el texto normalizado
     const match = (list) => list.some(w => norm.includes(w));
 
-    // ==========================================================
-    // 👜 CARTERA / BANDOLERA / BOLSO / BOLSA / BILLETERA
-    //    campos extra: compartimentos, cierre, capacidad, genero,
-    //                  alto, ancho, profundidad, peso
-    // ==========================================================
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "billetera", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola"])) {
+  
+    // 💳 BILLETERA — sin capacidad ni compartimentos
+    if (match(["billetera", "wallet", "portatarjeta", "porta tarjeta", "tarjetero", "monedero", "portamonedas", "porta monedas", "cartera fina"])) {
+        setVisible(campos.cierre, true);
+        setVisible(campos.genero, true);
+        setVisible(campos.alto, true);
+        setVisible(campos.ancho, true);
+        setVisible(campos.prof, true);
+        setVisible(campos.peso, true);
+        return;
+    }
+
+    // 👜 CARTERA / BANDOLERA / BOLSO / BOLSA / MOCHILA
+    if (match(["cartera", "bandolera", "bolso", "bolsa", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
@@ -3654,7 +3662,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
         setVisible(campos.peso, true);
-        setVisible(campos.fuelle, true);   // ← AGREGAR
+        setVisible(campos.fuelle, true);
         return;
     }
 
@@ -3663,7 +3671,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos extra: compartimentos, cierre, capacidad, genero,
     //                  alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["valija", "trolley", "set valijas"])) {
+    if (match(["valija", "trolley", "set valijas", "maleta", "equipaje", "carry on", "carry-on", "cabina", "baulera", "baul", "maletín de viaje", "maletin de viaje", "trolley bag"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
@@ -3681,8 +3689,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🪭 ABANICOS / APLIQUES / TIARAS / CORONAS
     //    campos extra: genero, alto, ancho, peso
     // ==========================================================
-    if (match(["abanico", "aplique", "tiara", "corona", "cinto", "cinta", "correa", "cenidor"])) {
-        setVisible(campos.genero, true);
+    if (match(["abanico", "aplique", "tiara", "corona", "cinto", "cinta", "correa", "cenidor", "vincha", "diadema", "headband", "pin", "broche", "pasador", "hebilla", "clip pelo", "accesorio pelo", "tocado"])) {        setVisible(campos.genero, true);
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.peso, true);
@@ -3699,7 +3706,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // ==========================================================
 
     // Cadena / collar / pulsera
-    if (match(["collar", "cadena", "pulsera", "pandora", "brazalete"])) {
+    if (match(["collar", "cadena", "pulsera", "pandora", "brazalete", "tobillera", "gargantilla", "choker", "necklace", "bracelet", "chain", "enklet", "anklet"])) {
         renameLabel(campos.alto, isView ? "Largo" : "Largo (cm)");
         renameLabel(campos.ancho, isView ? "Grosor" : "Grosor (mm)");
         setVisible(campos.genero, true);
@@ -3715,8 +3722,9 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // Aros / Piercing → alto y ancho (sin profundidad)
     if (match([
         "aro", "piercing", "expansor", "espansor",
-        "helix", "clapton", "nostril",
-        "argolla", "septum", "bull", "industrial", "flecha"
+        "helix", "clapton", "nostril", "earcuff","cuff","ear-cuff",
+        "argolla", "septum", "bull", "industrial", "flecha",
+        "earring", "pendiente", "arete", "earing", "dormilon", "dormilón", "tuerca", "stick", "clip oreja"
     ])) {
         setVisible(campos.genero, true);
         setVisible(campos.alto, true);
@@ -3729,7 +3737,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🧣 CHALINAS / BUFANDAS / CUELLOS / CUELLITOS / SACOS
     //    campos extra: genero, ancho, alto, peso
     // ==========================================================
-    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina", "bufandon", "maxi bufanda", "megabufanda"])) {
+    if (match(["chalina", "bufanda", "cuello", "cuellito", "saco", "tapado", "pashmina", "bufandon", "maxi bufanda", "megabufanda", "estola", "chal", "mantón", "manton", "foulard", "scarf", "pañuelo", "infinity scarf"])) {
         setVisible(campos.genero, true);
         setVisible(campos.ancho, true);
         setVisible(campos.alto, true);
@@ -3741,7 +3749,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🛏 ALMOHADAS / ALMOHADILLAS / CANDADOS
     //    campos: alto, ancho, profundidad, peso, genero
     // ==========================================================
-    if (match(["almohada", "almohadilla", "almohadin", "candado"])) {
+    if (match(["almohada", "almohadilla", "almohadin", "candado", "cerrojo", "lock", "cadeado", "candadito", "seguro valija", "pillow", "cushion"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
@@ -3754,7 +3762,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // ⚖️ BALANZA PARA VALIJAS
     //    campos: alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["balanza"])) {
+    if (match(["balanza", "peso valija", "pesa valija", "pesaje", "escala", "luggage scale"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
@@ -3766,7 +3774,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🔌 BOMBA ELÉCTRICA / MANUAL DE VACÍO
     //    campos: alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["bomba"])) {
+    if (match(["bomba", "bomba vacio", "bomba al vacio", "bomba manual", "bomba electrica", "aspiradora ropa", "compresor bolsas"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
@@ -3792,7 +3800,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos: compartimentos, capacidad, alto, ancho,
     //            profundidad, peso, genero, cierre
     // ==========================================================
-    if (match(["porta valores", "portavalores"])) {
+    if (match(["porta valores", "portavalores", "caja fuerte", "caja de seguridad", "cofre", "safe box", "porta documentos", "portadocumentos"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cap, true);
         setVisible(campos.alto, true);
@@ -3805,7 +3813,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     // Dije circular / redondo → solo diámetro
-    if (match(["dije circular", "dije redondo", "medallon", "medallón"])) {
+    if (match(["dije circular", "dije redondo", "medallon", "medallón", "colgante redondo", "pendant redondo", "moneda colgante"])) {
         setVisible(campos.genero, true);
         setVisible(campos.diametro, true);
         setVisible(campos.peso, true);
@@ -3813,7 +3821,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     // Dije genérico / charm → alto y ancho
-    if (match(["dije", "charm"])) {
+    if (match(["dije", "charm", "colgante", "pendant", "charms", "dijecito"])) {
         setVisible(campos.genero, true);
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
