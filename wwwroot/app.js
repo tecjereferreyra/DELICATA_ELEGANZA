@@ -1946,9 +1946,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === "Go") {
-            const tag = document.activeElement?.tagName;
-            if (tag === "INPUT" || tag === "TEXTAREA") {
-                document.activeElement.blur();
+            const active = document.activeElement;
+            const tag = active?.tagName;
+            if ((tag === "INPUT" || tag === "TEXTAREA") && !active.closest("form")) {
+                active.blur();
             }
         }
     });
@@ -2015,9 +2016,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ── Búsqueda: registrar aquí para garantizar que domCache ya está listo ──
+    function aplicarFiltrosYScroll() {
+        aplicarFiltros();
+        requestAnimationFrame(() => {
+            const contenedor = document.getElementById("contenedor-productos");
+            if (contenedor) {
+                contenedor.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        });
+    }
+
     const busquedaDebounced = debounce(aplicarFiltros, 300);
-    if (domCache.searchInput) domCache.searchInput.addEventListener("input", busquedaDebounced);
-    if (domCache.btnBuscar) domCache.btnBuscar.addEventListener("click", aplicarFiltros);
+    if (domCache.searchInput) {
+        domCache.searchInput.addEventListener("input", busquedaDebounced);
+        domCache.searchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === "Go") {
+                e.preventDefault();
+                domCache.searchInput.blur();
+                aplicarFiltrosYScroll();
+            }
+        });
+    }
+    if (domCache.btnBuscar) domCache.btnBuscar.addEventListener("click", aplicarFiltrosYScroll);
 
     hamburger = document.querySelector(".hamburger");
     mobileMenu = document.querySelector(".mobile-menu");
@@ -2974,6 +2994,7 @@ async function guardarNuevoProducto() {
 
 
 async function abrirEditarProducto(id) {
+    window._scrollAntesDeCRUD = window.pageYOffset;
     await cargarOpcionesDatalist();
 
     fetch(`/api/Productos/${id}`)
@@ -3416,7 +3437,7 @@ async function guardarEdicionProducto() {
         window._imagenesGuardadasAEliminar = [];
         mostrarToast("Producto editado correctamente ✓", "success");
         _fkCargadas = false;
-        const _savedScrollEditar = _scrollLockedAt;
+        const _savedScrollEditar = window._scrollAntesDeCRUD ?? _scrollLockedAt;
         cerrarModalCRUD("modalEditar");
         fetch(`/api/Productos/${id}`)
             .then(r => r.json())
@@ -3454,6 +3475,7 @@ async function guardarEdicionProducto() {
 let idProdEliminar = null;
 
 function abrirEliminarProducto(id, nombre) {
+    window._scrollAntesDeCRUD = window.pageYOffset;
     idProdEliminar = id;
 
     const textoEl = document.getElementById("prodTextoEliminar");
@@ -3470,7 +3492,7 @@ function confirmarEliminarProducto() {
 
     document.activeElement?.blur();
 
-    const _savedScrollEliminarProd = _scrollLockedAt;
+    const _savedScrollEliminarProd = window._scrollAntesDeCRUD ?? _scrollLockedAt;
     fetch(`${API_URL}/${idProdEliminar}`, {
         method: "DELETE"
     })
@@ -3528,7 +3550,7 @@ function confirmarEliminar() {
         return;
     }
 
-    const _savedScrollEliminar = _scrollLockedAt;
+    const _savedScrollEliminar = window._scrollAntesDeCRUD ?? _scrollLockedAt;
     mostrarToast("Eliminando producto...", "info");
 
     fetch(`/api/Productos/${idProdEliminar}`, {
