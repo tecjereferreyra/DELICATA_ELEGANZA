@@ -1278,6 +1278,15 @@ function expandirConSinonimos(color) {
     }
     return colorNorm;
 }
+function expandirGenero(genero) {
+    if (!genero || genero === "—") return "";
+    const n = normalizar(String(genero));
+    if (n.includes("mujer") || n.includes("femen") || n.includes("dama") || n === "f")
+        return "mujer femenino dama";
+    if (n.includes("hombre") || n.includes("mascul") || n.includes("caballero") || n.includes("varon") || n === "m")
+        return "hombre masculino caballero varon";
+    return n;
+}
 function recalcularCamposBusqueda(prod) {
     const altoStr = prod.Alto && prod.Alto !== "—" ? String(prod.Alto) : null;
     const anchoStr = prod.Ancho && prod.Ancho !== "—" ? String(prod.Ancho) : null;
@@ -1295,7 +1304,7 @@ function recalcularCamposBusqueda(prod) {
         prod.Nombre, prod.Modelo, colorNorm,
         prod.Marca, prod.Material, prod.Tipo,
         prod.Capacidad, prod.Categoria,
-        prod.Genero, prod.TipoCierre,
+        expandirGenero(prod.Genero), prod.TipoCierre,
         String(prod.Stock ?? ""),
         prod.Compartimentos !== "—" ? String(prod.Compartimentos) : null,
         prod.CantidadRuedas !== "—" ? String(prod.CantidadRuedas) : null,
@@ -1453,18 +1462,30 @@ function parsearGrupos(textoBusqueda) {
 
 
 function palabraMatchFuzzy(palabra, textoNormalizado) {
+    // Match exacto como token
     const tokens = textoNormalizado.split(/\s+/);
     if (tokens.includes(palabra)) return true;
+
+    // Números: buscar que estén contenidos (ej: "30" dentro de "30cm")
     if (/\d/.test(palabra)) {
         return tokens.some(token => token.includes(palabra));
     }
-    // Palabras de 1-3 letras: sin tolerancia. De 4 en adelante: tolerancia 1.
-    const maxDist = palabra.length <= 5 ? 0 : 1;
-    if (maxDist === 0) return false;
-    return tokens.some(token => {
-        if (Math.abs(token.length - palabra.length) > maxDist + 1) return false;
-        return levenshtein(palabra, token) <= maxDist;
-    });
+
+    // Palabras cortas (≤5 letras): solo exacto, sin fuzzy
+    if (palabra.length <= 5) return false;
+
+  
+    if (palabra.length >= 8) {
+        const prefijo = palabra.slice(0, 4);
+        return tokens.some(token => {
+            if (!token.startsWith(prefijo)) return false;
+            if (Math.abs(token.length - palabra.length) > 2) return false;
+            return levenshtein(palabra, token) <= 1;
+        });
+    }
+
+    // Palabras de 6-7 letras: sin fuzzy, solo exacto (zona más conflictiva)
+    return false;
 }
 
 
@@ -2015,13 +2036,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ── Búsqueda: registrar aquí para garantizar que domCache ya está listo ──
     function aplicarFiltrosYScroll() {
         aplicarFiltros();
         requestAnimationFrame(() => {
             const contenedor = document.getElementById("contenedor-productos");
             if (contenedor) {
-                contenedor.scrollIntoView({ behavior: "smooth", block: "start" });
+                const navbar = document.querySelector("header.navbar");
+                const navbarH = navbar ? navbar.getBoundingClientRect().height : 80;
+                const y = contenedor.getBoundingClientRect().top + window.pageYOffset - navbarH - 24;
+                window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
             }
         });
     }
@@ -3796,7 +3819,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🔌 BOMBA ELÉCTRICA / MANUAL DE VACÍO
     //    campos: alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["bomba", "bomba vacio", "bomba al vacio", "bomba manual", "bomba electrica", "aspiradora ropa", "compresor bolsas"])) {
+    if (match(["bomba", "bomba vacio", "bomba vacío", "bomba al vacio", "bomba de vacio", "bomba de vacío", "bomba manual", "bomba electrica", "bomba eléctrica", "bomba de vacío eléctrica", "aspiradora ropa", "compresor bolsas"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
