@@ -21,7 +21,7 @@ namespace DELICATA_ELEGANZA.DTO
         public decimal? Ancho { get; set; }
         public decimal? Profundidad { get; set; }
         public decimal? Peso { get; set; }
-        public string Genero { get; set; }      // ídem
+        public string? Genero { get; set; }      // ídem
         public decimal? Diametro { get; set; }
         public int? CantidadRuedas { get; set; }
 
