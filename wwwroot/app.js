@@ -3630,6 +3630,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         fuelle: get("FuelleExpandible"),   // ← AGREGAR
     };
 
+    const campoStock = get("Stock");
     // Renombra el label visible del campo (tanto en formulario como en modal vista)
     function renameLabel(elem, nuevoLabel) {
         if (!elem) return;
@@ -3652,6 +3653,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         renameLabel(campos.ancho, isView ? "Ancho" : "Ancho (cm)");
         renameLabel(campos.prof, isView ? "Profundidad" : "Profundidad (cm)");
         renameLabel(campos.diametro, isView ? "Diámetro" : "Diámetro (mm)");
+        renameLabel(campoStock, "Stock total");
     }
 
     function setVisible(elem, visible) {
@@ -3697,8 +3699,8 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         return;
     }
 
-    // 👜 CARTERA / BANDOLERA / BOLSO / BOLSA / MOCHILA
-    if (match(["cartera", "bandolera", "bolso", "bolsa", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio"])) {
+    // 👜 CARTERA / BANDOLERA / BOLSO / MOCHILA
+    if (match(["cartera", "bandolera", "bolso",  "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
@@ -3775,6 +3777,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.peso, true);
+        renameLabel(campoStock, "Stock por par");
         return;
     }
 
@@ -3812,6 +3815,10 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
         setVisible(campos.peso, true);
+        renameLabel(campoStock, "Stock por unidad");
+        renameLabel(campos.alto, isView ? "Alto por unidad" : "Alto por unidad (cm)");
+        renameLabel(campos.ancho, isView ? "Ancho por unidad" : "Ancho por unidad (cm)");
+        renameLabel(campos.prof, isView ? "Profundidad por unidad" : "Profundidad por unidad (cm)");
         return;
     }
 
@@ -3819,7 +3826,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🔌 BOMBA ELÉCTRICA / MANUAL DE VACÍO
     //    campos: alto, ancho, profundidad, peso
     // ==========================================================
-    if (match(["bomba", "bomba vacio", "bomba vacío", "bomba al vacio", "bomba de vacio", "bomba de vacío", "bomba manual", "bomba electrica", "bomba eléctrica", "bomba de vacío eléctrica", "aspiradora ropa", "compresor bolsas"])) {
+    if (match(["bomba", "bomba vacio", "bomba vacío", "bomba al vacio", "bomba de vacio", "bomba de vacío", "bomba manual", "bomba electrica", "bomba eléctrica", "bomba de vacío eléctrica", "aspiradora ropa", "compresor"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
@@ -3832,12 +3839,16 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos: alto, ancho, profundidad, peso, capacidad
     //    (va ANTES del bloque genérico de "bolsa" para tener prioridad)
     // ==========================================================
-    if (match(["vacio", "vacío"])) {
+    if (match(["vacio", "vacío","bolsa vacio", "bolsa vacío","bolsas vacio", "bolsas vacío"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
         setVisible(campos.peso, true);
         setVisible(campos.cap, true);
+        renameLabel(campoStock, "Stock por unidad");
+        renameLabel(campos.alto, isView ? "Alto por unidad" : "Alto por unidad (cm)");
+        renameLabel(campos.ancho, isView ? "Ancho por unidad" : "Ancho por unidad (cm)");
+        renameLabel(campos.prof, isView ? "Profundidad por unidad" : "Profundidad por unidad (cm)");
         return;
     }
     // ==========================================================
@@ -3862,6 +3873,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.genero, true);
         setVisible(campos.diametro, true);
         setVisible(campos.peso, true);
+        renameLabel(campos.diametro, isView ? "Diámetro total" : "Diámetro total (mm)");
         return;
     }
 
