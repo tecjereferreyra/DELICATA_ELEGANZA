@@ -1299,7 +1299,20 @@ function recalcularCamposBusqueda(prod) {
     const colorNorm = prod.Color && prod.Color !== "—"
         ? normalizar(prod.Color.replace(/-/g, " "))
         : "";
-
+    prod._indiceBusqueda = {
+        nombre: normalizar(prod.Nombre || ""),
+        modelo: normalizar(prod.Modelo || ""),
+        color: normalizar(prod.Color || ""),
+        marca: normalizar(prod.Marca || ""),
+        material: normalizar(prod.Material || ""),
+        tipo: normalizar(prod.Tipo || ""),
+        categoria: normalizar(prod.Categoria || ""),
+        genero: normalizar(prod.Genero || ""),
+        alto: prod.Alto ? String(prod.Alto) : "",
+        ancho: prod.Ancho ? String(prod.Ancho) : "",
+        profundidad: prod.Profundidad ? String(prod.Profundidad) : "",
+        diametro: prod.Diametro ? String(prod.Diametro) : ""
+    };
     prod._camposNormalizados = [
         prod.Nombre, prod.Modelo, colorNorm,
         prod.Marca, prod.Material, prod.Tipo,
@@ -1466,9 +1479,8 @@ function palabraMatchFuzzy(palabra, textoNormalizado) {
     const tokens = textoNormalizado.split(/\s+/);
     if (tokens.includes(palabra)) return true;
 
-    // Números: buscar que estén contenidos (ej: "30" dentro de "30cm")
-    if (/\d/.test(palabra)) {
-        return tokens.some(token => token.includes(palabra));
+    if (/^\d+([.,]\d+)?$/.test(palabra)) {
+        return tokens.includes(palabra);
     }
 
     // Palabras cortas (≤5 letras): solo exacto, sin fuzzy
@@ -1519,7 +1531,26 @@ function normalizarTermino(p) {
         .replace(/([^aeiou])es$/, "$1");
 
 }
+function extraerFiltrosBusqueda(texto) {
 
+    texto = normalizar(texto);
+
+    const filtros = {};
+
+    // Alto
+    let m = texto.match(/(\d+(?:[.,]\d+)?)\s*cm\s*de\s*alto/);
+    if (!m) m = texto.match(/alto\s*(\d+(?:[.,]\d+)?)/);
+
+    if (m) filtros.alto = m[1];
+
+    // Ancho
+    m = texto.match(/(\d+(?:[.,]\d+)?)\s*cm\s*de\s*ancho/);
+    if (!m) m = texto.match(/ancho\s*(\d+(?:[.,]\d+)?)/);
+
+    if (m) filtros.ancho = m[1];
+
+    return filtros;
+}
 function matchBusquedaFuzzy(camposNormalizados, textoBusqueda) {
     const grupos = parsearGrupos(textoBusqueda);
     if (grupos.length === 0) return true;
@@ -1595,10 +1626,33 @@ const aplicarFiltros = () => {
         });
     }
 
-    // 2. Filtrar por búsqueda fuzzy multi-palabra (solo sobre el base ya filtrado)
-    // 2. Filtrar por búsqueda fuzzy multi-palabra (solo sobre el base ya filtrado)
     if (textoBusqueda !== "") {
-        base = base.filter(p => matchBusquedaFuzzy(p._camposNormalizados, textoBusqueda));
+
+        const filtros = extraerFiltrosBusqueda(textoBusqueda);
+
+        base = base.filter(p => {
+
+            const idx = p._indiceBusqueda;
+
+            if (
+                filtros.alto &&
+                idx.alto !== filtros.alto
+            ) {
+                return false;
+            }
+
+            if (
+                filtros.ancho &&
+                idx.ancho !== filtros.ancho
+            ) {
+                return false;
+            }
+
+            return matchBusquedaFuzzy(
+                p._camposNormalizados,
+                textoBusqueda
+            );
+        });
     }
 
     productosFiltrados = base;
