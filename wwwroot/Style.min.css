@@ -254,7 +254,7 @@ input::placeholder {
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    margin: 8px 10px 4px;
+    margin: 2px;
     padding: 10px 14px;
     background: #faf6f1;
     border: 1px solid rgba(177, 151, 116, .45);
@@ -1426,7 +1426,7 @@ header.navbar .title {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px
+    gap: 1px;
 }
 
 .modal-buttons-wrapper {
@@ -3107,7 +3107,7 @@ footer.footer {
     }
 
     .modal-info-grid p {
-        font-size: .79rem;
+        font-size: .71rem;
         padding: 4px 6px;
         min-height: 28px
     }
@@ -3118,7 +3118,7 @@ footer.footer {
     }
 
     .modal-content {
-        max-height: 94vh;
+        max-height: 97vh;
         padding: 3px;
         max-width:63%;
     }

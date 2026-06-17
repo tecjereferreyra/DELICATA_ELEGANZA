@@ -2063,15 +2063,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+   
     const tipoInput = document.getElementById("prodTipo");
-    if (tipoInput) {
-        tipoInput.addEventListener("input", e => {
-            toggleFieldsByTipo(e.target.value, false, "form");
-        });
-        tipoInput.addEventListener("change", e => {
-            toggleFieldsByTipo(e.target.value, false, "form");
-        });
-    }
+ 
 
     const nombreEditarInput = document.getElementById("prodNombreEditar");
     if (nombreEditarInput) {
@@ -2080,15 +2074,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+
     const tipoEditarInput = document.getElementById("prodTipoEditar");
-    if (tipoEditarInput) {
-        tipoEditarInput.addEventListener("input", e => {
-            toggleFieldsByTipo(e.target.value, true, "edit");
-        });
-        tipoEditarInput.addEventListener("change", e => {
-            toggleFieldsByTipo(e.target.value, true, "edit");
-        });
-    }
+
 
     function aplicarFiltrosYScroll() {
         aplicarFiltros();
@@ -3893,12 +3881,11 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    campos: alto, ancho, profundidad, peso, capacidad
     //    (va ANTES del bloque genérico de "bolsa" para tener prioridad)
     // ==========================================================
-    if (match(["vacio", "vacío","bolsa vacio", "bolsa vacío","bolsas vacio", "bolsas vacío"])) {
+    if (match(["vacio", "vacío", "bolsa vacio", "bolsa vacío", "bolsas vacio", "bolsas vacío"])) {
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
         setVisible(campos.peso, true);
-        setVisible(campos.cap, true);
         renameLabel(campoStock, "Stock por unidad");
         renameLabel(campos.alto, isView ? "Alto por unidad" : "Alto por unidad (cm)");
         renameLabel(campos.ancho, isView ? "Ancho por unidad" : "Ancho por unidad (cm)");
