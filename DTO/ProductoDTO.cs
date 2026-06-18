@@ -92,6 +92,9 @@ namespace DELICATA_ELEGANZA.DTO          // ← esto faltaba
         [JsonPropertyName("disponible")]
         public bool Disponible { get; set; }
 
+        [JsonPropertyName("medidasTexto")]
+        public string? MedidasTexto { get; set; }
+
         [JsonPropertyName("imagenes")]
         public List<string>? Imagenes { get; set; }
     }

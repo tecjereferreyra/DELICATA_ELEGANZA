@@ -30,5 +30,7 @@ namespace DELICATA_ELEGANZA.DTO
         public int? Stock { get; set; }
         public string? ImagenUrl { get; set; }
         public int? IdTipoCierre { get; set; }
+
+        public string? MedidasTexto { get; set; }
     }
 }

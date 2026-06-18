@@ -83,6 +83,7 @@ namespace DELICATA_ELEGANZA.Controllers
                         FuelleExpandible = p.FuelleExpandible,
                         IdTipoCierre = p.id_tipo_cierre,
                         TipoCierre = p.TipoCierre != null ? p.TipoCierre.Nombre : null,
+                        MedidasTexto = p.MedidasTexto,
                         Stock = p.Stock,
 
                         ImagenUrl = string.IsNullOrEmpty(p.ImagenUrl)
@@ -196,6 +197,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 FuelleExpandible = producto.FuelleExpandible,
                 IdTipoCierre = producto.id_tipo_cierre,
                 TipoCierre = producto.TipoCierre?.Nombre,
+                MedidasTexto = producto.MedidasTexto,
                 Stock = producto.Stock,
 
                 ImagenUrl = producto.ImagenUrl ?? "/ImagenUrl/default.jpg",
@@ -237,6 +239,7 @@ namespace DELICATA_ELEGANZA.Controllers
             producto.Diametro = productoDto.Diametro;
             producto.CantidadRuedas = productoDto.CantidadRuedas;
             producto.FuelleExpandible = productoDto.FuelleExpandible;
+            producto.MedidasTexto = productoDto.MedidasTexto;
             producto.Compartimentos = productoDto.Compartimentos;
             producto.Stock = productoDto.Stock ?? producto.Stock;
             producto.Disponible = producto.Stock > 0;
@@ -282,6 +285,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 Diametro = productoDto.Diametro,
                 CantidadRuedas = productoDto.CantidadRuedas,
                 FuelleExpandible = productoDto.FuelleExpandible,
+                MedidasTexto = productoDto.MedidasTexto,
                 Compartimentos = productoDto.Compartimentos,
                 Stock = productoDto.Stock,
             };
@@ -325,6 +329,7 @@ namespace DELICATA_ELEGANZA.Controllers
                     Diametro = nuevoProducto.Diametro,
                     CantidadRuedas = nuevoProducto.CantidadRuedas,
                     FuelleExpandible = nuevoProducto.FuelleExpandible,
+                    MedidasTexto = nuevoProducto.MedidasTexto,
                     Stock = nuevoProducto.Stock,
                     Disponible = nuevoProducto.Disponible,
                     ImagenUrl = nuevoProducto.ImagenUrl ?? "/ImagenUrl/default.jpg",

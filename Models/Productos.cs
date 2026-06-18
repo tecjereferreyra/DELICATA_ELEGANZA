@@ -58,6 +58,8 @@ namespace DELICATA_ELEGANZA.Models
         public string? ImagenUrl { get; set; }
         public bool Disponible { get; set; }
 
+        public string? MedidasTexto { get; set; }
+
         [ForeignKey("id_categoria")]
         public Categorias? Categoria { get; set; }
 

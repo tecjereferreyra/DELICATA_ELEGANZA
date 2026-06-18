@@ -197,6 +197,7 @@ function normalizarProducto(p) {
         Diametro: p.Diametro ?? p.diametro ?? "—",
         CantidadRuedas: p.CantidadRuedas ?? p.cantidadRuedas ?? "—",
         FuelleExpandible: p.FuelleExpandible ?? p.fuelleExpandible ?? null,
+        MedidasTexto: p.MedidasTexto ?? p.medidasTexto ?? "—", 
         TipoCierre: p.TipoCierre ?? p.tipoCierre ?? "—",
         Stock: Number(p.Stock ?? p.stock ?? 0),
         ImagenUrl: p.ImagenUrl ?? p.imagenUrl ?? "/ImagenUrl/default.jpg",
@@ -847,6 +848,7 @@ function abrirModal(prod) {
         { id: "modalGenero", value: prod.Genero || prod.genero },
         { id: "modalCantidadRuedas", value: prod.CantidadRuedas || prod.cantidadRuedas },
         { id: "modalFuelleExpandible", value: prod.FuelleExpandible === true ? "Sí" : prod.FuelleExpandible === false ? "No" : null },
+        { id: "modalMedidas", value: prod.MedidasTexto && prod.MedidasTexto !== "—" ? prod.MedidasTexto : null },   // ← agregar
         { id: "modalTipoCierre", value: prod.TipoCierre || prod.tipoCierre },
         { id: "modalStock", value: prod.Stock ?? prod.stock },
     ];
@@ -2731,6 +2733,7 @@ function _leerSnapshotFormulario() {
         CantidadRuedas: val("prodCantidadRuedas"),
         TipoCierre: val("prodTipoCierre"),
         FuelleExpandible: checked("prodFuelleExpandible"),
+        MedidasTexto: val("prodMedidas"),
         Stock: val("prodStock"),
         _archivo: archivo,
         _archivosExtra: archivosExtra,
@@ -2762,6 +2765,7 @@ function _cargarSnapshotAlFormulario(snap) {
     set("prodStock", snap.Stock);
     const fuelle = document.getElementById("prodFuelleExpandible");
     if (fuelle) fuelle.checked = !!snap.FuelleExpandible;
+    set("prodMedidas", snap.MedidasTexto);  
     // Actualizar swatch
     _actualizarPreviewColorAgregar();
     // Re-aplicar toggleFields
@@ -2970,6 +2974,7 @@ function _snapToFormData(snap) {
     if (snap.CantidadRuedas) fd.append("CantidadRuedas", snap.CantidadRuedas);
     if (snap.TipoCierre) fd.append("TipoCierre", snap.TipoCierre);
     fd.append("FuelleExpandible", snap.FuelleExpandible ? "true" : "false");
+    if (snap.MedidasTexto) fd.append("MedidasTexto", snap.MedidasTexto);  
     if (snap._archivo) fd.append("imagen", snap._archivo);
     return fd;
 }
@@ -3086,7 +3091,8 @@ async function abrirEditarProducto(id) {
                 genero: p.Genero ?? p.genero ?? "",
                 diametro: p.Diametro ?? p.diametro ?? "",
                 cantidadRuedas: p.CantidadRuedas ?? p.cantidadRuedas ?? "",
-                fuelleExpandible: p.FuelleExpandible ?? p.fuelleExpandible ?? null,  // ← línea nueva
+                fuelleExpandible: p.FuelleExpandible ?? p.fuelleExpandible ?? null,
+                medidasTexto: p.MedidasTexto ?? p.medidasTexto ?? "", // ← línea nueva
                 tipoCierre: p.TipoCierre ?? p.tipoCierre ?? "",
                 stock: p.Stock ?? p.stock ?? "",
                 disponible: p.Disponible ?? p.disponible ?? false,
@@ -3126,6 +3132,8 @@ async function abrirEditarProducto(id) {
             document.getElementById("prodCantidadRuedasEditar").value = producto.cantidadRuedas ?? "";
             const fuelleInput = document.getElementById("prodFuelleExpandibleEditar");
             if (fuelleInput) fuelleInput.checked = producto.fuelleExpandible === true;
+            const medidasInput = document.getElementById("prodMedidasEditar");
+            if (medidasInput) medidasInput.value = producto.medidasTexto ?? "";  
             document.getElementById("prodTipoCierreEditar").value = producto.tipoCierre ?? "";
             document.getElementById("prodStockEditar").value = producto.stock;
             const inputPrincipalReset = document.getElementById("prodImagenEditar");
@@ -3459,6 +3467,7 @@ async function guardarEdicionProducto() {
         if (fuelleColEdit?.style.display !== "none") {
             fd.append("FuelleExpandible", fuelleValEdit ? "true" : "false");
         }
+        appendIfVisible(fd, "prodMedidasEditar", "MedidasTexto", "");
         fd.append("Stock", document.getElementById("prodStockEditar").value);
 
         const archivo = document.getElementById("prodImagenEditar").files[0];
@@ -3665,7 +3674,8 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         diametro: get("Diametro"),
         ruedas: get("CantidadRuedas"),
         cierre: get("TipoCierre"),
-        fuelle: get("FuelleExpandible"),   // ← AGREGAR
+        fuelle: get("FuelleExpandible"),
+        medidas: get("Medidas"), // ← AGREGAR
     };
 
     const campoStock = get("Stock");
@@ -3692,6 +3702,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         renameLabel(campos.prof, isView ? "Profundidad" : "Profundidad (cm)");
         renameLabel(campos.diametro, isView ? "Diámetro" : "Diámetro (mm)");
         renameLabel(campoStock, "Stock total");
+        renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");  // ← AGREGAR
     }
 
     function setVisible(elem, visible) {
@@ -3817,6 +3828,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.ancho, true);
         setVisible(campos.peso, true);
         renameLabel(campoStock, "Stock por par");
+        renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");
         return;
     }
 
@@ -3879,14 +3891,10 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     //    (va ANTES del bloque genérico de "bolsa" para tener prioridad)
     // ==========================================================
     if (match(["vacio", "vacío", "bolsa vacio", "bolsa vacío", "bolsas vacio", "bolsas vacío"])) {
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
+        setVisible(campos.medidas, true);
         setVisible(campos.peso, true);
         renameLabel(campoStock, "Stock por unidad");
-        renameLabel(campos.alto, isView ? "Alto por unidad" : "Alto por unidad (cm)");
-        renameLabel(campos.ancho, isView ? "Ancho por unidad" : "Ancho por unidad (cm)");
-        renameLabel(campos.prof, isView ? "Profundidad por unidad" : "Profundidad por unidad (cm)");
+        renameLabel(campos.peso, isView ? "Peso por unidad" : "Peso por unidad (g)");
         return;
     }
     // ==========================================================

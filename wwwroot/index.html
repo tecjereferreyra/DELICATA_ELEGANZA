@@ -319,6 +319,7 @@
                     <p id="modalAncho" data-label="Ancho" hidden></p>
                     <p id="modalProfundidad" data-label="Profundidad" hidden></p>
                     <p id="modalPeso" data-label="Peso" hidden></p>
+                    <p id="modalMedidas" data-label="Medidas por unidad" hidden></p>
                     <p id="modalDiametro" data-label="Diámetro" hidden></p>
                     <p id="modalGenero" data-label="Género" hidden></p>
                     <p id="modalCantidadRuedas" data-label="Cant. Ruedas" hidden></p>
@@ -397,6 +398,10 @@
                     <label>Capacidad</label>
                     <input id="prodCapacidad" list="dlCapacidades" name="capacidadNombre" placeholder="Elije o escribe una capacidad">
                     <datalist id="dlCapacidades"></datalist>
+                </div>
+                <div class="col">
+                    <label>Medidas por unidad</label>
+                    <input id="prodMedidas" name="medidasTexto" type="text" placeholder="Ej: 30x40 / 45x60 / 60x80 cm">
                 </div>
                 <div class="col">
                     <label>Alto (cm)</label>
@@ -528,6 +533,10 @@
                     <label>Capacidad</label>
                     <input id="prodCapacidadEditar" list="dlCapacidadesEditar" name="capacidadNombre">
                     <datalist id="dlCapacidadesEditar"></datalist>
+                </div>
+                <div class="col">
+                    <label>Medidas por unidad</label>
+                    <input id="prodMedidasEditar" name="medidasTexto" type="text">
                 </div>
                 <div class="col">
                     <label>Alto (cm)</label>

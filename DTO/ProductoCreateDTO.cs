@@ -30,5 +30,7 @@ namespace DELICATA_ELEGANZA.DTO
         public bool? FuelleExpandible { get; set; }
         public string? TipoCierre { get; set; }
         public int Stock { get; set; }
+
+        public string? MedidasTexto { get; set; }
     }
 }

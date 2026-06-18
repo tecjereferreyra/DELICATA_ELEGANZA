@@ -169,6 +169,9 @@ namespace DELICATA_ELEGANZA.Migrations
                     b.Property<string>("ImagenUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("MedidasTexto")
+                    .HasColumnType("text");
+
                     b.Property<string>("Modelo")
                         .IsRequired()
                         .HasColumnType("text");
