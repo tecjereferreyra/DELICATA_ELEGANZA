@@ -3894,7 +3894,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.medidas, true);
         setVisible(campos.peso, true);
         renameLabel(campoStock, "Stock por unidad");
-        renameLabel(campos.peso, isView ? "Peso por unidad" : "Peso por unidad (g)");
+        renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)"); 
         return;
     }
     // ==========================================================
