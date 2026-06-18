@@ -1486,7 +1486,7 @@ function palabraMatchFuzzy(palabra, textoNormalizado) {
     // Palabras cortas (≤5 letras): solo exacto, sin fuzzy
     if (palabra.length <= 5) return false;
 
-  
+
     if (palabra.length >= 8) {
         const prefijo = palabra.slice(0, 4);
         return tokens.some(token => {
@@ -2063,9 +2063,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-   
+
     const tipoInput = document.getElementById("prodTipo");
- 
+
 
     const nombreEditarInput = document.getElementById("prodNombreEditar");
     if (nombreEditarInput) {
@@ -3184,7 +3184,7 @@ async function abrirEditarProducto(id) {
             if (inputImgExtraEdit2) inputImgExtraEdit2.value = "";
 
             abrirModalAdmin("modalEditar");
-           
+
 
         })
         .catch(err => console.error("Error al abrir edición:", err));
@@ -3348,7 +3348,9 @@ document.getElementById("prodCategoria")?.addEventListener("change", function ()
     // Limpiar el campo tipo para que el admin elija uno acorde
     const tipoInput = document.getElementById("prodTipo");
     if (tipoInput) tipoInput.value = "";
-    toggleFieldsByTipo("", false, "form");
+    // El toggle depende únicamente de nombre, así que se recalcula con su valor actual (no se resetea a vacío)
+    const nombreActual = document.getElementById("prodNombre")?.value ?? "";
+    toggleFieldsByTipo(nombreActual, false, "form");
 });
 
 document.getElementById("prodCategoriaEditar")?.addEventListener("change", function () {
@@ -3369,13 +3371,7 @@ document.getElementById("prodMarca")?.addEventListener("change", function () {
 
 document.getElementById("prodTipo")?.addEventListener("change", function () {
     actualizarIdDesdeDatalist(this, "dlTipos", "prodIdTipo");
-    const nombre = document.getElementById("prodNombre")?.value ?? "";
-    toggleFieldsByTipo(nombre || this.value, false, "form");
-});
-
-document.getElementById("prodTipo")?.addEventListener("input", function () {
-    const nombre = document.getElementById("prodNombre")?.value ?? "";
-    toggleFieldsByTipo(nombre || this.value, false, "form");
+    // toggleFieldsByTipo NO se dispara desde acá: el campo tipo no debe afectar el toggle, solo nombre.
 });
 
 document.getElementById("prodNombre")?.addEventListener("input", function () {
@@ -3729,7 +3725,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // Devuelve true si alguna palabra de la lista aparece en el texto normalizado
     const match = (list) => list.some(w => norm.includes(w));
 
-  
+
     // 💳 BILLETERA — sin capacidad ni compartimentos
     if (match(["billetera", "wallet", "portatarjeta", "porta tarjeta", "tarjetero", "monedero", "portamonedas", "porta monedas", "cartera fina"])) {
         setVisible(campos.cierre, true);
@@ -3742,7 +3738,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     // 👜 CARTERA / BANDOLERA / BOLSO / MOCHILA
-    if (match(["cartera", "bandolera", "bolso",  "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio"])) {
+    if (match(["cartera", "bandolera", "bolso", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
@@ -3778,7 +3774,8 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     // 🪭 ABANICOS / APLIQUES / TIARAS / CORONAS
     //    campos extra: genero, alto, ancho, peso
     // ==========================================================
-    if (match(["abanico", "aplique", "tiara", "corona", "cinto", "cinta", "correa", "cenidor", "vincha", "diadema", "headband", "pin", "broche", "pasador", "hebilla", "clip pelo", "accesorio pelo", "tocado"])) {        setVisible(campos.genero, true);
+    if (match(["abanico", "aplique", "tiara", "corona", "cinto", "cinta", "correa", "cenidor", "vincha", "diadema", "headband", "pin", "broche", "pasador", "hebilla", "clip pelo", "accesorio pelo", "tocado"])) {
+        setVisible(campos.genero, true);
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.peso, true);
@@ -3805,13 +3802,13 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         return;
     }
 
-  
-   
+
+
 
     // Aros / Piercing → alto y ancho (sin profundidad)
     if (match([
         "aro", "piercing", "expansor", "espansor",
-        "helix", "clapton", "nostril", "earcuff","cuff","ear-cuff",
+        "helix", "clapton", "nostril", "earcuff", "cuff", "ear-cuff",
         "argolla", "septum", "bull", "industrial", "flecha",
         "earring", "pendiente", "arete", "earing", "dormilon", "dormilón", "tuerca", "stick", "clip oreja"
     ])) {
@@ -3834,7 +3831,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         setVisible(campos.peso, true);
         return;
     }
-   
+
     // ==========================================================
     // 🛏 ALMOHADAS / ALMOHADILLAS / CANDADOS
     //    campos: alto, ancho, profundidad, peso, genero
