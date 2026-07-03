@@ -12,6 +12,9 @@ let _menuCerradoRecien = false;
 let categoriaActivaActual = "todos";
 let subcategoriaActivaActual = "";
 const BLOQUE_CARGA = 12;
+window.addEventListener("pageshow", (e) => {
+    if (e.persisted) cargarProductos(true);
+});
 const delay = 0;
 let productosFiltrados = [];
 let esAdminActual = false;
@@ -571,7 +574,76 @@ function irASlide(idx) {
     carruselActual = idx;
     slides[carruselActual].classList.add("active");
     dots[carruselActual]?.classList.add("active");
+    resetZoomCarrusel();
 }
+let _zoomState = { scale: 1, x: 0, y: 0, startDist: 0, startScale: 1, panStartX: 0, panStartY: 0, panning: false };
+
+function _imgActivaCarrusel() {
+    return document.querySelector("#carruselWrapper .carrusel-slide.active img");
+}
+
+function resetZoomCarrusel() {
+    _zoomState = { scale: 1, x: 0, y: 0, startDist: 0, startScale: 1, panStartX: 0, panStartY: 0, panning: false };
+    document.querySelectorAll("#carruselWrapper img").forEach(img => img.style.transform = "");
+}
+
+function _aplicarTransformZoom(img) {
+    img.style.transform = `translate(${_zoomState.x}px, ${_zoomState.y}px) scale(${_zoomState.scale})`;
+}
+
+(function initPinchZoomCarrusel() {
+    const wrapper = document.getElementById("carruselWrapper");
+    if (!wrapper) return;
+
+    wrapper.addEventListener("touchstart", (e) => {
+        const img = _imgActivaCarrusel();
+        if (!img) return;
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            _zoomState.startDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            _zoomState.startScale = _zoomState.scale;
+            _zoomState.panning = false;
+        } else if (e.touches.length === 1 && _zoomState.scale > 1) {
+            _zoomState.panning = true;
+            _zoomState.panStartX = e.touches[0].clientX - _zoomState.x;
+            _zoomState.panStartY = e.touches[0].clientY - _zoomState.y;
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener("touchmove", (e) => {
+        const img = _imgActivaCarrusel();
+        if (!img) return;
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            _zoomState.scale = Math.min(4, Math.max(1, _zoomState.startScale * (dist / _zoomState.startDist)));
+            if (_zoomState.scale === 1) { _zoomState.x = 0; _zoomState.y = 0; }
+            _aplicarTransformZoom(img);
+        } else if (e.touches.length === 1 && _zoomState.panning) {
+            e.preventDefault();
+            _zoomState.x = e.touches[0].clientX - _zoomState.panStartX;
+            _zoomState.y = e.touches[0].clientY - _zoomState.panStartY;
+            _aplicarTransformZoom(img);
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener("touchend", (e) => {
+        if (e.touches.length === 0) _zoomState.panning = false;
+    });
+
+    let _ultimoTap = 0;
+    wrapper.addEventListener("touchend", () => {
+        const ahora = Date.now();
+        if (ahora - _ultimoTap < 300) resetZoomCarrusel();
+        _ultimoTap = ahora;
+    });
+})();
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("carruselPrev")?.addEventListener("click", () => {
@@ -591,7 +663,7 @@ function cerrarModalProducto() {
     modal.inert = true;
     unlockScroll();
     _cerrarModalTimeout = null;
-
+    resetZoomCarrusel();
     // ← NUEVO: resetear el flag de zoom para la próxima apertura
     const imgContainer = modal.querySelector(".modal-img-container");
     if (imgContainer) imgContainer._zoomInit = false;
@@ -1402,8 +1474,8 @@ async function cargarProductos(forzar = false) {
         }
 
         // ── Siempre buscar la versión actualizada en background ──
-        const resp = await fetch(API_URL, {
-            headers: { "Cache-Control": "no-cache" }   // siempre pedir versión fresca
+        const resp = await fetch(`${API_URL}?_=${Date.now()}`, {
+            cache: "no-store"
         });
         if (!resp.ok) throw new Error("Error cargando productos");
 
@@ -1576,7 +1648,8 @@ const CATEGORIAS_MAP = {
     "panoleria": "panoleria"
 };
 
-const aplicarFiltros = () => {
+const aplicarFiltros = (preservarPaginacion = false) => {
+    const productosYaRenderizadosPrevios = productosRenderizados;
     const textoBusqueda = normalizarBusqueda(   // ← envolver con esta función
         normalizar(domCache.searchInput?.value || "")
             .replace(/[\/,]+/g, " ")   // tratar / y , como separadores de palabra
@@ -1672,8 +1745,14 @@ const aplicarFiltros = () => {
         if (btnVerMas) btnVerMas.style.display = "none";
         return;
     }
-
-    renderizarProductosProgresivo();
+    if (preservarPaginacion) {
+        const objetivo = Math.min(productosYaRenderizadosPrevios, productosFiltrados.length);
+        do {
+            renderizarProductosProgresivo();
+        } while (productosRenderizados < objetivo);
+    } else {
+        renderizarProductosProgresivo();
+    }
 };
 
 // NOTA: Los listeners de búsqueda se registran dentro del DOMContentLoaded
@@ -3055,7 +3134,7 @@ async function guardarNuevoProducto() {
                 productosData.push(prod);
             } catch (e) { /* si falla uno, el reload general lo va a buscar */ }
         }
-        aplicarFiltros();
+        aplicarFiltros(true);
         requestAnimationFrame(() => window.scrollTo({ top: _savedScroll, behavior: "instant" }));
     } else if (errores.length === 0) {
         cargarProductos(true);
@@ -3531,7 +3610,7 @@ async function guardarEdicionProducto() {
                     }
                 }
 
-                aplicarFiltros();
+                aplicarFiltros(true);
                 requestAnimationFrame(() => window.scrollTo({ top: _savedScrollEditar, behavior: "instant" }));
             })
             .catch(() => cargarProductos(true));
@@ -3576,7 +3655,7 @@ function confirmarEliminarProducto() {
             // Actualizar array local sin refetch
             productosData = productosData.filter(p => p.IdProducto !== idProdEliminar);
             idProdEliminar = null;
-            aplicarFiltros(); // re-renderiza con los datos ya en memoria
+            aplicarFiltros(true); // re-renderiza con los datos ya en memoria
             requestAnimationFrame(() => window.scrollTo({ top: _savedScrollEliminarProd, behavior: "instant" }));
         })
         .catch(err => {
@@ -3635,7 +3714,7 @@ function confirmarEliminar() {
             cerrarModalCRUD("modalEliminar");
             productosData = productosData.filter(p => p.IdProducto !== idProdEliminar);
             idProdEliminar = null;
-            aplicarFiltros();
+            aplicarFiltros(true);
             requestAnimationFrame(() => window.scrollTo({ top: _savedScrollEliminar, behavior: "instant" }));
         })
         .catch(err => {
