@@ -3817,7 +3817,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
 
 
     // 💳 BILLETERA — sin capacidad ni compartimentos
-    if (match(["billetera", "wallet", "portatarjeta", "porta tarjeta", "tarjetero", "monedero", "portamonedas", "porta monedas", "cartera fina"])) {
+    if (match(["billetera", "wallet", "portatarjeta", "porta tarjeta", "tarjetero", "monedero", "portamonedas", "porta monedas"])) {
         setVisible(campos.cierre, true);
         setVisible(campos.genero, true);
         setVisible(campos.alto, true);
@@ -3828,7 +3828,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     // 👜 CARTERA / BANDOLERA / BOLSO / MOCHILA
-    if (match(["cartera", "bandolera", "bolso", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio"])) {
+    if (match(["cartera", "bandolera", "bolso", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio","portanotebook"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
