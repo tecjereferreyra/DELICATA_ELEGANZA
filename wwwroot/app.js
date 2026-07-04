@@ -3335,7 +3335,7 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 
 /* ── MAPA DE TIPOS POR CATEGORÍA ── */
 const TIPOS_POR_CATEGORIA = {
-    "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M", "Portanotebooks"],
+    "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M", "Mini Bags", "Portanotebooks"],
     "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas", "Dijes", "Fiesta"],
     "complementos": ["Paraguas", "Cajas Bijou", "Abanicos", "Cintos"],
     "artículos de viaje": ["Valijas", "Complementos de viaje"],
@@ -3368,6 +3368,8 @@ const TIPO_ALIAS_MAP = {
     "mochila hombre": "Mochilas H/M",
     "mochila mujer": "Mochilas H/M",
     "mochila h/m": "Mochilas H/M",
+    "mini bag": "Mini Bags",
+    "mini bags": "Mini Bags",
     "portanotebook": "Portanotebooks",
     "portanotebooks": "Portanotebooks",
     "porta notebook": "Portanotebooks",
@@ -3833,7 +3835,7 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     // 👜 CARTERA / BANDOLERA / BOLSO / MOCHILA
-    if (match(["cartera", "bandolera", "bolso", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio","portanotebook"])) {
+    if (match(["cartera", "bandolera", "bolso", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag","mini bag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio","portanotebook"])) {
         setVisible(campos.comp, true);
         setVisible(campos.cierre, true);
         setVisible(campos.cap, true);
