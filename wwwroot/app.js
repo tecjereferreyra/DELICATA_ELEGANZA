@@ -583,11 +583,15 @@ function _imgActivaCarrusel() {
 }
 
 function resetZoomCarrusel() {
-    _zoomState = { scale: 1, x: 0, y: 0, startDist: 0, startScale: 1, panStartX: 0, panStartY: 0, panning: false };
-    document.querySelectorAll("#carruselWrapper img").forEach(img => img.style.transform = "");
+    _zoomState = { scale: 1, x: 0, y: 0, startDist: 0, startScale: 1, panStartX: 0, panStartY: 0, panning: false, maxTouches: 0 };
+    document.querySelectorAll("#carruselWrapper img").forEach(img => {
+        img.style.transition = "transform .2s ease-out";
+        img.style.transform = "";
+    });
 }
 
 function _aplicarTransformZoom(img) {
+    img.style.transition = "none";
     img.style.transform = `translate(${_zoomState.x}px, ${_zoomState.y}px) scale(${_zoomState.scale})`;
 }
 
@@ -598,6 +602,7 @@ function _aplicarTransformZoom(img) {
     wrapper.addEventListener("touchstart", (e) => {
         const img = _imgActivaCarrusel();
         if (!img) return;
+        _zoomState.maxTouches = Math.max(_zoomState.maxTouches || 0, e.touches.length);
         if (e.touches.length === 2) {
             e.preventDefault();
             _zoomState.startDist = Math.hypot(
@@ -633,15 +638,18 @@ function _aplicarTransformZoom(img) {
         }
     }, { passive: false });
 
-    wrapper.addEventListener("touchend", (e) => {
-        if (e.touches.length === 0) _zoomState.panning = false;
-    });
-
     let _ultimoTap = 0;
-    wrapper.addEventListener("touchend", () => {
-        const ahora = Date.now();
-        if (ahora - _ultimoTap < 300) resetZoomCarrusel();
-        _ultimoTap = ahora;
+    wrapper.addEventListener("touchend", (e) => {
+        if (e.touches.length !== 0) return;
+        _zoomState.panning = false;
+
+        if ((_zoomState.maxTouches || 0) <= 1) {
+            const ahora = Date.now();
+            if (ahora - _ultimoTap < 300) resetZoomCarrusel();
+            _ultimoTap = ahora;
+        }
+
+        _zoomState.maxTouches = 0;
     });
 })();
 
