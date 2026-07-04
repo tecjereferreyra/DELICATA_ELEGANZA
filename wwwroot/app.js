@@ -576,23 +576,86 @@ function irASlide(idx) {
     dots[carruselActual]?.classList.add("active");
     resetZoomCarrusel();
 }
-let _zoomState = { scale: 1, x: 0, y: 0, startDist: 0, startScale: 1, panStartX: 0, panStartY: 0, panning: false };
+
+let _zoomState = {
+    targetScale: 1, currentScale: 1,
+    targetX: 50, targetY: 50, currentX: 50, currentY: 50,
+    startDist: 0, startScale: 1,
+    maxTouches: 0, panning: false,
+    animFrameId: null, cachedRect: null,
+    ultimoTap: 0
+};
 
 function _imgActivaCarrusel() {
     return document.querySelector("#carruselWrapper .carrusel-slide.active img");
 }
 
 function resetZoomCarrusel() {
-    _zoomState = { scale: 1, x: 0, y: 0, startDist: 0, startScale: 1, panStartX: 0, panStartY: 0, panning: false, maxTouches: 0 };
+    if (_zoomState.animFrameId) cancelAnimationFrame(_zoomState.animFrameId);
+    const tapPrevio = _zoomState.ultimoTap;
+    _zoomState = {
+        targetScale: 1, currentScale: 1,
+        targetX: 50, targetY: 50, currentX: 50, currentY: 50,
+        startDist: 0, startScale: 1,
+        maxTouches: 0, panning: false,
+        animFrameId: null, cachedRect: null,
+        ultimoTap: tapPrevio
+    };
     document.querySelectorAll("#carruselWrapper img").forEach(img => {
         img.style.transition = "transform .2s ease-out";
-        img.style.transform = "";
+        img.style.transform = "scale(1)";
+        img.style.transformOrigin = "center";
     });
 }
 
-function _aplicarTransformZoom(img) {
+function _lerp(a, b, t) { return a + (b - a) * t; }
+
+function _iniciarLoopZoomTouch() {
+    if (!_zoomState.animFrameId) _zoomState.animFrameId = requestAnimationFrame(_animarZoomTouch);
+}
+
+function _animarZoomTouch() {
+    const img = _imgActivaCarrusel();
+    if (!img) { _zoomState.animFrameId = null; return; }
+
     img.style.transition = "none";
-    img.style.transform = `translate(${_zoomState.x}px, ${_zoomState.y}px) scale(${_zoomState.scale})`;
+    _zoomState.currentScale = _lerp(_zoomState.currentScale, _zoomState.targetScale, 0.18);
+    img.style.transform = `scale(${_zoomState.currentScale.toFixed(3)})`;
+
+    if (_zoomState.currentScale > 1.02) {
+        _zoomState.currentX = _lerp(_zoomState.currentX, _zoomState.targetX, 0.22);
+        _zoomState.currentY = _lerp(_zoomState.currentY, _zoomState.targetY, 0.22);
+        img.style.transformOrigin = `${_zoomState.currentX.toFixed(2)}% ${_zoomState.currentY.toFixed(2)}%`;
+    }
+
+    const scaleOk = Math.abs(_zoomState.currentScale - _zoomState.targetScale) < 0.004;
+    const origenOk = Math.abs(_zoomState.currentX - _zoomState.targetX) < 0.05 &&
+        Math.abs(_zoomState.currentY - _zoomState.targetY) < 0.05;
+
+    if (scaleOk && (origenOk || _zoomState.targetScale < 1.05)) {
+        _zoomState.currentScale = _zoomState.targetScale;
+        if (_zoomState.targetScale <= 1) {
+            img.style.transform = "scale(1)";
+            img.style.transformOrigin = "center";
+            _zoomState.cachedRect = null;
+        }
+        _zoomState.animFrameId = null;
+        return;
+    }
+    _zoomState.animFrameId = requestAnimationFrame(_animarZoomTouch);
+}
+
+function _actualizarOrigenZoom(clientX, clientY) {
+    if (!_zoomState.cachedRect) {
+        const wrapper = document.getElementById("carruselWrapper");
+        _zoomState.cachedRect = wrapper.getBoundingClientRect();
+    }
+    const rect = _zoomState.cachedRect;
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    if (_zoomState.currentScale < 1.05) { _zoomState.currentX = x; _zoomState.currentY = y; }
+    _zoomState.targetX = Math.max(18, Math.min(82, x));
+    _zoomState.targetY = Math.max(10, Math.min(90, y));
 }
 
 (function initPinchZoomCarrusel() {
@@ -603,55 +666,62 @@ function _aplicarTransformZoom(img) {
         const img = _imgActivaCarrusel();
         if (!img) return;
         _zoomState.maxTouches = Math.max(_zoomState.maxTouches || 0, e.touches.length);
+
         if (e.touches.length === 2) {
             e.preventDefault();
             _zoomState.startDist = Math.hypot(
                 e.touches[0].clientX - e.touches[1].clientX,
                 e.touches[0].clientY - e.touches[1].clientY
             );
-            _zoomState.startScale = _zoomState.scale;
+            _zoomState.startScale = _zoomState.targetScale;
             _zoomState.panning = false;
-        } else if (e.touches.length === 1 && _zoomState.scale > 1) {
+            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            _actualizarOrigenZoom(midX, midY);
+        } else if (e.touches.length === 1 && _zoomState.targetScale > 1) {
             _zoomState.panning = true;
-            _zoomState.panStartX = e.touches[0].clientX - _zoomState.x;
-            _zoomState.panStartY = e.touches[0].clientY - _zoomState.y;
+            _actualizarOrigenZoom(e.touches[0].clientX, e.touches[0].clientY);
         }
     }, { passive: false });
 
     wrapper.addEventListener("touchmove", (e) => {
         const img = _imgActivaCarrusel();
         if (!img) return;
+
         if (e.touches.length === 2) {
             e.preventDefault();
             const dist = Math.hypot(
                 e.touches[0].clientX - e.touches[1].clientX,
                 e.touches[0].clientY - e.touches[1].clientY
             );
-            _zoomState.scale = Math.min(4, Math.max(1, _zoomState.startScale * (dist / _zoomState.startDist)));
-            if (_zoomState.scale === 1) { _zoomState.x = 0; _zoomState.y = 0; }
-            _aplicarTransformZoom(img);
+            _zoomState.targetScale = Math.min(4, Math.max(1, _zoomState.startScale * (dist / _zoomState.startDist)));
+
+            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            _actualizarOrigenZoom(midX, midY);
+
+            _iniciarLoopZoomTouch();
         } else if (e.touches.length === 1 && _zoomState.panning) {
             e.preventDefault();
-            _zoomState.x = e.touches[0].clientX - _zoomState.panStartX;
-            _zoomState.y = e.touches[0].clientY - _zoomState.panStartY;
-            _aplicarTransformZoom(img);
+            _actualizarOrigenZoom(e.touches[0].clientX, e.touches[0].clientY);
+            _iniciarLoopZoomTouch();
         }
     }, { passive: false });
 
-    let _ultimoTap = 0;
     wrapper.addEventListener("touchend", (e) => {
         if (e.touches.length !== 0) return;
         _zoomState.panning = false;
 
         if ((_zoomState.maxTouches || 0) <= 1) {
             const ahora = Date.now();
-            if (ahora - _ultimoTap < 300) resetZoomCarrusel();
-            _ultimoTap = ahora;
+            if (ahora - _zoomState.ultimoTap < 300) resetZoomCarrusel();
+            _zoomState.ultimoTap = ahora;
         }
 
         _zoomState.maxTouches = 0;
     });
 })();
+
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("carruselPrev")?.addEventListener("click", () => {
