@@ -3335,8 +3335,8 @@ function actualizarIdDesdeDatalist(input, datalistId, hiddenInputId) {
 
 /* ── MAPA DE TIPOS POR CATEGORÍA ── */
 const TIPOS_POR_CATEGORIA = {
-    "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M"],
-    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas", "Dijes"],
+    "marroquineria": ["Carteras", "Billeteras H/M", "Bandoleras", "Bolsos", "Ficheros", "Morrales", "Riñoneras", "Mochilas H/M", "Portanotebooks"],
+    "bijouterie": ["Aros", "Cadenas", "Pulseras", "Collares", "Cadenas", "Dijes", "Fiesta"],
     "complementos": ["Paraguas", "Cajas Bijou", "Abanicos", "Cintos"],
     "artículos de viaje": ["Valijas", "Complementos de viaje"],
     "piercing": ["Piercing"],
@@ -3368,6 +3368,11 @@ const TIPO_ALIAS_MAP = {
     "mochila hombre": "Mochilas H/M",
     "mochila mujer": "Mochilas H/M",
     "mochila h/m": "Mochilas H/M",
+    "portanotebook": "Portanotebooks",
+    "portanotebooks": "Portanotebooks",
+    "porta notebook": "Portanotebooks",
+    "porta notebooks": "Portanotebooks",
+    "fiesta": "Fiesta",
     "aro": "Aros",
     "argolla": "Argollas",
     "argollas": "Argollas",

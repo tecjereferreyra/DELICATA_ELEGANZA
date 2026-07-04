@@ -239,7 +239,8 @@ input::placeholder {
 
 .modal-img-container .carrusel-wrapper {
     overflow: hidden;
-    border-radius: 18px
+    border-radius: 18px;
+    touch-action: none
 }
 
 .de-logo::after, .greeting::after, .title::after {
@@ -420,6 +421,7 @@ input::placeholder {
     }
 
     .modal-img-container .carrusel-slide img {
+        touch-action: none;
         width: auto !important;
         height: 100% !important;
         max-width: 95%;
