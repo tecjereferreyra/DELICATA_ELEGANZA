@@ -583,7 +583,7 @@ function _aplicarZoomTouchDirecto() {
     }
     const img = _imgActivaCarrusel();
     if (!img) return;
-    img.style.transition = "none";
+    img.style.transition = "transform 90ms cubic-bezier(0.22, 1, 0.36, 1)";
     _zoomState.currentScale = _zoomState.targetScale;
     _zoomState.currentX = _zoomState.targetX;
     _zoomState.currentY = _zoomState.targetY;
@@ -636,7 +636,9 @@ function _actualizarOrigenZoom(clientX, clientY) {
                 e.touches[0].clientX - e.touches[1].clientX,
                 e.touches[0].clientY - e.touches[1].clientY
             );
-            _zoomState.targetScale = Math.min(4, Math.max(1, _zoomState.startScale * (dist / _zoomState.startDist)));
+            const ratioBruto = dist / _zoomState.startDist;      
+            const ratioSensible = 1 + (ratioBruto - 1) * 1.4;
+            _zoomState.targetScale = Math.min(4, Math.max(1, _zoomState.startScale * ratioSensible));
             const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             _actualizarOrigenZoom(midX, midY);
