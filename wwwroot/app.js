@@ -519,9 +519,10 @@ function irASlide(idx) {
     resetZoomCarrusel();
 }
 let _zoomState = {
-    scale: 1, startScale: 1, startDist: 0,
-    x: 0, y: 0, startX: 0, startY: 0,
-    startMidX: 0, startMidY: 0,
+    scale: 1, x: 0, y: 0,
+    startScale: 1, startX: 0, startY: 0,
+    startMidX: 0, startMidY: 0, startDist: 0,
+    pointers: new Map(),
     ultimoTap: 0
 };
 function _imgActivaCarrusel() {
@@ -529,21 +530,18 @@ function _imgActivaCarrusel() {
 }
 function resetZoomCarrusel() {
     const tapPrevio = _zoomState.ultimoTap;
-    _zoomState = {
-        scale: 1, startScale: 1, startDist: 0,
-        x: 0, y: 0, startX: 0, startY: 0,
-        startMidX: 0, startMidY: 0,
-        ultimoTap: tapPrevio
-    };
+    _zoomState.pointers.clear();
+    _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
+    _zoomState.ultimoTap = tapPrevio;
     document.querySelectorAll("#carruselWrapper img").forEach(img => {
-        img.style.transition = "transform .2s ease-out";
+        img.style.transition = "transform .25s cubic-bezier(.22,1,.36,1)";
         img.style.transform = "translate(0px,0px) scale(1)";
     });
 }
-function _aplicarTransformZoom() {
+function _aplicarTransformZoom(animar = false) {
     const img = _imgActivaCarrusel();
     if (!img) return;
-    img.style.transition = "none";
+    img.style.transition = animar ? "transform .25s cubic-bezier(.22,1,.36,1)" : "none";
     img.style.transform = `translate(${_zoomState.x}px, ${_zoomState.y}px) scale(${_zoomState.scale})`;
 }
 function _clampPanZoom() {
@@ -554,67 +552,98 @@ function _clampPanZoom() {
     _zoomState.x = Math.max(-maxX, Math.min(maxX, _zoomState.x));
     _zoomState.y = Math.max(-maxY, Math.min(maxY, _zoomState.y));
 }
+function _rebaseGesto() {
+    const pts = Array.from(_zoomState.pointers.values());
+    _zoomState.startScale = _zoomState.scale;
+    _zoomState.startX = _zoomState.x;
+    _zoomState.startY = _zoomState.y;
+    if (pts.length >= 2) {
+        _zoomState.startDist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+        _zoomState.startMidX = (pts[0].x + pts[1].x) / 2;
+        _zoomState.startMidY = (pts[0].y + pts[1].y) / 2;
+    } else if (pts.length === 1) {
+        _zoomState.startMidX = pts[0].x;
+        _zoomState.startMidY = pts[0].y;
+    }
+}
 (function initPinchZoomCarrusel() {
     const wrapper = document.getElementById("carruselWrapper");
     if (!wrapper) return;
+
+    function actualizarPuntero(e) {
+        _zoomState.pointers.clear();
+        for (const t of e.touches) {
+            _zoomState.pointers.set(t.identifier, { x: t.clientX, y: t.clientY });
+        }
+    }
+
     wrapper.addEventListener("touchstart", (e) => {
         if (!_imgActivaCarrusel()) return;
-        if (e.touches.length === 2) {
-            e.preventDefault();
-            _zoomState.startDist = Math.max(1, Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            ));
-            _zoomState.startScale = _zoomState.scale;
-            _zoomState.startMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-            _zoomState.startMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            _zoomState.startX = _zoomState.x;
-            _zoomState.startY = _zoomState.y;
-        } else if (e.touches.length === 1 && _zoomState.scale > 1.02) {
-            e.preventDefault();
-            _zoomState.startMidX = e.touches[0].clientX;
-            _zoomState.startMidY = e.touches[0].clientY;
-            _zoomState.startX = _zoomState.x;
-            _zoomState.startY = _zoomState.y;
-        }
+        if (e.touches.length >= 2 || _zoomState.scale > 1.02) e.preventDefault();
+        actualizarPuntero(e);
+        _rebaseGesto(); // clave: re-ancla siempre que cambia la cantidad de dedos
     }, { passive: false });
+
     wrapper.addEventListener("touchmove", (e) => {
         if (!_imgActivaCarrusel()) return;
-        if (e.touches.length === 2) {
+        const n = e.touches.length;
+        if (n === 2) {
             e.preventDefault();
-            const dist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
+            actualizarPuntero(e);
+            const pts = Array.from(_zoomState.pointers.values());
+            const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
             _zoomState.scale = Math.min(4, Math.max(1, _zoomState.startScale * (dist / _zoomState.startDist)));
-            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            const midX = (pts[0].x + pts[1].x) / 2;
+            const midY = (pts[0].y + pts[1].y) / 2;
             _zoomState.x = _zoomState.startX + (midX - _zoomState.startMidX);
             _zoomState.y = _zoomState.startY + (midY - _zoomState.startMidY);
             _clampPanZoom();
             _aplicarTransformZoom();
-        } else if (e.touches.length === 1 && _zoomState.scale > 1.02) {
+        } else if (n === 1 && _zoomState.scale > 1.02) {
             e.preventDefault();
-            _zoomState.x = _zoomState.startX + (e.touches[0].clientX - _zoomState.startMidX);
-            _zoomState.y = _zoomState.startY + (e.touches[0].clientY - _zoomState.startMidY);
+            actualizarPuntero(e);
+            const pts = Array.from(_zoomState.pointers.values());
+            _zoomState.x = _zoomState.startX + (pts[0].x - _zoomState.startMidX);
+            _zoomState.y = _zoomState.startY + (pts[0].y - _zoomState.startMidY);
             _clampPanZoom();
             _aplicarTransformZoom();
         }
     }, { passive: false });
-    wrapper.addEventListener("touchend", (e) => {
-        if (e.touches.length !== 0) return;
-        if (_zoomState.scale <= 1.02) {
-            const ahora = Date.now();
-            if (ahora - _zoomState.ultimoTap < 300) {
-                resetZoomCarrusel();
-            } else {
+
+    function onFinDeToque(e) {
+        actualizarPuntero(e);
+        _rebaseGesto(); // re-ancla apenas queda 1 dedo o 0, evita el salto
+        if (e.touches.length > 0) return;
+
+        const ahora = Date.now();
+        const esDobleTap = (ahora - _zoomState.ultimoTap) < 300 && _zoomState.scale <= 1.3;
+        _zoomState.ultimoTap = ahora;
+
+        if (esDobleTap) {
+            const t = e.changedTouches[0];
+            const rect = wrapper.getBoundingClientRect();
+            if (_zoomState.scale > 1.02) {
                 _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
-                const img = _imgActivaCarrusel();
-                if (img) { img.style.transition = "transform .2s ease-out"; _aplicarTransformZoom(); }
+            } else {
+                _zoomState.scale = 2.5;
+                const relX = (t.clientX - rect.left) - rect.width / 2;
+                const relY = (t.clientY - rect.top) - rect.height / 2;
+                _zoomState.x = -relX * (_zoomState.scale - 1);
+                _zoomState.y = -relY * (_zoomState.scale - 1);
+                _clampPanZoom();
             }
-            _zoomState.ultimoTap = ahora;
+            _aplicarTransformZoom(true);
+            return;
         }
-    });
+        if (_zoomState.scale <= 1.02) {
+            _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
+        } else {
+            _clampPanZoom();
+        }
+        _aplicarTransformZoom(true);
+    }
+    wrapper.addEventListener("touchend", onFinDeToque);
+    wrapper.addEventListener("touchcancel", onFinDeToque);
 })();
 
 document.addEventListener("DOMContentLoaded", () => {

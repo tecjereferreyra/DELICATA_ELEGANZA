@@ -1357,7 +1357,8 @@ header.navbar .title {
         margin: auto;
         transform-origin: center;
         will-change: transform;
-        pointer-events: none
+        pointer-events: none;
+        box-shadow: 0 4px 20px rgba(142,118,85,.1),0 1px 4px rgba(0,0,0,.04) !important
     }
 
 .modal-extra, .modal-info-grid {
@@ -1993,7 +1994,9 @@ footer.footer {
 .mobile-menu.active .mobile-categories > li:nth-child(7) {
     transition-delay: .7s
 }
-
+.mobile-menu.active .mobile-categories > li:nth-child(8) {
+    transition-delay: .8s
+}
 .mobile-categories li:hover {
     background: rgba(177,151,116,.15)
 }
