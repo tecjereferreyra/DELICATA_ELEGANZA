@@ -576,6 +576,20 @@ function _animarZoomTouch() {
     }
     _zoomState.animFrameId = requestAnimationFrame(_animarZoomTouch);
 }
+function _aplicarZoomTouchDirecto() {
+    if (_zoomState.animFrameId) {
+        cancelAnimationFrame(_zoomState.animFrameId);
+        _zoomState.animFrameId = null;
+    }
+    const img = _imgActivaCarrusel();
+    if (!img) return;
+    img.style.transition = "none";
+    _zoomState.currentScale = _zoomState.targetScale;
+    _zoomState.currentX = _zoomState.targetX;
+    _zoomState.currentY = _zoomState.targetY;
+    img.style.transform = `scale(${_zoomState.currentScale.toFixed(3)})`;
+    img.style.transformOrigin = `${_zoomState.currentX.toFixed(2)}% ${_zoomState.currentY.toFixed(2)}%`;
+}
 function _actualizarOrigenZoom(clientX, clientY) {
     if (!_zoomState.cachedRect) {
         const wrapper = document.getElementById("carruselWrapper");
@@ -608,8 +622,8 @@ function _actualizarOrigenZoom(clientX, clientY) {
             const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             _actualizarOrigenZoom(midX, midY);
-        } else if (e.touches.length === 1 && _zoomState.targetScale > 1) {
-            _zoomState.panning = true;
+        } else if (e.touches.length === 1 && _zoomState.panning) {
+            e.preventDefault();
             _actualizarOrigenZoom(e.touches[0].clientX, e.touches[0].clientY);
         }
     }, { passive: false });
@@ -626,11 +640,11 @@ function _actualizarOrigenZoom(clientX, clientY) {
             const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             _actualizarOrigenZoom(midX, midY);
-            _iniciarLoopZoomTouch();
+            _aplicarZoomTouchDirecto();
         } else if (e.touches.length === 1 && _zoomState.panning) {
             e.preventDefault();
             _actualizarOrigenZoom(e.touches[0].clientX, e.touches[0].clientY);
-            _iniciarLoopZoomTouch();
+            _aplicarZoomTouchDirecto();
         }
     }, { passive: false });
     wrapper.addEventListener("touchend", (e) => {
@@ -3369,175 +3383,190 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         }
         const col = elem.closest(".col");
         if (col) col.style.display = visible ? "" : "none";
+     
+    }
 
-        if (!visible) {
-            if (elem.type === "checkbox") {
-                elem.checked = false;
-            } else {
-                elem.value = "";
+    function limpiarCamposOcultos() {
+        Object.values(campos).forEach(elem => {
+            if (!elem) return;
+            const oculto = isView
+                ? elem.style.display === "none"
+                : (elem.closest(".col")?.style.display === "none");
+            if (oculto) {
+                if (elem.type === "checkbox") {
+                    elem.checked = false;
+                } else {
+                    elem.value = "";
+                }
             }
+        });
+    }
+
+
+    function aplicarReglasDeVisibilidad() {
+        resetLabels();
+        Object.values(campos).forEach(el => setVisible(el, false));
+        if (!norm) {
+            Object.values(campos).forEach(el => setVisible(el, true));
+            return;
         }
-    }
 
-    resetLabels();
-    Object.values(campos).forEach(el => setVisible(el, false));
-    if (!norm) {
-        Object.values(campos).forEach(el => setVisible(el, true));
-        return;
-    }
-
-    const match = (list) => list.some(w => norm.includes(w));
+        const match = (list) => list.some(w => norm.includes(w));
 
 
-    if (match(["billetera", "wallet", "portatarjeta", "porta tarjeta", "tarjetero", "monedero", "portamonedas", "porta monedas"])) {
-        setVisible(campos.cierre, true);
-        setVisible(campos.genero, true);
+        if (match(["billetera", "wallet", "portatarjeta", "porta tarjeta", "tarjetero", "monedero", "portamonedas", "porta monedas"])) {
+            setVisible(campos.cierre, true);
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            return;
+        }
+
+        if (match(["cartera", "bandolera", "sobre", "bolso", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini bag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio", "portanotebook"])) {
+            setVisible(campos.comp, true);
+            setVisible(campos.cierre, true);
+            setVisible(campos.cap, true);
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            setVisible(campos.fuelle, true);
+            return;
+        }
+
+        if (match(["valija", "trolley", "set valijas", "maleta", "equipaje", "carry on", "carry-on", "cabina", "baulera", "baul", "maletín de viaje", "maletin de viaje", "trolley bag"])) {
+            setVisible(campos.comp, true);
+            setVisible(campos.cierre, true);
+            setVisible(campos.cap, true);
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            setVisible(campos.ruedas, true);
+            setVisible(campos.fuelle, true);
+            return;
+        }
+
+        if (match(["abanico", "aplique", "tiara", "corona", "cinto", "cinta", "correa", "cenidor", "vincha", "diadema", "headband", "pin", "broche", "pasador", "hebilla", "clip pelo", "accesorio pelo", "tocado"])) {
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.peso, true);
+            return;
+        }
+
+
+        if (match(["collar", "cadena", "pulsera", "pandora", "brazalete", "tobillera", "gargantilla", "choker", "necklace", "bracelet", "chain", "enklet", "anklet"])) {
+            renameLabel(campos.alto, isView ? "Largo" : "Largo (cm)");
+            renameLabel(campos.ancho, isView ? "Grosor" : "Grosor (mm)");
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.peso, true);
+            return;
+        }
+
+
+
+
+        if (match([
+            "aro", "piercing", "expansor", "espansor",
+            "helix", "clapton", "nostril", "earcuff", "cuff", "ear-cuff",
+            "argolla", "septum", "bull", "industrial", "flecha",
+            "earring", "pendiente", "arete", "earing", "dormilon", "dormilón", "tuerca", "stick", "clip oreja"
+        ])) {
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.peso, true);
+            renameLabel(campoStock, "Stock por par");
+            renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");
+            return;
+        }
+
+        if (match(["chalina", "bufanda", "cuello", "chales", "chale", "cuellito", "saco", "tapado", "pashmina", "bufandon", "maxi bufanda", "megabufanda", "estola", "chal", "mantón", "manton", "foulard", "scarf", "pañuelo", "infinity scarf"])) {
+            setVisible(campos.genero, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.peso, true);
+            return;
+        }
+
+        if (match(["almohada", "almohadilla", "almohadin", "candado", "cerrojo", "lock", "cadeado", "candadito", "seguro valija", "pillow", "cushion"])) {
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            setVisible(campos.genero, true);
+            return;
+        }
+
+        if (match(["balanza", "peso valija", "pesa valija", "pesaje", "escala", "luggage scale"])) {
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            renameLabel(campoStock, "Stock por unidad");
+            renameLabel(campos.alto, isView ? "Alto por unidad" : "Alto por unidad (cm)");
+            renameLabel(campos.ancho, isView ? "Ancho por unidad" : "Ancho por unidad (cm)");
+            renameLabel(campos.prof, isView ? "Profundidad por unidad" : "Profundidad por unidad (cm)");
+            return;
+        }
+
+        if (match(["bomba", "bomba vacio", "bomba vacío", "bomba al vacio", "bomba de vacio", "bomba de vacío", "bomba manual", "bomba electrica", "bomba eléctrica", "bomba de vacío eléctrica", "aspiradora ropa", "compresor"])) {
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            return;
+        }
+
+        if (match(["vacio", "vacío", "bolsa vacio", "bolsa vacío", "bolsas vacio", "bolsas vacío"])) {
+            setVisible(campos.medidas, true);
+            setVisible(campos.peso, true);
+            renameLabel(campoStock, "Stock por unidad");
+            renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");
+            return;
+        }
+        if (match(["porta valores", "portavalores", "caja fuerte", "caja de seguridad", "cofre", "safe box", "porta documentos", "portadocumentos"])) {
+            setVisible(campos.comp, true);
+            setVisible(campos.cap, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            setVisible(campos.genero, true);
+            setVisible(campos.cierre, true);
+            return;
+        }
+
+        if (match(["dije circular", "dije redondo", "medallon", "medallón", "colgante redondo", "pendant redondo", "moneda colgante"])) {
+            setVisible(campos.genero, true);
+            setVisible(campos.diametro, true);
+            setVisible(campos.peso, true);
+            renameLabel(campos.diametro, isView ? "Diámetro total" : "Diámetro total (mm)");
+            return;
+        }
+
+        if (match(["dije", "charm", "colgante", "pendant", "charms", "dijecito"])) {
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.peso, true);
+            return;
+        }
         setVisible(campos.alto, true);
         setVisible(campos.ancho, true);
         setVisible(campos.prof, true);
         setVisible(campos.peso, true);
-        return;
     }
 
-    if (match(["cartera", "bandolera", "sobre", "bolso", "fichero", "rinonera", "necesser", "mochila", "morral", "bag", "minibag", "mini bag", "mini-bag", "caja porta joyas", "cajaportajoyas", "neceser", "gondola", "backpack", "tote", "clutch", "sobre", "maletín", "maletin", "portafolio", "portanotebook"])) {
-        setVisible(campos.comp, true);
-        setVisible(campos.cierre, true);
-        setVisible(campos.cap, true);
-        setVisible(campos.genero, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
-        setVisible(campos.peso, true);
-        setVisible(campos.fuelle, true);
-        return;
-    }
-
-    if (match(["valija", "trolley", "set valijas", "maleta", "equipaje", "carry on", "carry-on", "cabina", "baulera", "baul", "maletín de viaje", "maletin de viaje", "trolley bag"])) {
-        setVisible(campos.comp, true);
-        setVisible(campos.cierre, true);
-        setVisible(campos.cap, true);
-        setVisible(campos.genero, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
-        setVisible(campos.peso, true);
-        setVisible(campos.ruedas, true);
-        setVisible(campos.fuelle, true);
-        return;
-    }
-
-    if (match(["abanico", "aplique", "tiara", "corona", "cinto", "cinta", "correa", "cenidor", "vincha", "diadema", "headband", "pin", "broche", "pasador", "hebilla", "clip pelo", "accesorio pelo", "tocado"])) {
-        setVisible(campos.genero, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.peso, true);
-        return;
-    }
-
-
-    if (match(["collar", "cadena", "pulsera", "pandora", "brazalete", "tobillera", "gargantilla", "choker", "necklace", "bracelet", "chain", "enklet", "anklet"])) {
-        renameLabel(campos.alto, isView ? "Largo" : "Largo (cm)");
-        renameLabel(campos.ancho, isView ? "Grosor" : "Grosor (mm)");
-        setVisible(campos.genero, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.peso, true);
-        return;
-    }
-
-
-
-
-    if (match([
-        "aro", "piercing", "expansor", "espansor",
-        "helix", "clapton", "nostril", "earcuff", "cuff", "ear-cuff",
-        "argolla", "septum", "bull", "industrial", "flecha",
-        "earring", "pendiente", "arete", "earing", "dormilon", "dormilón", "tuerca", "stick", "clip oreja"
-    ])) {
-        setVisible(campos.genero, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.peso, true);
-        renameLabel(campoStock, "Stock por par");
-        renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");
-        return;
-    }
-
-    if (match(["chalina", "bufanda", "cuello", "chales", "chale", "cuellito", "saco", "tapado", "pashmina", "bufandon", "maxi bufanda", "megabufanda", "estola", "chal", "mantón", "manton", "foulard", "scarf", "pañuelo", "infinity scarf"])) {
-        setVisible(campos.genero, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.peso, true);
-        return;
-    }
-
-    if (match(["almohada", "almohadilla", "almohadin", "candado", "cerrojo", "lock", "cadeado", "candadito", "seguro valija", "pillow", "cushion"])) {
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
-        setVisible(campos.peso, true);
-        setVisible(campos.genero, true);
-        return;
-    }
-
-    if (match(["balanza", "peso valija", "pesa valija", "pesaje", "escala", "luggage scale"])) {
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
-        setVisible(campos.peso, true);
-        renameLabel(campoStock, "Stock por unidad");
-        renameLabel(campos.alto, isView ? "Alto por unidad" : "Alto por unidad (cm)");
-        renameLabel(campos.ancho, isView ? "Ancho por unidad" : "Ancho por unidad (cm)");
-        renameLabel(campos.prof, isView ? "Profundidad por unidad" : "Profundidad por unidad (cm)");
-        return;
-    }
-
-    if (match(["bomba", "bomba vacio", "bomba vacío", "bomba al vacio", "bomba de vacio", "bomba de vacío", "bomba manual", "bomba electrica", "bomba eléctrica", "bomba de vacío eléctrica", "aspiradora ropa", "compresor"])) {
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
-        setVisible(campos.peso, true);
-        return;
-    }
-
-    if (match(["vacio", "vacío", "bolsa vacio", "bolsa vacío", "bolsas vacio", "bolsas vacío"])) {
-        setVisible(campos.medidas, true);
-        setVisible(campos.peso, true);
-        renameLabel(campoStock, "Stock por unidad");
-        renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");
-        return;
-    }
-    if (match(["porta valores", "portavalores", "caja fuerte", "caja de seguridad", "cofre", "safe box", "porta documentos", "portadocumentos"])) {
-        setVisible(campos.comp, true);
-        setVisible(campos.cap, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.prof, true);
-        setVisible(campos.peso, true);
-        setVisible(campos.genero, true);
-        setVisible(campos.cierre, true);
-        return;
-    }
-
-    if (match(["dije circular", "dije redondo", "medallon", "medallón", "colgante redondo", "pendant redondo", "moneda colgante"])) {
-        setVisible(campos.genero, true);
-        setVisible(campos.diametro, true);
-        setVisible(campos.peso, true);
-        renameLabel(campos.diametro, isView ? "Diámetro total" : "Diámetro total (mm)");
-        return;
-    }
-
-    if (match(["dije", "charm", "colgante", "pendant", "charms", "dijecito"])) {
-        setVisible(campos.genero, true);
-        setVisible(campos.alto, true);
-        setVisible(campos.ancho, true);
-        setVisible(campos.peso, true);
-        return;
-    }
-    setVisible(campos.alto, true);
-    setVisible(campos.ancho, true);
-    setVisible(campos.prof, true);
-    setVisible(campos.peso, true);
+    aplicarReglasDeVisibilidad();
+    limpiarCamposOcultos();
 }
 
 function keepAliveRender() {
