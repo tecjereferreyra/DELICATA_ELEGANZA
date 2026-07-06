@@ -1355,10 +1355,9 @@ header.navbar .title {
         object-fit: contain;
         display: block;
         margin: auto;
-        transform-origin: center;
+        transform: none !important;
         will-change: transform;
         pointer-events: none;
-        box-shadow: 0 4px 20px rgba(142,118,85,.1),0 1px 4px rgba(0,0,0,.04) !important
     }
 
 .modal-extra, .modal-info-grid {
