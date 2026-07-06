@@ -545,10 +545,10 @@ function _aplicarTransformZoom(animar = false) {
     img.style.transform = `translate(${_zoomState.x}px, ${_zoomState.y}px) scale(${_zoomState.scale})`;
 }
 function _clampPanZoom() {
-    const wrapper = document.getElementById("carruselWrapper");
-    if (!wrapper) return;
-    const maxX = (wrapper.clientWidth * (_zoomState.scale - 1)) / 2;
-    const maxY = (wrapper.clientHeight * (_zoomState.scale - 1)) / 2;
+    const w = _zoomState.imgWidth || 0;
+    const h = _zoomState.imgHeight || 0;
+    const maxX = (w * (_zoomState.scale - 1)) / 2;
+    const maxY = (h * (_zoomState.scale - 1)) / 2;
     _zoomState.x = Math.max(-maxX, Math.min(maxX, _zoomState.x));
     _zoomState.y = Math.max(-maxY, Math.min(maxY, _zoomState.y));
 }
@@ -557,6 +557,14 @@ function _rebaseGesto() {
     _zoomState.startScale = _zoomState.scale;
     _zoomState.startX = _zoomState.x;
     _zoomState.startY = _zoomState.y;
+
+    const img = _imgActivaCarrusel();
+    if (img) {
+        const rect = img.getBoundingClientRect();
+        _zoomState.imgWidth = rect.width;
+        _zoomState.imgHeight = rect.height;
+    }
+
     if (pts.length >= 2) {
         _zoomState.startDist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
         _zoomState.startMidX = (pts[0].x + pts[1].x) / 2;
@@ -621,7 +629,8 @@ function _rebaseGesto() {
 
         if (esDobleTap) {
             const t = e.changedTouches[0];
-            const rect = wrapper.getBoundingClientRect();
+            const img = _imgActivaCarrusel();
+            const rect = img.getBoundingClientRect();
             if (_zoomState.scale > 1.02) {
                 _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
             } else {
@@ -3571,7 +3580,9 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
     }
 
     aplicarReglasDeVisibilidad();
-    limpiarCamposOcultos();
+    if (modo !== "edit") {
+        limpiarCamposOcultos();
+    }
 }
 
 function keepAliveRender() {
