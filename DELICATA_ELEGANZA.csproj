@@ -3,7 +3,8 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-	</PropertyGroup>
+	  <UserSecretsId>43b015dc-029a-4655-b41b-ae021fd2e1d2</UserSecretsId>
+  </PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
 		<PackageReference Include="CloudinaryDotNet" Version="1.29.1" />
