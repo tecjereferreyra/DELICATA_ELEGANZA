@@ -240,7 +240,6 @@ input::placeholder {
 .modal-img-container .carrusel-wrapper {
     overflow: hidden;
     border-radius: 18px;
-    touch-action: none
 }
 
 .de-logo::after, .greeting::after, .title::after {
@@ -421,13 +420,12 @@ input::placeholder {
     }
 
     .modal-img-container .carrusel-slide img {
-        touch-action: none;
         width: auto !important;
         height: 100% !important;
         max-width: 95%;
         object-fit: contain;
         aspect-ratio: unset !important;
-        pointer-events: none
+        pointer-events: none;
     }
 
 .col-full {
@@ -1355,7 +1353,6 @@ header.navbar .title {
         object-fit: contain;
         display: block;
         margin: auto;
-        transform: none !important;
         will-change: transform;
         pointer-events: none;
     }

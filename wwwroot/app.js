@@ -518,142 +518,14 @@ function irASlide(idx) {
     dots[carruselActual]?.classList.add("active");
     resetZoomCarrusel();
 }
-let _zoomState = {
-    scale: 1, x: 0, y: 0,
-    startScale: 1, startX: 0, startY: 0,
-    startMidX: 0, startMidY: 0, startDist: 0,
-    pointers: new Map(),
-    ultimoTap: 0
-};
-function _imgActivaCarrusel() {
-    return document.querySelector("#carruselWrapper .carrusel-slide.active img");
-}
+let _zoomState = { scale: 1, x: 0, y: 0 };
 function resetZoomCarrusel() {
-    const tapPrevio = _zoomState.ultimoTap;
-    _zoomState.pointers.clear();
     _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
-    _zoomState.ultimoTap = tapPrevio;
     document.querySelectorAll("#carruselWrapper img").forEach(img => {
         img.style.transition = "transform .25s cubic-bezier(.22,1,.36,1)";
         img.style.transform = "translate(0px,0px) scale(1)";
     });
 }
-function _aplicarTransformZoom(animar = false) {
-    const img = _imgActivaCarrusel();
-    if (!img) return;
-    img.style.transition = animar ? "transform .25s cubic-bezier(.22,1,.36,1)" : "none";
-    img.style.transform = `translate(${_zoomState.x}px, ${_zoomState.y}px) scale(${_zoomState.scale})`;
-}
-function _clampPanZoom() {
-    const w = _zoomState.imgWidth || 0;
-    const h = _zoomState.imgHeight || 0;
-    const maxX = (w * (_zoomState.scale - 1)) / 2;
-    const maxY = (h * (_zoomState.scale - 1)) / 2;
-    _zoomState.x = Math.max(-maxX, Math.min(maxX, _zoomState.x));
-    _zoomState.y = Math.max(-maxY, Math.min(maxY, _zoomState.y));
-}
-function _rebaseGesto() {
-    const pts = Array.from(_zoomState.pointers.values());
-    _zoomState.startScale = _zoomState.scale;
-    _zoomState.startX = _zoomState.x;
-    _zoomState.startY = _zoomState.y;
-
-    const img = _imgActivaCarrusel();
-    if (img) {
-        const rect = img.getBoundingClientRect();
-        _zoomState.imgWidth = rect.width;
-        _zoomState.imgHeight = rect.height;
-    }
-
-    if (pts.length >= 2) {
-        _zoomState.startDist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
-        _zoomState.startMidX = (pts[0].x + pts[1].x) / 2;
-        _zoomState.startMidY = (pts[0].y + pts[1].y) / 2;
-    } else if (pts.length === 1) {
-        _zoomState.startMidX = pts[0].x;
-        _zoomState.startMidY = pts[0].y;
-    }
-}
-(function initPinchZoomCarrusel() {
-    const wrapper = document.getElementById("carruselWrapper");
-    if (!wrapper) return;
-
-    function actualizarPuntero(e) {
-        _zoomState.pointers.clear();
-        for (const t of e.touches) {
-            _zoomState.pointers.set(t.identifier, { x: t.clientX, y: t.clientY });
-        }
-    }
-
-    wrapper.addEventListener("touchstart", (e) => {
-        if (!_imgActivaCarrusel()) return;
-        if (e.touches.length >= 2 || _zoomState.scale > 1.02) e.preventDefault();
-        actualizarPuntero(e);
-        _rebaseGesto(); // clave: re-ancla siempre que cambia la cantidad de dedos
-    }, { passive: false });
-
-    wrapper.addEventListener("touchmove", (e) => {
-        if (!_imgActivaCarrusel()) return;
-        const n = e.touches.length;
-        if (n === 2) {
-            e.preventDefault();
-            actualizarPuntero(e);
-            const pts = Array.from(_zoomState.pointers.values());
-            const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
-            _zoomState.scale = Math.min(4, Math.max(1, _zoomState.startScale * (dist / _zoomState.startDist)));
-            const midX = (pts[0].x + pts[1].x) / 2;
-            const midY = (pts[0].y + pts[1].y) / 2;
-            _zoomState.x = _zoomState.startX + (midX - _zoomState.startMidX);
-            _zoomState.y = _zoomState.startY + (midY - _zoomState.startMidY);
-            _clampPanZoom();
-            _aplicarTransformZoom();
-        } else if (n === 1 && _zoomState.scale > 1.02) {
-            e.preventDefault();
-            actualizarPuntero(e);
-            const pts = Array.from(_zoomState.pointers.values());
-            _zoomState.x = _zoomState.startX + (pts[0].x - _zoomState.startMidX);
-            _zoomState.y = _zoomState.startY + (pts[0].y - _zoomState.startMidY);
-            _clampPanZoom();
-            _aplicarTransformZoom();
-        }
-    }, { passive: false });
-
-    function onFinDeToque(e) {
-        actualizarPuntero(e);
-        _rebaseGesto(); // re-ancla apenas queda 1 dedo o 0, evita el salto
-        if (e.touches.length > 0) return;
-
-        const ahora = Date.now();
-        const esDobleTap = (ahora - _zoomState.ultimoTap) < 300 && _zoomState.scale <= 1.3;
-        _zoomState.ultimoTap = ahora;
-
-        if (esDobleTap) {
-            const t = e.changedTouches[0];
-            const img = _imgActivaCarrusel();
-            const rect = img.getBoundingClientRect();
-            if (_zoomState.scale > 1.02) {
-                _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
-            } else {
-                _zoomState.scale = 2.5;
-                const relX = (t.clientX - rect.left) - rect.width / 2;
-                const relY = (t.clientY - rect.top) - rect.height / 2;
-                _zoomState.x = -relX * (_zoomState.scale - 1);
-                _zoomState.y = -relY * (_zoomState.scale - 1);
-                _clampPanZoom();
-            }
-            _aplicarTransformZoom(true);
-            return;
-        }
-        if (_zoomState.scale <= 1.02) {
-            _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
-        } else {
-            _clampPanZoom();
-        }
-        _aplicarTransformZoom(true);
-    }
-    wrapper.addEventListener("touchend", onFinDeToque);
-    wrapper.addEventListener("touchcancel", onFinDeToque);
-})();
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("carruselPrev")?.addEventListener("click", () => {
@@ -1097,7 +969,7 @@ const COLOR_SINONIMOS = {
     "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada", "antracita", "grafito", "piedra", "humo", "ceniza"],
     "acero": ["acero", "acero inoxidable", "steel", "inox", "inoxidable", "metalico", "metálico", "cromado"],
     "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro", "champagne", "bronce"],
-    "naranja": ["naranja", "naranjas", "orange", "oxido", "óxido", "mango", "calabaza", "ladrillo", "brick"],
+    "naranja": ["naranja", "naranjas", "orange", "oxido", "óxido", "mango", "calabaza", "ladrillo", "brick", "anaranjado", "anaranjada", "anaranjados", "anaranjadas", "bermellon", "bermellón"],
     "terracota": ["terracota", "terracotta", "coral", "teja clara", "ocre rojo", "arcilla", "canyon"],
     "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow", "ocre", "mostaza", "limón", "limon", "canario", "miel"],
     "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes", "vison", "visón", "bisón", "bison", "taupe", "natural", "crudo", "ecru", "lino", "caqui claro"],
@@ -1105,6 +977,8 @@ const COLOR_SINONIMOS = {
     "turquesa": ["turquesa", "turquoise", "agua", "aqua", "aguamarina", "tiffany", "verde agua", "aqua marine"],
     "bordeaux": ["bordeaux", "bordo", "burdeos", "vino tinto", "marsala", "granate oscuro"],
     "multicolor": ["multicolor", "estampado", "colores", "tie dye", "tie-dye", "multicolores"],
+    "tornasol": ["tornasol", "tornasoles", "tornasolado", "tornasolada", "tornasolados", "tornasoladas", "iridiscente", "iridiscentes", "irisado", "irisada", "holografico", "holográfico"],
+
 };
 const COLOR_CSS = {
     "negro": "#111", "negra": "#111", "negros": "#111", "negras": "#111",
@@ -1196,6 +1070,9 @@ const COLOR_CSS = {
 
     "multicolor": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
     "estampado": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
+    "tornasol": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "tornasolado": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "bermellon": "#e34234", "bermellón": "#e34234",
     "tie dye": "linear-gradient(135deg,#e91e63,#9c27b0,#3f51b5,#00bcd4,#4caf50)",
     "tie-dye": "linear-gradient(135deg,#e91e63,#9c27b0,#3f51b5,#00bcd4,#4caf50)",
 };
@@ -1321,6 +1198,7 @@ function recalcularCamposBusqueda(prod) {
         diamStr ? diamStr + "mm" : null,
         diamStr ? diamStr + " mm" : null,
         altoStr, anchoStr, profStr, pesoStr, diamStr,
+        prod.Color && prod.Color !== "—" ? expandirConSinonimos(prod.Color) : null,
         prod.Material && prod.Material !== "—" ? expandirConSinonimos(prod.Material) : null,
     ].filter(v => v && v !== "—" && v !== "null" && String(v).trim() !== "")
         .join(" ")
@@ -1433,6 +1311,9 @@ function parsearGrupos(textoBusqueda) {
     return grupos;
 }
 
+function raizAdjetivo(p) {
+    return normalizarTermino(p).replace(/[oa]$/, "");
+}
 function palabraMatchFuzzy(palabra, textoNormalizado) {
     const tokens = textoNormalizado.split(/\s+/);
 
@@ -1443,6 +1324,13 @@ function palabraMatchFuzzy(palabra, textoNormalizado) {
     if (tokens.includes(palabra)) return true;
 
     if (tokens.some(token => token.startsWith(palabra))) return true;
+
+    if (palabra.length >= 4) {
+        const raiz = raizAdjetivo(palabra);
+        if (raiz.length >= 3 && tokens.some(token => token.length >= 4 && raizAdjetivo(token) === raiz)) {
+            return true;
+        }
+    }
 
     if (palabra.length <= 5) return false;
     if (palabra.length >= 8) {
