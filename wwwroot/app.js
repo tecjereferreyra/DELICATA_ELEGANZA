@@ -170,6 +170,39 @@ function unlockScroll() {
         }, 400);
     }, { passive: true });
 })();
+(function corregirLayoutAlZoom() {
+    const SELECTORES_FIXED = 'header.navbar, .modal, .modal-overlay, .modal-user, .mobile-menu';
+    let zoomAnterior = window.visualViewport ? window.visualViewport.scale : 1;
+    let raf = null;
+
+    function regenerarCapas() {
+        document.querySelectorAll(SELECTORES_FIXED).forEach(el => {
+            const wc = el.style.willChange;
+            el.style.willChange = 'auto';
+            void el.offsetHeight;
+            el.style.willChange = wc;
+        });
+        
+        window.scrollBy(0, 1);
+        window.scrollBy(0, -1);
+    }
+
+    function onResize() {
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(regenerarCapas);
+    }
+
+    window.addEventListener('resize', onResize, { passive: true });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            const zoomActual = window.visualViewport.scale;
+            if (Math.abs(zoomActual - zoomAnterior) > 0.01) {
+                zoomAnterior = zoomActual;
+                onResize();
+            }
+        }, { passive: true });
+    }
+})();
 function normalizarProducto(p) {
     return {
         IdProducto: p.IdProducto ?? p.idProducto ?? p.id_producto ?? p.id ?? null,
@@ -905,16 +938,37 @@ const cardObserver = new IntersectionObserver(
     }
 );
 
-function renderizarProductosProgresivo() {
+function renderizarProductosProgresivo(reiniciar = false) {
     const contenedor = document.getElementById("contenedor-productos");
     const hasta = Math.min(productosRenderizados + BLOQUE_CARGA, productosFiltrados.length);
 
-    const fragment = document.createDocumentFragment();
-    for (let i = productosRenderizados; i < hasta; i++) {
-        const card = crearTarjetaDOM(productosFiltrados[i], i);
-        fragment.appendChild(card);
+    if (reiniciar) {
+        const existentes = new Map();
+        contenedor.querySelectorAll(".product-card").forEach(card => {
+            existentes.set(card.dataset.id, card);
+        });
+
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < hasta; i++) {
+            const prod = productosFiltrados[i];
+            const idStr = String(prod.IdProducto);
+            const existente = existentes.get(idStr);
+            if (existente) {
+                fragment.appendChild(existente);
+                existentes.delete(idStr);
+            } else {
+                fragment.appendChild(crearTarjetaDOM(prod, i));
+            }
+        }
+        contenedor.replaceChildren(fragment);
+    } else {
+        const fragment = document.createDocumentFragment();
+        for (let i = productosRenderizados; i < hasta; i++) {
+            fragment.appendChild(crearTarjetaDOM(productosFiltrados[i], i));
+        }
+        contenedor.appendChild(fragment);
     }
-    contenedor.appendChild(fragment);
+
     productosRenderizados = hasta;
     const btnVerMas = document.getElementById("btnVerMas");
     btnVerMas.style.display = productosRenderizados < productosFiltrados.length ? "block" : "none";
@@ -960,8 +1014,9 @@ const COLOR_SINONIMOS = {
     "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche"],
     "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "perla", "nieve", "ivory", "blanquito"],
     "rojo": ["rojo", "roja", "rojos", "rojas", "red", "bordo", "bordeau", "granate", "carmesi", "carmesí", "escarlata", "cereza", "vino", "sangre"],
-    "azul": ["azul", "azules", "blue", "marino", "celeste", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo"],
-    "verde": ["verde", "verdes", "green", "oliva", "militar", "kaki", "esmeralda", "menta", "sage", "botella", "musgo", "selva", "lima", "verde francia"],
+    "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero"],
+
+    "verde": ["verde", "verdes", "green", "oliva", "militar", "verde militar", "kaki", "esmeralda", "menta", "sage", "botella", "verde botella", "musgo", "selva", "lima", "verde francia", "verde ingles", "verde inglés", "verde seco", "verde bosque", "verde jade"],
     "marron": ["marron", "marrón", "marrones", "cafe", "café", "tabaco", "cognac", "camel", "cuero", "chocolate", "tierra", "havana", "walnut", "tobacco", "avellana"],
     "suela": ["suela", "teja", "madera", "castano", "castaño", "castañas", "nuez", "roble", "cobre", "cobre viejo"],
     "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon", "salmón", "palo de rosa", "flamingo", "blush", "magenta", "hot pink"],
@@ -1003,6 +1058,18 @@ const COLOR_CSS = {
     "petroleo": "#00454a", "petróleo": "#00454a",
 
     "verde": "#2e7d32", "verdes": "#2e7d32", "green": "#2e7d32",
+    "azul francia": "#318ce7",
+    "azul rey": "#1434a4",
+    "azul electrico": "#0066ff", "azul eléctrico": "#0066ff",
+    "azul bebe": "#a7c6ed", "azul bebé": "#a7c6ed",
+    "azul acero": "#4863a0",
+
+    "verde militar": "#4b5320",
+    "verde ingles": "#123524", "verde inglés": "#123524",
+    "verde seco": "#7a7a52",
+    "verde bosque": "#0b3d24",
+    "verde jade": "#00a86b",
+    "verde botella": "#1b4d2e",
     "oliva": "#6b6b2a", "militar": "#4a5240", "kaki": "#8b8040",
     "esmeralda": "#004d40", "menta": "#80cbc4", "sage": "#7d9b76",
     "botella": "#1b4d2e", "musgo": "#556b2f", "selva": "#1a3a26",
@@ -1452,31 +1519,23 @@ const aplicarFiltros = (preservarPaginacion = false) => {
     }
     if (textoBusqueda !== "") {
         const filtros = extraerFiltrosBusqueda(textoBusqueda);
+        const tipoExacto = extraerTipoExacto(textoBusqueda);
+        const textoParaFuzzy = tipoExacto ? tipoExacto.textoRestante : textoBusqueda;
+
         base = base.filter(p => {
             const idx = p._indiceBusqueda;
-            if (
-                filtros.alto &&
-                idx.alto !== filtros.alto
-            ) {
-                return false;
-            }
-            if (
-                filtros.ancho &&
-                idx.ancho !== filtros.ancho
-            ) {
-                return false;
-            }
-            return matchBusquedaFuzzy(
-                p._camposNormalizados,
-                textoBusqueda
-            );
+            if (filtros.alto && idx.alto !== filtros.alto) return false;
+            if (filtros.ancho && idx.ancho !== filtros.ancho) return false;
+            if (tipoExacto && idx.tipo !== tipoExacto.tipo) return false;
+            if (textoParaFuzzy === "") return true;
+            return matchBusquedaFuzzy(p._camposNormalizados, textoParaFuzzy);
         });
     }
     productosFiltrados = base;
     productosRenderizados = 0;
     const contenedor = document.getElementById("contenedor-productos");
-    contenedor.replaceChildren();
     if (productosFiltrados.length === 0) {
+        contenedor.replaceChildren();
         contenedor.innerHTML = `
             <div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--color-marca-oro);">
                 <p>No se encontraron productos para "${document.getElementById("searchInput")?.value}"</p>
@@ -1487,11 +1546,12 @@ const aplicarFiltros = (preservarPaginacion = false) => {
     }
     if (preservarPaginacion) {
         const objetivo = Math.min(productosYaRenderizadosPrevios, productosFiltrados.length);
-        do {
+        renderizarProductosProgresivo(true);
+        while (productosRenderizados < objetivo) {
             renderizarProductosProgresivo();
-        } while (productosRenderizados < objetivo);
+        }
     } else {
-        renderizarProductosProgresivo();
+        renderizarProductosProgresivo(true);
     }
 };
 
@@ -2951,7 +3011,33 @@ const TIPO_ALIAS_MAP = {
     "chalina": "Chalinas",
     "cuello": "Cuellos",
     "pashmina": "Pashminas",
+    "dije": "Dijes",
+    "dijes": "Dijes",
 };
+function extraerTipoExacto(textoNormalizado) {
+    const clavesCompuestas = Object.keys(TIPO_ALIAS_MAP)
+        .filter(k => k.includes(" "))
+        .sort((a, b) => b.length - a.length);
+    for (const clave of clavesCompuestas) {
+        const patron = new RegExp(`\\b${clave.replace(/\s+/g, "\\s+")}\\b`);
+        if (patron.test(textoNormalizado)) {
+            return {
+                tipo: normalizar(TIPO_ALIAS_MAP[clave]),
+                textoRestante: textoNormalizado.replace(patron, " ").replace(/\s+/g, " ").trim()
+            };
+        }
+    }
+    const tokens = textoNormalizado.split(/\s+/).filter(Boolean);
+    for (const tok of tokens) {
+        if (TIPO_ALIAS_MAP[tok]) {
+            return {
+                tipo: normalizar(TIPO_ALIAS_MAP[tok]),
+                textoRestante: textoNormalizado.replace(new RegExp(`\\b${tok}\\b`), " ").replace(/\s+/g, " ").trim()
+            };
+        }
+    }
+    return null;
+}
 function normalizarTipo(valor) {
     if (!valor || !valor.trim()) return valor;
     const key = valor.trim().toLowerCase()
