@@ -1275,6 +1275,7 @@ header.navbar .title {
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
+    touch-action: pan-y;
     background: linear-gradient(180deg,#fff 0,#f7f2ea 100%);
     border-radius: 22px;
     padding: 10px;

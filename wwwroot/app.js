@@ -194,7 +194,7 @@ function unlockScroll() {
         debounceId = setTimeout(() => { if (pendiente) regenerarCapas(); }, 250);
     }
 
-    window.addEventListener('resize', marcarPendiente, { passive: true });
+
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const zoomActual = window.visualViewport.scale;
