@@ -1342,7 +1342,8 @@ header.navbar .title {
     border-radius: 18px;
     margin-bottom: 10px;
     overflow: hidden;
-    position: relative
+    position: relative;
+    touch-action: pan-y;
 }
 
     .modal-img-container img {
@@ -1353,7 +1354,6 @@ header.navbar .title {
         object-fit: contain;
         display: block;
         margin: auto;
-        touch-action: pan-y;
         will-change: transform;
         pointer-events: none;
     }
