@@ -173,7 +173,7 @@ function unlockScroll() {
 (function corregirLayoutAlZoom() {
     const SELECTORES_FIXED = 'header.navbar, .modal, .modal-overlay, .modal-user, .mobile-menu';
     let zoomAnterior = window.visualViewport ? window.visualViewport.scale : 1;
-    let raf = null;
+    let debounceId = null;
 
     function regenerarCapas() {
         document.querySelectorAll(SELECTORES_FIXED).forEach(el => {
@@ -182,14 +182,13 @@ function unlockScroll() {
             void el.offsetHeight;
             el.style.willChange = wc;
         });
-        
         window.scrollBy(0, 1);
         window.scrollBy(0, -1);
     }
 
     function onResize() {
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(regenerarCapas);
+        clearTimeout(debounceId);
+        debounceId = setTimeout(regenerarCapas, 200); // espera a que el gesto termine
     }
 
     window.addEventListener('resize', onResize, { passive: true });

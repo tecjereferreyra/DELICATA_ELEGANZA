@@ -12,7 +12,8 @@
 }
 
 body, html {
-    overscroll-behavior-x: none
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
 }
 
 .carrusel-slide, .carrusel-wrapper {
@@ -124,6 +125,8 @@ body, header.navbar {
 html {
     scroll-behavior: auto;
     font-size: clamp(13px, 1.8vw, 16px);
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
 }
 
 body {
@@ -133,10 +136,7 @@ body {
     flex-direction: column;
     padding-top: 0;
     overflow-x: clip;
-    overflow-y: scroll;
-    scrollbar-gutter: stable;
 }
-
 main {
     flex: 1;
     min-height: 60vh
