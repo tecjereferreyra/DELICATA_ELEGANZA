@@ -16,7 +16,7 @@ body.page-carrito .navbar {
     display: none
 }
 body.page-carrito {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
     min-height: 100dvh; /* ← ocupa toda la pantalla */
     display: flex; /* ← layout columna */
     flex-direction: column;

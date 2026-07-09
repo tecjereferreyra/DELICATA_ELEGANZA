@@ -173,9 +173,11 @@ function unlockScroll() {
 (function corregirLayoutAlZoom() {
     const SELECTORES_FIXED = 'header.navbar, .modal, .modal-overlay, .modal-user, .mobile-menu';
     let zoomAnterior = window.visualViewport ? window.visualViewport.scale : 1;
+    let pendiente = false;
     let debounceId = null;
 
     function regenerarCapas() {
+        pendiente = false;
         document.querySelectorAll(SELECTORES_FIXED).forEach(el => {
             const wc = el.style.willChange;
             el.style.willChange = 'auto';
@@ -186,21 +188,33 @@ function unlockScroll() {
         window.scrollBy(0, -1);
     }
 
-    function onResize() {
+    function marcarPendiente() {
+        pendiente = true;
         clearTimeout(debounceId);
-        debounceId = setTimeout(regenerarCapas, 200); // espera a que el gesto termine
+        debounceId = setTimeout(() => { if (pendiente) regenerarCapas(); }, 250);
     }
 
-    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('resize', marcarPendiente, { passive: true });
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', () => {
             const zoomActual = window.visualViewport.scale;
             if (Math.abs(zoomActual - zoomAnterior) > 0.01) {
                 zoomAnterior = zoomActual;
-                onResize();
+                marcarPendiente();
             }
         }, { passive: true });
     }
+
+
+    document.addEventListener('touchend', (e) => {
+        if (pendiente && e.touches.length === 0) {
+            clearTimeout(debounceId);
+            regenerarCapas();
+        }
+    }, { passive: true });
+    document.addEventListener('touchcancel', () => {
+        if (pendiente) { clearTimeout(debounceId); regenerarCapas(); }
+    }, { passive: true });
 })();
 function normalizarProducto(p) {
     return {

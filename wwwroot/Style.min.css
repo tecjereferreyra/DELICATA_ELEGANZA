@@ -13,7 +13,7 @@
 
 body, html {
     overscroll-behavior-x: none;
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
 }
 
 .carrusel-slide, .carrusel-wrapper {
