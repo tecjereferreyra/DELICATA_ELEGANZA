@@ -1353,6 +1353,7 @@ header.navbar .title {
         object-fit: contain;
         display: block;
         margin: auto;
+        touch-action: pan-y;
         will-change: transform;
         pointer-events: none;
     }

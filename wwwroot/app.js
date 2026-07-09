@@ -381,6 +381,7 @@ function abrirModalProducto() {
     requestAnimationFrame(() => {
         modal.classList.add("show");
         initZoom();
+        initZoomTouch();
     });
 }
 (function () {
@@ -579,6 +580,7 @@ function cerrarModalProducto() {
     unlockScroll();
     _cerrarModalTimeout = null;
     resetZoomCarrusel();
+    document.querySelector(".modal-img-container")?._resetZoomTouch?.();
     const imgContainer = modal.querySelector(".modal-img-container");
     if (imgContainer) imgContainer._zoomInit = false;
 }
@@ -1856,6 +1858,157 @@ function initZoom() {
     window.addEventListener("resize", () => {
         if (isZoomActive || currentScale > 1) cachedRect = modalImgContainer.getBoundingClientRect();
     }, { passive: true });
+}
+function initZoomTouch() {
+    const modalImgContainer = document.querySelector(".modal-img-container");
+    if (!modalImgContainer || !esTouchDevice) return;
+    if (modalImgContainer._zoomTouchInit) return;
+    modalImgContainer._zoomTouchInit = true;
+
+    const MAX_SCALE = 3;
+    const EASE = 0.18;
+
+    let scale = 1, targetScale = 1;
+    let tx = 0, ty = 0, targetTx = 0, targetTy = 0;
+    let animId = null;
+    let rect = null;
+    let startDist = 0, startScale = 1;
+    let isPanning = false;
+    let panStartX = 0, panStartY = 0;
+    let lastTap = 0;
+    let lastImg = null;
+
+    function getActiveImg() {
+        return modalImgContainer.querySelector(".carrusel-slide.active img")
+            || modalImgContainer.querySelector("img");
+    }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function dist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
+
+    function clamp() {
+        if (!rect) return;
+        const maxX = (rect.width * (targetScale - 1)) / 2;
+        const maxY = (rect.height * (targetScale - 1)) / 2;
+        targetTx = Math.max(-maxX, Math.min(maxX, targetTx));
+        targetTy = Math.max(-maxY, Math.min(maxY, targetTy));
+    }
+
+    function loop() {
+        const img = getActiveImg();
+        if (!img) { animId = null; return; }
+        scale = lerp(scale, targetScale, EASE);
+        tx = lerp(tx, targetTx, EASE);
+        ty = lerp(ty, targetTy, EASE);
+        img.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${scale.toFixed(3)})`;
+
+        const done = Math.abs(scale - targetScale) < 0.003
+            && Math.abs(tx - targetTx) < 0.05
+            && Math.abs(ty - targetTy) < 0.05;
+
+        if (done) {
+            scale = targetScale; tx = targetTx; ty = targetTy;
+            img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+            animId = null;
+            return;
+        }
+        animId = requestAnimationFrame(loop);
+    }
+    function ensureLoop() { if (!animId) animId = requestAnimationFrame(loop); }
+
+    function resetZoom() {
+        targetScale = 1; scale = 1; targetTx = 0; targetTy = 0; tx = 0; ty = 0;
+        const img = getActiveImg();
+        if (img) {
+            img.style.transformOrigin = "center center";
+            img.style.transform = "translate(0px, 0px) scale(1)";
+        }
+    }
+
+    function toggleZoom(clientX, clientY) {
+        const img = getActiveImg();
+        if (!img) return;
+        if (targetScale > 1.02) {
+            targetScale = 1; targetTx = 0; targetTy = 0;
+        } else {
+            rect = modalImgContainer.getBoundingClientRect();
+            const ox = ((clientX - rect.left) / rect.width) * 100;
+            const oy = ((clientY - rect.top) / rect.height) * 100;
+            img.style.transformOrigin = `${ox}% ${oy}%`;
+            targetScale = 2.4;
+            targetTx = 0; targetTy = 0;
+        }
+        ensureLoop();
+    }
+
+    function esControl(e) {
+        return e.target.closest(".carrusel-btn, .carrusel-dots, .dot");
+    }
+
+    modalImgContainer.addEventListener("touchstart", (e) => {
+        if (esControl(e)) return;
+        const img = getActiveImg();
+        if (img !== lastImg) { resetZoom(); lastImg = img; }
+        rect = modalImgContainer.getBoundingClientRect();
+
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            startDist = dist(e.touches[0], e.touches[1]);
+            startScale = scale;
+            isPanning = false;
+        } else if (e.touches.length === 1) {
+            if (targetScale > 1.02) {
+                isPanning = true;
+                panStartX = e.touches[0].clientX - tx;
+                panStartY = e.touches[0].clientY - ty;
+            }
+            const now = Date.now();
+            if (now - lastTap < 300) {
+                e.preventDefault();
+                toggleZoom(e.touches[0].clientX, e.touches[0].clientY);
+                lastTap = 0;
+            } else {
+                lastTap = now;
+            }
+        }
+    }, { passive: false });
+
+    modalImgContainer.addEventListener("touchmove", (e) => {
+        if (esControl(e)) return;
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            e.stopPropagation();
+            const newDist = dist(e.touches[0], e.touches[1]);
+            const factor = newDist / startDist;
+            targetScale = Math.max(1, Math.min(MAX_SCALE, startScale * factor));
+            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            const img = getActiveImg();
+            if (img) {
+                const ox = ((midX - rect.left) / rect.width) * 100;
+                const oy = ((midY - rect.top) / rect.height) * 100;
+                img.style.transformOrigin = `${ox}% ${oy}%`;
+            }
+            clamp();
+            ensureLoop();
+        } else if (e.touches.length === 1 && isPanning) {
+            e.preventDefault();
+            e.stopPropagation();
+            targetTx = e.touches[0].clientX - panStartX;
+            targetTy = e.touches[0].clientY - panStartY;
+            clamp();
+            ensureLoop();
+        }
+    }, { passive: false });
+
+    modalImgContainer.addEventListener("touchend", (e) => {
+        if (e.touches.length === 0) {
+            isPanning = false;
+            if (targetScale < 1.08) resetZoom();
+            ensureLoop();
+        }
+    });
+
+    modalImgContainer._resetZoomTouch = resetZoom;
 }
 document.addEventListener("DOMContentLoaded", () => {
     cargarProductos();
