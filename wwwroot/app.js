@@ -288,7 +288,6 @@ function initDOMCache() {
     domCache.modalNombre = document.getElementById("modalNombre");
     domCache.modalModelo = document.getElementById("modalModelo");
     domCache.modalColor = document.getElementById("modalColor");
-    domCache.modalCategoria = document.getElementById("modalCategoria");
     domCache.modalMarca = document.getElementById("modalMarca");
     domCache.modalMaterial = document.getElementById("modalMaterial");
     domCache.modalCapacidad = document.getElementById("modalCapacidad");
