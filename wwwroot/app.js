@@ -804,11 +804,9 @@ function abrirModal(prod) {
     const camposDisponibles = [
         { id: "modalModelo", value: prod.Modelo || prod.modelo },
         { id: "modalColor", value: prod.Color || prod.color },
-        { id: "modalCategoria", value: prod.Categoria || prod.categoria },
         { id: "modalMarca", value: prod.Marca || prod.marca },
         { id: "modalMaterial", value: prod.Material || prod.material },
         { id: "modalCapacidad", value: prod.Capacidad || prod.capacidad },
-        { id: "modalTipo", value: prod.Tipo || prod.tipo },
         { id: "modalCompartimentos", value: prod.Compartimentos || prod.compartimentos },
         { id: "modalAlto", value: prod.Alto && prod.Alto !== "—" ? prod.Alto + " cm" : null },
         { id: "modalAncho", value: prod.Ancho && prod.Ancho !== "—" ? prod.Ancho + " cm" : null },
