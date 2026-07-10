@@ -25,7 +25,7 @@ namespace DELICATA_ELEGANZA.Data
             modelBuilder.Entity<Marcas>().HasKey(m => m.id_marca);
             modelBuilder.Entity<Materiales>().HasKey(m => m.id_material);
             modelBuilder.Entity<Tipos>().HasKey(t => t.id_tipo);
-            modelBuilder.Entity<Productos>().HasKey(p => p.id_producto); 
+            modelBuilder.Entity<Productos>().HasKey(p => p.id_producto);
             modelBuilder.Entity<TiposCierre>().HasKey(t => t.id_tipo_cierre);
             modelBuilder.Entity<Usuario>().HasKey(u => u.IdUsuario);
             modelBuilder.Entity<Capacidades>().HasKey(c => c.id_capacidad);
@@ -101,7 +101,63 @@ namespace DELICATA_ELEGANZA.Data
             modelBuilder.Entity<Productos>()
                 .HasIndex(p => p.Disponible)
                 .HasDatabaseName("IX_Productos_Disponible");
+
+            // ── Índices nuevos de Productos (velocidad de búsqueda) ───────
+            modelBuilder.Entity<Productos>()
+                .HasIndex(p => p.id_tipo)
+                .HasDatabaseName("IX_Productos_Tipo");
+
+            modelBuilder.Entity<Productos>()
+                .HasIndex(p => p.id_material)
+                .HasDatabaseName("IX_Productos_Material");
+
+            modelBuilder.Entity<Productos>()
+                .HasIndex(p => p.id_capacidad)
+                .HasDatabaseName("IX_Productos_Capacidad");
+
+            modelBuilder.Entity<Productos>()
+                .HasIndex(p => p.id_genero)
+                .HasDatabaseName("IX_Productos_Genero");
+
+            modelBuilder.Entity<Productos>()
+                .HasIndex(p => p.id_tipo_cierre)
+                .HasDatabaseName("IX_Productos_TipoCierre");
+
+            // ── Índices únicos anti-duplicados en catálogos ───────────────
+            modelBuilder.Entity<Categorias>()
+                .HasIndex(c => c.Nombre)
+                .IsUnique()
+                .HasDatabaseName("ux_categorias_nombre_lower");
+
+            modelBuilder.Entity<Marcas>()
+                .HasIndex(m => m.Nombre)
+                .IsUnique()
+                .HasDatabaseName("ux_marcas_nombre_lower");
+
+            modelBuilder.Entity<Materiales>()
+                .HasIndex(m => m.Nombre)
+                .IsUnique()
+                .HasDatabaseName("ux_materiales_nombre_lower");
+
+            modelBuilder.Entity<Tipos>()
+                .HasIndex(t => t.Nombre)
+                .IsUnique()
+                .HasDatabaseName("ux_tipos_nombre_lower");
+
+            modelBuilder.Entity<TiposCierre>()
+                .HasIndex(t => t.Nombre)
+                .IsUnique()
+                .HasDatabaseName("ux_tiposcierre_nombre_lower");
+
+            modelBuilder.Entity<Capacidades>()
+                .HasIndex(c => c.Descripcion)
+                .IsUnique()
+                .HasDatabaseName("ux_capacidades_desc_lower");
+
+            modelBuilder.Entity<Generos>()
+                .HasIndex(g => g.Descripcion)
+                .IsUnique()
+                .HasDatabaseName("ux_generos_desc_lower");
         }
     }
 }
-

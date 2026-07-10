@@ -671,7 +671,7 @@ async function enviarSolicitudRecuperacion() {
 
 function verificarUsuarioAutorizado() {
     const usuario = localStorage.getItem("correoDelicata");
-    esAdminActual = ["tec.jereferreyra@gmail.com", "reflej8@hotmail.com"].includes(usuario);
+    esAdminActual = localStorage.getItem("rolDelicata") === "Administrador";
     const greeting = document.getElementById("greeting");
     const mobileGreeting = document.getElementById("mobileGreeting");
     const nombre = localStorage.getItem("usuarioDelicata");
@@ -697,7 +697,7 @@ function verificarUsuarioAutorizado() {
     if (modalProducto && modalProducto.classList.contains("show")) {
         const adminBox = document.getElementById("modalAdminButtons");
         if (adminBox) {
-            const esAdmin = correo === "reflej8@hotmail.com" || correo === "tec.jereferreyra@gmail.com";
+            const esAdmin = localStorage.getItem("rolDelicata") === "Administrador";
             adminBox.style.display = esAdmin ? "flex" : "none";
         }
     }
@@ -1685,6 +1685,8 @@ function openUserModalAsLogin() {
                 const correoMostrar = data.correo || correo;
                 localStorage.setItem("usuarioDelicata", nombreMostrar);
                 localStorage.setItem("correoDelicata", correoMostrar);
+                localStorage.setItem("tokenDelicata", data.token || "");
+                localStorage.setItem("rolDelicata", data.rol || "Usuario");
                 if (typeof restaurarCarritoUsuario === "function") {
                     restaurarCarritoUsuario(correoMostrar);
                 }
@@ -2435,6 +2437,8 @@ function mostrarLogoutConfirm() {
         }
         localStorage.removeItem("usuarioDelicata");
         localStorage.removeItem("correoDelicata");
+        localStorage.removeItem("tokenDelicata");
+        localStorage.removeItem("rolDelicata");
         cerrarLogout();
         try {
             verificarUsuarioAutorizado?.();
@@ -2858,7 +2862,11 @@ function _snapToFormData(snap) {
 
 async function _enviarSnapshot(snap) {
     const fd = _snapToFormData(snap);
-    const res = await fetch("/api/Productos", { method: "POST", body: fd });
+    const res = await fetch("/api/Productos", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}` },
+        body: fd
+    });
     if (!res.ok) {
         const text = await res.text();
         throw new Error(traducirErrorBackend(text));
@@ -2870,7 +2878,11 @@ async function _enviarSnapshot(snap) {
     if (extras.length > 0 && nuevoId) {
         const fdImg = new FormData();
         extras.forEach(f => fdImg.append("imagenes", f));
-        await fetch(`/api/Productos/${nuevoId}/imagenes`, { method: "POST", body: fdImg })
+        await fetch(`/api/Productos/${nuevoId}/imagenes`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}` },
+            body: fdImg
+        })
             .catch(e => console.warn("Error subiendo imágenes extra:", e));
     }
     return nuevoId;
@@ -3332,6 +3344,7 @@ async function guardarEdicionProducto() {
         mostrarToast("Guardando cambios...", "info");
         const res = await fetch(`/api/Productos/${id}`, {
             method: "PUT",
+            headers: { "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}` },
             body: fd
         });
         if (!res.ok) {
@@ -3344,7 +3357,11 @@ async function guardarEdicionProducto() {
         if (archivosExtraEdit.length > 0) {
             const fdImgs = new FormData();
             archivosExtraEdit.forEach(f => fdImgs.append("imagenes", f));
-            await fetch(`/api/Productos/${id}/imagenes`, { method: "POST", body: fdImgs })
+            await fetch(`/api/Productos/${id}/imagenes`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}` },
+                body: fdImgs
+            })
                 .catch(e => console.warn("Error subiendo imágenes extra:", e));
         }
         window._archivosExtraEditar = [];
@@ -3352,7 +3369,10 @@ async function guardarEdicionProducto() {
         for (const url of imagenesAEliminar) {
             await fetch(`/api/Productos/${id}/imagenes/by-url`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}`
+                },
                 body: JSON.stringify(url)
             }).catch(e => console.warn("Error eliminando imagen del carrusel:", e));
         }
@@ -3405,7 +3425,8 @@ function confirmarEliminarProducto() {
     document.activeElement?.blur();
     const _savedScrollEliminarProd = window._scrollAntesDeCRUD ?? _scrollLockedAt;
     fetch(`${API_URL}/${idProdEliminar}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}` }
     })
         .then(res => {
             if (!res.ok) throw new Error("No se pudo eliminar");
@@ -3457,7 +3478,8 @@ function confirmarEliminar() {
     const _savedScrollEliminar = window._scrollAntesDeCRUD ?? _scrollLockedAt;
     mostrarToast("Eliminando producto...", "info");
     fetch(`/api/Productos/${idProdEliminar}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}` }
     })
         .then(res => {
             if (!res.ok) throw new Error("No se pudo eliminar");
@@ -3730,11 +3752,6 @@ function keepAliveRender() {
 }
 setInterval(keepAliveRender, 10 * 60 * 1000);
 
-window.addEventListener("load", () => {
-    requestAnimationFrame(() => {
-        document.body.classList.add("page-ready");
-    });
-});
 window.addEventListener("load", () => {
     requestAnimationFrame(() => {
         document.body.classList.add("page-ready");

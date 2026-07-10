@@ -5,13 +5,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -22,12 +25,18 @@ namespace DELICATA_ELEGANZA.Controllers
         private readonly DelicataContext _context;
         private readonly IMemoryCache _cache;
         private readonly Cloudinary _cloudinary;
+        private readonly ILogger<ProductosController> _logger;
 
-        public ProductosController(DelicataContext context, IMemoryCache cache, Cloudinary cloudinary)
+        public ProductosController(
+            DelicataContext context,
+            IMemoryCache cache,
+            Cloudinary cloudinary,
+            ILogger<ProductosController> logger)
         {
             _context = context;
             _cache = cache;
             _cloudinary = cloudinary;
+            _logger = logger;
         }
 
         // ============================================================
@@ -100,11 +109,8 @@ namespace DELICATA_ELEGANZA.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
-                    mensaje = "Error al obtener productos",
-                    detalle = ex.Message
-                });
+                _logger.LogError(ex, "Error al obtener productos");
+                return StatusCode(500, new { mensaje = "Error al obtener productos" });
             }
         }
 
@@ -214,6 +220,7 @@ namespace DELICATA_ELEGANZA.Controllers
         // ============================================================
         // PUT: api/Productos/5
         // ============================================================
+        [Authorize(Roles = "Administrador")]
         [HttpPut("{id}")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> UpdateProducto(
@@ -221,6 +228,9 @@ namespace DELICATA_ELEGANZA.Controllers
             [FromForm] ProductoUpdateDTO productoDto,
             [FromForm] IFormFile? imagen)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             _cache.Remove("productos_lista");
 
             var producto = await _context.Productos
@@ -229,49 +239,65 @@ namespace DELICATA_ELEGANZA.Controllers
             if (producto == null)
                 return NotFound();
 
-            producto.Nombre = productoDto.Nombre;
-            producto.Modelo = productoDto.Modelo;
-            producto.Color = productoDto.Color;
-            producto.Alto = productoDto.Alto;
-            producto.Ancho = productoDto.Ancho;
-            producto.Profundidad = productoDto.Profundidad;
-            producto.Peso = productoDto.Peso;
-            producto.Diametro = productoDto.Diametro;
-            producto.CantidadRuedas = productoDto.CantidadRuedas;
-            producto.FuelleExpandible = productoDto.FuelleExpandible;
-            producto.MedidasTexto = productoDto.MedidasTexto;
-            producto.Compartimentos = productoDto.Compartimentos;
-            producto.Stock = productoDto.Stock ?? producto.Stock;
-            producto.Disponible = producto.Stock > 0;
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                producto.Nombre = productoDto.Nombre;
+                producto.Modelo = productoDto.Modelo;
+                producto.Color = productoDto.Color;
+                producto.Alto = productoDto.Alto;
+                producto.Ancho = productoDto.Ancho;
+                producto.Profundidad = productoDto.Profundidad;
+                producto.Peso = productoDto.Peso;
+                producto.Diametro = productoDto.Diametro;
+                producto.CantidadRuedas = productoDto.CantidadRuedas;
+                producto.FuelleExpandible = productoDto.FuelleExpandible;
+                producto.MedidasTexto = productoDto.MedidasTexto;
+                producto.Compartimentos = productoDto.Compartimentos;
+                producto.Stock = productoDto.Stock ?? producto.Stock;
+                producto.Disponible = producto.Stock > 0;
 
-            producto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
-            producto.id_marca = await GetOrCreateMarca(productoDto.Marca);
-            producto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
-            producto.id_material = await GetOrCreateMaterial(productoDto.Material);
-            producto.id_tipo_cierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
-            producto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
-            producto.id_genero = await GetOrCreateGenero(productoDto.Genero);
+                producto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
+                producto.id_marca = await GetOrCreateMarca(productoDto.Marca);
+                producto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
+                producto.id_material = await GetOrCreateMaterial(productoDto.Material);
+                producto.id_tipo_cierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
+                producto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
+                producto.id_genero = await GetOrCreateGenero(productoDto.Genero);
 
-            if (imagen != null && imagen.Length > 0)
-                producto.ImagenUrl = await ProcesarImagenAsync(imagen);
+                if (imagen != null && imagen.Length > 0)
+                    producto.ImagenUrl = await ProcesarImagenAsync(imagen);
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al actualizar producto {Id}", id);
+                return StatusCode(500, new { mensaje = "Error al actualizar el producto" });
+            }
+
             return NoContent();
         }
 
         // ============================================================
         // POST: api/Productos
         // ============================================================
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult<Productos>> PostProducto(
             [FromForm] ProductoCreateDTO productoDto,
             [FromForm] IFormFile? imagen)
         {
-            _cache.Remove("productos_lista");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             if (productoDto == null)
                 return BadRequest("Datos incompletos.");
+
+            _cache.Remove("productos_lista");
 
             var nuevoProducto = new Productos
             {
@@ -291,19 +317,30 @@ namespace DELICATA_ELEGANZA.Controllers
             };
             nuevoProducto.Disponible = nuevoProducto.Stock > 0;
 
-            nuevoProducto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
-            nuevoProducto.id_marca = await GetOrCreateMarca(productoDto.Marca);
-            nuevoProducto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
-            nuevoProducto.id_material = await GetOrCreateMaterial(productoDto.Material);
-            nuevoProducto.id_tipo_cierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
-            nuevoProducto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
-            nuevoProducto.id_genero = await GetOrCreateGenero(productoDto.Genero);
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                nuevoProducto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
+                nuevoProducto.id_marca = await GetOrCreateMarca(productoDto.Marca);
+                nuevoProducto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
+                nuevoProducto.id_material = await GetOrCreateMaterial(productoDto.Material);
+                nuevoProducto.id_tipo_cierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
+                nuevoProducto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
+                nuevoProducto.id_genero = await GetOrCreateGenero(productoDto.Genero);
 
-            if (imagen != null && imagen.Length > 0)
-                nuevoProducto.ImagenUrl = await ProcesarImagenAsync(imagen);
+                if (imagen != null && imagen.Length > 0)
+                    nuevoProducto.ImagenUrl = await ProcesarImagenAsync(imagen);
 
-            _context.Productos.Add(nuevoProducto);
-            await _context.SaveChangesAsync();
+                _context.Productos.Add(nuevoProducto);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al crear producto");
+                return StatusCode(500, new { mensaje = "Error al crear el producto" });
+            }
 
             return CreatedAtAction(
                 "GetProducto",
@@ -337,9 +374,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 });
         }
 
-        // ============================================================
-        // DELETE: api/Productos/5
-        // ============================================================
+        [Authorize(Roles = "Administrador")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
@@ -349,98 +384,211 @@ namespace DELICATA_ELEGANZA.Controllers
             if (producto == null)
                 return NotFound();
 
-          
+           
+            var imagenesCarrusel = await _context.ProductoImagenes
+                .Where(i => i.id_producto == id)
+                .Select(i => i.Url)
+                .ToListAsync();
 
+            var urlsABorrar = new List<string>(imagenesCarrusel);
+            if (!string.IsNullOrEmpty(producto.ImagenUrl))
+                urlsABorrar.Add(producto.ImagenUrl);
+
+            
             _context.Productos.Remove(producto);
             await _context.SaveChangesAsync();
+
+       
+            foreach (var url in urlsABorrar.Distinct())
+            {
+                var publicId = ExtraerPublicIdDeUrl(url);
+                if (publicId == null)
+                    continue;
+
+                try
+                {
+                    var resultado = await _cloudinary.DestroyAsync(new DeletionParams(publicId));
+                    if (resultado.Result != "ok" && resultado.Result != "not found")
+                        _logger.LogWarning(
+                            "Cloudinary no pudo borrar {PublicId} del producto {Id}: {Resultado}",
+                            publicId, id, resultado.Result);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al borrar imagen {PublicId} de Cloudinary (producto {Id})", publicId, id);
+                }
+            }
+
             return NoContent();
         }
 
-        // ============================================================
-        // Métodos auxiliares GetOrCreate
-        // ============================================================
+     
         private async Task<int?> GetOrCreateCategoria(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre)) return null;
             nombre = nombre.Trim();
+
             var existente = await _context.Categorias.FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
             if (existente != null) return existente.id_categoria;
+
             var nueva = new Categorias { Nombre = nombre };
             _context.Categorias.Add(nueva);
-            await _context.SaveChangesAsync();
-            return nueva.id_categoria;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return nueva.id_categoria;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(nueva).State = EntityState.Detached;
+                var creadaPorOtroProceso = await _context.Categorias
+                    .FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
+                return creadaPorOtroProceso?.id_categoria;
+            }
         }
 
         private async Task<int?> GetOrCreateMarca(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre)) return null;
             nombre = nombre.Trim();
+
             var existente = await _context.Marcas.FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
             if (existente != null) return existente.id_marca;
+
             var nueva = new Marcas { Nombre = nombre };
             _context.Marcas.Add(nueva);
-            await _context.SaveChangesAsync();
-            return nueva.id_marca;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return nueva.id_marca;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(nueva).State = EntityState.Detached;
+                var creadaPorOtroProceso = await _context.Marcas
+                    .FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
+                return creadaPorOtroProceso?.id_marca;
+            }
         }
 
         private async Task<int?> GetOrCreateTipo(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre)) return null;
             nombre = nombre.Trim();
+
             var existente = await _context.Tipos.FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
             if (existente != null) return existente.id_tipo;
+
             var nueva = new Tipos { Nombre = nombre };
             _context.Tipos.Add(nueva);
-            await _context.SaveChangesAsync();
-            return nueva.id_tipo;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return nueva.id_tipo;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(nueva).State = EntityState.Detached;
+                var creadaPorOtroProceso = await _context.Tipos
+                    .FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
+                return creadaPorOtroProceso?.id_tipo;
+            }
         }
 
         private async Task<int?> GetOrCreateMaterial(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre)) return null;
             nombre = nombre.Trim();
+
             var existente = await _context.Materiales.FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
             if (existente != null) return existente.id_material;
+
             var nueva = new Materiales { Nombre = nombre };
             _context.Materiales.Add(nueva);
-            await _context.SaveChangesAsync();
-            return nueva.id_material;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return nueva.id_material;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(nueva).State = EntityState.Detached;
+                var creadaPorOtroProceso = await _context.Materiales
+                    .FirstOrDefaultAsync(c => c.Nombre.ToLower() == nombre.ToLower());
+                return creadaPorOtroProceso?.id_material;
+            }
         }
 
         private async Task<int?> GetOrCreateTipoCierre(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre)) return null;
             nombre = nombre.Trim();
+
             var existente = await _context.TiposCierre.FirstOrDefaultAsync(t => t.Nombre.ToLower() == nombre.ToLower());
             if (existente != null) return existente.id_tipo_cierre;
+
             var nuevo = new TiposCierre { Nombre = nombre };
             _context.TiposCierre.Add(nuevo);
-            await _context.SaveChangesAsync();
-            return nuevo.id_tipo_cierre;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return nuevo.id_tipo_cierre;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(nuevo).State = EntityState.Detached;
+                var creadaPorOtroProceso = await _context.TiposCierre
+                    .FirstOrDefaultAsync(t => t.Nombre.ToLower() == nombre.ToLower());
+                return creadaPorOtroProceso?.id_tipo_cierre;
+            }
         }
 
         private async Task<int?> GetOrCreateCapacidad(string descripcion)
         {
             if (string.IsNullOrWhiteSpace(descripcion)) return null;
             descripcion = descripcion.Trim();
+
             var existente = await _context.Capacidades.FirstOrDefaultAsync(c => c.Descripcion.ToLower() == descripcion.ToLower());
             if (existente != null) return existente.id_capacidad;
+
             var nueva = new Capacidades { Descripcion = descripcion };
             _context.Capacidades.Add(nueva);
-            await _context.SaveChangesAsync();
-            return nueva.id_capacidad;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return nueva.id_capacidad;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(nueva).State = EntityState.Detached;
+                var creadaPorOtroProceso = await _context.Capacidades
+                    .FirstOrDefaultAsync(c => c.Descripcion.ToLower() == descripcion.ToLower());
+                return creadaPorOtroProceso?.id_capacidad;
+            }
         }
 
         private async Task<int?> GetOrCreateGenero(string descripcion)
         {
             if (string.IsNullOrWhiteSpace(descripcion)) return null;
             descripcion = descripcion.Trim();
+
             var existente = await _context.Generos.FirstOrDefaultAsync(g => g.Descripcion.ToLower() == descripcion.ToLower());
             if (existente != null) return existente.id_genero;
+
             var nuevo = new Generos { Descripcion = descripcion };
             _context.Generos.Add(nuevo);
-            await _context.SaveChangesAsync();
-            return nuevo.id_genero;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return nuevo.id_genero;
+            }
+            catch (DbUpdateException)
+            {
+                _context.Entry(nuevo).State = EntityState.Detached;
+                var creadaPorOtroProceso = await _context.Generos
+                    .FirstOrDefaultAsync(g => g.Descripcion.ToLower() == descripcion.ToLower());
+                return creadaPorOtroProceso?.id_genero;
+            }
         }
 
         private async Task<string> ProcesarImagenAsync(IFormFile imagen)
@@ -450,10 +598,10 @@ namespace DELICATA_ELEGANZA.Controllers
                 File = new FileDescription(imagen.FileName, imagen.OpenReadStream()),
                 Folder = "delicata-eleganza",
                 Transformation = new Transformation()
-    .Width(800)
-    .Crop("limit")
-    .Quality(90)
-    .FetchFormat("webp")
+                    .Width(800)
+                    .Crop("limit")
+                    .Quality(90)
+                    .FetchFormat("webp")
             };
 
             var result = await _cloudinary.UploadAsync(uploadParams);
@@ -464,7 +612,33 @@ namespace DELICATA_ELEGANZA.Controllers
             return result.SecureUrl.ToString();
         }
 
+  
+        private string ExtraerPublicIdDeUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return null;
+
+            const string marcador = "/upload/";
+            var indice = url.IndexOf(marcador, StringComparison.OrdinalIgnoreCase);
+            if (indice == -1)
+                return null;
+
+            var resto = url.Substring(indice + marcador.Length); // v1783.../delicata-eleganza/xxxxx.webp
+            var segmentos = resto.Split('/');
+            if (segmentos.Length < 2)
+                return null;
+
+            // El primer segmento es la versión (v1783...), lo salteamos.
+            var carpetaYArchivo = string.Join("/", segmentos.Skip(1)); // delicata-eleganza/xxxxx.webp
+            var puntoExtension = carpetaYArchivo.LastIndexOf('.');
+            if (puntoExtension == -1)
+                return carpetaYArchivo;
+
+            return carpetaYArchivo.Substring(0, puntoExtension); // delicata-eleganza/xxxxx
+        }
+
         // POST: api/Productos/5/imagenes
+        [Authorize(Roles = "Administrador")]
         [HttpPost("{id}/imagenes")]
         public async Task<IActionResult> SubirImagenes(int id, [FromForm] List<IFormFile> imagenes)
         {
@@ -490,6 +664,8 @@ namespace DELICATA_ELEGANZA.Controllers
         }
 
         // DELETE: api/Productos/imagenes/{idImagen}
+        // También borra el archivo físico en Cloudinary, no solo la fila en la base.
+        [Authorize(Roles = "Administrador")]
         [HttpDelete("imagenes/{idImagen}")]
         public async Task<IActionResult> EliminarImagen(int idImagen)
         {
@@ -498,10 +674,26 @@ namespace DELICATA_ELEGANZA.Controllers
 
             _context.ProductoImagenes.Remove(img);
             await _context.SaveChangesAsync();
+
+            var publicId = ExtraerPublicIdDeUrl(img.Url);
+            if (publicId != null)
+            {
+                try
+                {
+                    await _cloudinary.DestroyAsync(new DeletionParams(publicId));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al borrar imagen {PublicId} de Cloudinary", publicId);
+                }
+            }
+
             return NoContent();
         }
 
         // DELETE: api/Productos/{id}/imagenes/by-url
+        // También borra el archivo físico en Cloudinary, no solo la fila en la base.
+        [Authorize(Roles = "Administrador")]
         [HttpDelete("{id}/imagenes/by-url")]
         public async Task<IActionResult> EliminarImagenPorUrl(int id, [FromBody] string url)
         {
@@ -511,6 +703,20 @@ namespace DELICATA_ELEGANZA.Controllers
 
             _context.ProductoImagenes.Remove(img);
             await _context.SaveChangesAsync();
+
+            var publicId = ExtraerPublicIdDeUrl(url);
+            if (publicId != null)
+            {
+                try
+                {
+                    await _cloudinary.DestroyAsync(new DeletionParams(publicId));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al borrar imagen {PublicId} de Cloudinary", publicId);
+                }
+            }
+
             return NoContent();
         }
 

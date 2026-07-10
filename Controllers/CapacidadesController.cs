@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using DELICATA_ELEGANZA.Data;
 using DELICATA_ELEGANZA.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -40,6 +41,7 @@ namespace DELICATA_ELEGANZA.Controllers
         }
 
         // POST: api/Capacidades
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<ActionResult<Capacidades>> CreateCapacidad([FromBody] Capacidades capacidad)
         {
@@ -58,6 +60,7 @@ namespace DELICATA_ELEGANZA.Controllers
         }
 
         // PUT: api/Capacidades
+        [Authorize(Roles = "Administrador")]
         [HttpPut]
         public async Task<ActionResult> UpdateCapacidad([FromBody] Capacidades capacidad)
         {
@@ -71,6 +74,7 @@ namespace DELICATA_ELEGANZA.Controllers
         }
 
         // DELETE: api/Capacidades/5
+        [Authorize(Roles = "Administrador")]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteCapacidad(int id)
         {

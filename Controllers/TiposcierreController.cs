@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using DELICATA_ELEGANZA.Data;
+﻿using DELICATA_ELEGANZA.Data;
 using DELICATA_ELEGANZA.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -40,6 +41,7 @@ namespace DELICATA_ELEGANZA.Controllers
         }
 
         // POST: api/TiposCierre
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<ActionResult<TiposCierre>> CreateTipoCierre([FromBody] TiposCierre tipoCierre)
         {
@@ -58,6 +60,7 @@ namespace DELICATA_ELEGANZA.Controllers
         }
 
         // PUT: api/TiposCierre
+        [Authorize(Roles = "Administrador")]
         [HttpPut]
         public async Task<ActionResult> UpdateTipoCierre([FromBody] TiposCierre tipoCierre)
         {
@@ -71,6 +74,7 @@ namespace DELICATA_ELEGANZA.Controllers
         }
 
         // DELETE: api/TiposCierre/5
+        [Authorize(Roles = "Administrador")]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteTipoCierre(int id)
         {
