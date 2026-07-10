@@ -1270,7 +1270,8 @@ header.navbar .title {
     }
 
 .modal-content {
-    width: 940px;
+    width: 100%;
+    max-width: min(940px, 96vw);
     max-height: 96vh;
     overflow-y: auto;
     overflow-x: hidden;
