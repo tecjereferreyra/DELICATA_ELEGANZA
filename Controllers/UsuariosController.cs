@@ -2,7 +2,12 @@
 using DELICATA_ELEGANZA.DTO;
 using DELICATA_ELEGANZA.Services;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;  // ← reemplaza Microsoft.Data.SqlClient
+using Npgsql;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -51,29 +56,55 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto datos)
         {
-            using var con = new NpgsqlConnection(
-                _configuration.GetConnectionString("DefaultConnection"));
+            using var con = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
             await con.OpenAsync();
 
-            string query = @"SELECT ""UserName"", ""PasswordHash"" FROM ""Usuarios""
-                             WHERE ""Email"" = @Correo AND ""Activo"" = true";
+            // Ahora también traemos "Rol"
+            string query = @"SELECT ""UserName"", ""PasswordHash"", ""Rol"" FROM ""Usuarios""
+                     WHERE ""Email"" = @Correo AND ""Activo"" = true";
             using var cmd = new NpgsqlCommand(query, con);
             cmd.Parameters.AddWithValue("@Correo", datos.Correo);
 
             using var rd = await cmd.ExecuteReaderAsync();
-
-            if (!rd.HasRows)
-                return Unauthorized(new { message = "Usuario no encontrado" });
+            if (!rd.HasRows) return Unauthorized(new { message = "Usuario no encontrado" });
 
             await rd.ReadAsync();
             string nombre = rd["UserName"].ToString()!;
             string hash = rd["PasswordHash"].ToString()!;
+            string rol = rd["Rol"].ToString()!;
 
             bool ok = BCrypt.Net.BCrypt.Verify(datos.Contrasena, hash);
-            if (!ok)
-                return Unauthorized(new { message = "Contraseña incorrecta" });
+            if (!ok) return Unauthorized(new { message = "Contraseña incorrecta" });
 
-            return Ok(new { userName = nombre, correo = datos.Correo });
+            string token = GenerarToken(datos.Correo, nombre, rol);
+
+            return Ok(new { userName = nombre, correo = datos.Correo, rol = rol, token = token });
+        }
+
+        private string GenerarToken(string correo, string nombre, string rol)
+        {
+            var jwtKey = _configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException("Jwt:Key no configurado");
+
+            var claims = new[]
+            {
+        new Claim(ClaimTypes.Name, nombre),
+        new Claim(ClaimTypes.Email, correo),
+        new Claim(ClaimTypes.Role, rol)   
+    };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(8),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         [HttpPost("recuperar")]

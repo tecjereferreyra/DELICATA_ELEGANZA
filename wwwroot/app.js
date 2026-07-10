@@ -124,6 +124,7 @@ function _restoreScroll() {
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
+    document.documentElement.style.overflow = 'hidden';   // ← agregar esto
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
@@ -133,6 +134,7 @@ function lockScroll() {
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
+    document.documentElement.style.overflow = '';          // ← agregar esto
     window.scrollTo(0, _scrollLockedAt);
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);
