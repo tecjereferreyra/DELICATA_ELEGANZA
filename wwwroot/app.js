@@ -571,11 +571,10 @@ function resetZoomCarrusel() {
     imgContainer?._resetZoomTouch?.();
     imgContainer?._resetZoomMouse?.();
     document.querySelectorAll("#carruselWrapper img").forEach(img => {
-        img.style.transition = "transform .25s cubic-bezier(.22,1,.36,1)";
+        img.style.transition = "none";
         img.style.transform = "translate(0px,0px) scale(1)";
     });
 }
-
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("carruselPrev")?.addEventListener("click", () => {
         const total = document.querySelectorAll("#carruselWrapper .carrusel-slide").length;
@@ -1841,6 +1840,7 @@ function initZoom() {
         const img = getActiveImg();
         if (!img) { animFrameId = null; return; }
         currentScale = lerp(currentScale, targetScale, 0.09);
+        img.style.transition = "none";
         img.style.transform = `scale(${currentScale.toFixed(3)})`;
         if (currentScale > 1.02) {
             currentX = lerp(currentX, targetX, 0.14);
@@ -1923,7 +1923,10 @@ function initZoomTouch() {
 
     function apply() {
         const img = getActiveImg();
-        if (img) img.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${scale.toFixed(3)})`;
+        if (img) {
+            img.style.transition = "none";
+            img.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${scale.toFixed(3)})`;
+        }
     }
 
     // El loop solo se usa para animar (double-tap y el "settle" al soltar), no durante el gesto activo.
@@ -2090,12 +2093,22 @@ function initZoomTouch() {
         }
     });
 
+    const finalizarGesto = () => {
+        isPanning = false;
+        touchStartTime = 0;
+        if (targetScale < 1.08) resetZoom();
+        else ensureLoop();
+    };
+    modalImgContainer.addEventListener("touchcancel", finalizarGesto);
+
     const cancelarGestoNativo = (e) => e.preventDefault();
     modalImgContainer.addEventListener("gesturestart", cancelarGestoNativo);
     modalImgContainer.addEventListener("gesturechange", cancelarGestoNativo);
     modalImgContainer.addEventListener("gestureend", cancelarGestoNativo);
 
     modalImgContainer._resetZoomTouch = resetZoomInstant;
+
+
 
 }
 document.addEventListener("DOMContentLoaded", () => {

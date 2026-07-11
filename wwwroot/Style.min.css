@@ -19,8 +19,10 @@ body, html {
 .carrusel-slide, .carrusel-wrapper {
     overflow: hidden
 }
-html.scroll-locked {
-    overflow: hidden;
+@media (pointer: fine) {
+    html.scroll-locked {
+        overflow: hidden;
+    }
 }
     .carrusel-slide img, .product-card img {
         aspect-ratio: 1/1;
@@ -172,7 +174,6 @@ input::placeholder {
     .carrusel-slide img {
         width: 100%;
         border-radius: 8px;
-        transition: transform .1s ease-out
     }
 
 .carrusel-btn {
