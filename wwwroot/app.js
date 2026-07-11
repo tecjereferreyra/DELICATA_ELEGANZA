@@ -124,22 +124,6 @@ function _restoreScroll() {
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
-
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${_scrollLockedAt}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
-    document.body.style.width = '100%';
-
-    const navbar = document.querySelector('header.navbar');
-    if (navbar) {
-        navbar.style.position = 'fixed';
-        navbar.style.top = '0';
-        navbar.style.left = '0';
-        navbar.style.right = '0';
-        navbar.style.width = '100%';
-    }
-
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
@@ -149,22 +133,6 @@ function lockScroll() {
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
-
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.left = '';
-    document.body.style.right = '';
-    document.body.style.width = '';
-
-    const navbar = document.querySelector('header.navbar');
-    if (navbar) {
-        navbar.style.position = '';
-        navbar.style.top = '';
-        navbar.style.left = '';
-        navbar.style.right = '';
-        navbar.style.width = '';
-    }
-
     window.scrollTo(0, _scrollLockedAt);
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);
@@ -1910,7 +1878,7 @@ function initZoomTouch() {
     modalImgContainer._zoomTouchInit = true;
 
     const MAX_SCALE = 3;
-    const EASE = 0.18;
+    const EASE = 0.22;
 
     let scale = 1, targetScale = 1;
     let tx = 0, ty = 0, targetTx = 0, targetTy = 0;
@@ -1928,22 +1896,27 @@ function initZoomTouch() {
     }
     function lerp(a, b, t) { return a + (b - a) * t; }
     function dist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
+    function midpoint(a, b) { return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 }; }
 
-    function clamp() {
-        if (!rect) return;
-        const maxX = (rect.width * (targetScale - 1)) / 2;
-        const maxY = (rect.height * (targetScale - 1)) / 2;
-        targetTx = Math.max(-maxX, Math.min(maxX, targetTx));
-        targetTy = Math.max(-maxY, Math.min(maxY, targetTy));
+    function clampXY(x, y, s) {
+        const maxX = (rect.width * (s - 1)) / 2;
+        const maxY = (rect.height * (s - 1)) / 2;
+        return [Math.max(-maxX, Math.min(maxX, x)), Math.max(-maxY, Math.min(maxY, y))];
     }
 
+    function apply() {
+        const img = getActiveImg();
+        if (img) img.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${scale.toFixed(3)})`;
+    }
+
+    // El loop solo se usa para animar (double-tap y el "settle" al soltar), no durante el gesto activo.
     function loop() {
         const img = getActiveImg();
         if (!img) { animId = null; return; }
         scale = lerp(scale, targetScale, EASE);
         tx = lerp(tx, targetTx, EASE);
         ty = lerp(ty, targetTy, EASE);
-        img.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${scale.toFixed(3)})`;
+        apply();
 
         const done = Math.abs(scale - targetScale) < 0.003
             && Math.abs(tx - targetTx) < 0.05
@@ -1951,7 +1924,7 @@ function initZoomTouch() {
 
         if (done) {
             scale = targetScale; tx = targetTx; ty = targetTy;
-            img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+            apply();
             animId = null;
             return;
         }
@@ -1960,12 +1933,8 @@ function initZoomTouch() {
     function ensureLoop() { if (!animId) animId = requestAnimationFrame(loop); }
 
     function resetZoom() {
-        targetScale = 1; scale = 1; targetTx = 0; targetTy = 0; tx = 0; ty = 0;
-        const img = getActiveImg();
-        if (img) {
-            img.style.transformOrigin = "center center";
-            img.style.transform = "translate(0px, 0px) scale(1)";
-        }
+        targetScale = 1; targetTx = 0; targetTy = 0;
+        ensureLoop();
     }
 
     function toggleZoom(clientX, clientY) {
@@ -1994,13 +1963,22 @@ function initZoomTouch() {
         if (img !== lastImg) { resetZoom(); lastImg = img; }
         rect = modalImgContainer.getBoundingClientRect();
 
+        // Si había una animación de "settle" en curso, la cortamos: el dedo manda ahora.
+        if (animId) { cancelAnimationFrame(animId); animId = null; }
+
         if (e.touches.length === 2) {
             e.preventDefault();
             startDist = dist(e.touches[0], e.touches[1]);
             startScale = scale;
+            const mid = midpoint(e.touches[0], e.touches[1]);
+            if (img) {
+                const ox = ((mid.x - rect.left) / rect.width) * 100;
+                const oy = ((mid.y - rect.top) / rect.height) * 100;
+                img.style.transformOrigin = `${ox}% ${oy}%`;
+            }
             isPanning = false;
         } else if (e.touches.length === 1) {
-            if (targetScale > 1.02) {
+            if (scale > 1.02) {
                 isPanning = true;
                 panStartX = e.touches[0].clientX - tx;
                 panStartY = e.touches[0].clientY - ty;
@@ -2018,29 +1996,41 @@ function initZoomTouch() {
 
     modalImgContainer.addEventListener("touchmove", (e) => {
         if (esControl(e)) return;
+        const img = getActiveImg();
+        if (!img) return;
+
         if (e.touches.length === 2) {
             e.preventDefault();
             e.stopPropagation();
             const newDist = dist(e.touches[0], e.touches[1]);
             const factor = newDist / startDist;
-            targetScale = Math.max(1, Math.min(MAX_SCALE, startScale * factor));
-            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            const img = getActiveImg();
-            if (img) {
-                const ox = ((midX - rect.left) / rect.width) * 100;
-                const oy = ((midY - rect.top) / rect.height) * 100;
-                img.style.transformOrigin = `${ox}% ${oy}%`;
+            scale = targetScale = Math.max(1, Math.min(MAX_SCALE, startScale * factor));
+
+            const mid = midpoint(e.touches[0], e.touches[1]);
+            const ox = ((mid.x - rect.left) / rect.width) * 100;
+            const oy = ((mid.y - rect.top) / rect.height) * 100;
+            img.style.transformOrigin = `${ox}% ${oy}%`;
+
+            [tx, ty] = clampXY(tx, ty, scale);
+            targetTx = tx; targetTy = ty;
+            apply(); // 1:1 con el gesto, sin esperar al loop
+        } else if (e.touches.length === 1) {
+            // Veníamos de pellizcar con 2 dedos y soltaron uno: enganchamos
+            // el paneo con el dedo que queda SIN resetear el zoom.
+            if (!isPanning && scale > 1.02) {
+                isPanning = true;
+                panStartX = e.touches[0].clientX - tx;
+                panStartY = e.touches[0].clientY - ty;
             }
-            clamp();
-            ensureLoop();
-        } else if (e.touches.length === 1 && isPanning) {
-            e.preventDefault();
-            e.stopPropagation();
-            targetTx = e.touches[0].clientX - panStartX;
-            targetTy = e.touches[0].clientY - panStartY;
-            clamp();
-            ensureLoop();
+            if (isPanning) {
+                e.preventDefault();
+                e.stopPropagation();
+                let nx = e.touches[0].clientX - panStartX;
+                let ny = e.touches[0].clientY - panStartY;
+                [tx, ty] = clampXY(nx, ny, scale);
+                targetTx = tx; targetTy = ty;
+                apply();
+            }
         }
     }, { passive: false });
 
@@ -2048,7 +2038,10 @@ function initZoomTouch() {
         if (e.touches.length === 0) {
             isPanning = false;
             if (targetScale < 1.08) resetZoom();
-            ensureLoop();
+            else ensureLoop(); // por si el pellizco terminó fuera de los límites, hace un settle animado
+        } else if (e.touches.length === 1) {
+            // sigue habiendo un dedo apoyado (venía de pellizcar): no tocamos el zoom acá
+            isPanning = false;
         }
     });
 
