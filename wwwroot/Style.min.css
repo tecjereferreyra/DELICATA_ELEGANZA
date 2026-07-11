@@ -19,10 +19,8 @@ body, html {
 .carrusel-slide, .carrusel-wrapper {
     overflow: hidden
 }
-body.scroll-locked {
-    left: 0;
-    right: 0;
-    overflow-y: scroll
+html.scroll-locked {
+    overflow: hidden;
 }
     .carrusel-slide img, .product-card img {
         aspect-ratio: 1/1;

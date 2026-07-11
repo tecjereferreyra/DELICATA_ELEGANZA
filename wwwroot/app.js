@@ -122,17 +122,17 @@ function _restoreScroll() {
 }
 
 function lockScroll() {
-    if (document.body.classList.contains('scroll-locked')) return;
+    if (document.documentElement.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
-    document.body.classList.add('scroll-locked');
+    document.documentElement.classList.add('scroll-locked');
 }
 
 function unlockScroll() {
-    if (!document.body.classList.contains('scroll-locked')) return;
-    document.body.classList.remove('scroll-locked');
+    if (!document.documentElement.classList.contains('scroll-locked')) return;
+    document.documentElement.classList.remove('scroll-locked');
     window.scrollTo(0, _scrollLockedAt);
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);
@@ -567,6 +567,9 @@ function irASlide(idx) {
 let _zoomState = { scale: 1, x: 0, y: 0 };
 function resetZoomCarrusel() {
     _zoomState.scale = 1; _zoomState.x = 0; _zoomState.y = 0;
+    const imgContainer = document.querySelector(".modal-img-container");
+    imgContainer?._resetZoomTouch?.();
+    imgContainer?._resetZoomMouse?.();
     document.querySelectorAll("#carruselWrapper img").forEach(img => {
         img.style.transition = "transform .25s cubic-bezier(.22,1,.36,1)";
         img.style.transform = "translate(0px,0px) scale(1)";
@@ -1870,6 +1873,17 @@ function initZoom() {
     window.addEventListener("resize", () => {
         if (isZoomActive || currentScale > 1) cachedRect = modalImgContainer.getBoundingClientRect();
     }, { passive: true });
+
+    modalImgContainer._resetZoomMouse = function () {
+        if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+        isZoomActive = false;
+        currentScale = 1; targetScale = 1;
+        currentX = 50; currentY = 50; targetX = 50; targetY = 50;
+        cachedRect = null;
+        const img = getActiveImg();
+        if (img) { img.style.transform = "scale(1)"; img.style.transformOrigin = "center"; }
+    };
+
 }
 function initZoomTouch() {
     const modalImgContainer = document.querySelector(".modal-img-container");
@@ -1889,6 +1903,9 @@ function initZoomTouch() {
     let panStartX = 0, panStartY = 0;
     let lastTap = 0;
     let lastImg = null;
+    let touchStartTime = 0;
+    let touchStartX = 0, touchStartY = 0;
+    let usedTwoFingers = false;
 
     function getActiveImg() {
         return modalImgContainer.querySelector(".carrusel-slide.active img")
@@ -1937,6 +1954,19 @@ function initZoomTouch() {
         ensureLoop();
     }
 
+    function resetZoomInstant() {
+        if (animId) { cancelAnimationFrame(animId); animId = null; }
+        scale = targetScale = 1;
+        tx = targetTx = 0; ty = targetTy = 0;
+        isPanning = false;
+        rect = null;
+        const img = getActiveImg();
+        if (img) {
+            img.style.transform = "translate(0px,0px) scale(1)";
+            img.style.transformOrigin = "center";
+        }
+    }
+
     function toggleZoom(clientX, clientY) {
         const img = getActiveImg();
         if (!img) return;
@@ -1960,14 +1990,14 @@ function initZoomTouch() {
     modalImgContainer.addEventListener("touchstart", (e) => {
         if (esControl(e)) return;
         const img = getActiveImg();
-        if (img !== lastImg) { resetZoom(); lastImg = img; }
+        if (img !== lastImg) { resetZoomInstant(); lastImg = img; }
         rect = modalImgContainer.getBoundingClientRect();
 
-        // Si había una animación de "settle" en curso, la cortamos: el dedo manda ahora.
         if (animId) { cancelAnimationFrame(animId); animId = null; }
 
         if (e.touches.length === 2) {
             e.preventDefault();
+            usedTwoFingers = true;
             startDist = dist(e.touches[0], e.touches[1]);
             startScale = scale;
             const mid = midpoint(e.touches[0], e.touches[1]);
@@ -1978,18 +2008,14 @@ function initZoomTouch() {
             }
             isPanning = false;
         } else if (e.touches.length === 1) {
+            touchStartTime = Date.now();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            usedTwoFingers = false;
             if (scale > 1.02) {
                 isPanning = true;
                 panStartX = e.touches[0].clientX - tx;
                 panStartY = e.touches[0].clientY - ty;
-            }
-            const now = Date.now();
-            if (now - lastTap < 300) {
-                e.preventDefault();
-                toggleZoom(e.touches[0].clientX, e.touches[0].clientY);
-                lastTap = 0;
-            } else {
-                lastTap = now;
             }
         }
     }, { passive: false });
@@ -2003,7 +2029,7 @@ function initZoomTouch() {
             e.preventDefault();
             e.stopPropagation();
             const newDist = dist(e.touches[0], e.touches[1]);
-            const factor = newDist / startDist;
+            const factor = startDist > 0 ? (newDist / startDist) : 1;
             scale = targetScale = Math.max(1, Math.min(MAX_SCALE, startScale * factor));
 
             const mid = midpoint(e.touches[0], e.touches[1]);
@@ -2035,17 +2061,42 @@ function initZoomTouch() {
     }, { passive: false });
 
     modalImgContainer.addEventListener("touchend", (e) => {
+        if (esControl(e)) return;
+
         if (e.touches.length === 0) {
             isPanning = false;
+
+            const touch = e.changedTouches && e.changedTouches[0];
+            if (!usedTwoFingers && touch && touchStartTime) {
+                const elapsed = Date.now() - touchStartTime;
+                const moved = Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY);
+                if (elapsed < 300 && moved < 12) {
+                    const now = Date.now();
+                    if (now - lastTap < 300) {
+                        toggleZoom(touchStartX, touchStartY);
+                        lastTap = 0;
+                        touchStartTime = 0;
+                        return;
+                    }
+                    lastTap = now;
+                }
+            }
+            touchStartTime = 0;
+
             if (targetScale < 1.08) resetZoom();
-            else ensureLoop(); // por si el pellizco terminó fuera de los límites, hace un settle animado
+            else ensureLoop();
         } else if (e.touches.length === 1) {
-            // sigue habiendo un dedo apoyado (venía de pellizcar): no tocamos el zoom acá
             isPanning = false;
         }
     });
 
-    modalImgContainer._resetZoomTouch = resetZoom;
+    const cancelarGestoNativo = (e) => e.preventDefault();
+    modalImgContainer.addEventListener("gesturestart", cancelarGestoNativo);
+    modalImgContainer.addEventListener("gesturechange", cancelarGestoNativo);
+    modalImgContainer.addEventListener("gestureend", cancelarGestoNativo);
+
+    modalImgContainer._resetZoomTouch = resetZoomInstant;
+
 }
 document.addEventListener("DOMContentLoaded", () => {
     cargarProductos();
