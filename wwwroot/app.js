@@ -135,6 +135,17 @@ function lockScroll() {
         document.body.style.paddingRight = `${scrollBarWidth}px`;
     }
 
+    const navbar = document.querySelector('header.navbar');
+    if (navbar) {
+        navbar.style.position = 'fixed';
+        navbar.style.top = '0';
+        navbar.style.left = '0';
+        navbar.style.right = '0';
+        if (scrollBarWidth > 0) {
+            navbar.style.width = `calc(100% - ${scrollBarWidth}px)`;
+        }
+    }
+
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
@@ -151,6 +162,15 @@ function unlockScroll() {
     document.body.style.right = '';
     document.body.style.width = '';
     document.body.style.paddingRight = '';
+
+    const navbar = document.querySelector('header.navbar');
+    if (navbar) {
+        navbar.style.position = '';
+        navbar.style.top = '';
+        navbar.style.left = '';
+        navbar.style.right = '';
+        navbar.style.width = '';
+    }
 
     window.scrollTo(0, _scrollLockedAt);
     document.removeEventListener('wheel', _preventWheel);
