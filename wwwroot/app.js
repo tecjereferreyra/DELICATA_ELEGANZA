@@ -124,7 +124,17 @@ function _restoreScroll() {
 function lockScroll() {
     if (document.body.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
-    document.documentElement.style.overflow = 'hidden';   // ← agregar esto
+    const scrollBarWidth = getScrollbarWidth();
+
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${_scrollLockedAt}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
@@ -134,7 +144,14 @@ function lockScroll() {
 function unlockScroll() {
     if (!document.body.classList.contains('scroll-locked')) return;
     document.body.classList.remove('scroll-locked');
-    document.documentElement.style.overflow = '';          // ← agregar esto
+
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.paddingRight = '';
+
     window.scrollTo(0, _scrollLockedAt);
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);

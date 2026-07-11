@@ -141,11 +141,7 @@ main {
     flex: 1;
     min-height: 60vh
 }
-body.scroll-locked {
-    left: 0;
-    right: 0;
-    overflow-y: scroll; 
-}
+
 .product-card, a, button {
     touch-action: manipulation
 }

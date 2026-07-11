@@ -56,29 +56,35 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto datos)
         {
-            using var con = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            await con.OpenAsync();
+            try
+            {
+                using var con = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                await con.OpenAsync();
 
-            // Ahora también traemos "Rol"
-            string query = @"SELECT ""UserName"", ""PasswordHash"", ""Rol"" FROM ""Usuarios""
-                     WHERE ""Email"" = @Correo AND ""Activo"" = true";
-            using var cmd = new NpgsqlCommand(query, con);
-            cmd.Parameters.AddWithValue("@Correo", datos.Correo);
+                string query = @"SELECT ""UserName"", ""PasswordHash"", ""Rol"" FROM ""Usuarios""
+                         WHERE ""Email"" = @Correo AND ""Activo"" = true";
+                using var cmd = new NpgsqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@Correo", datos.Correo);
 
-            using var rd = await cmd.ExecuteReaderAsync();
-            if (!rd.HasRows) return Unauthorized(new { message = "Usuario no encontrado" });
+                using var rd = await cmd.ExecuteReaderAsync();
+                if (!rd.HasRows) return Unauthorized(new { message = "Usuario no encontrado" });
 
-            await rd.ReadAsync();
-            string nombre = rd["UserName"].ToString()!;
-            string hash = rd["PasswordHash"].ToString()!;
-            string rol = rd["Rol"].ToString()!;
+                await rd.ReadAsync();
+                string nombre = rd["UserName"] == DBNull.Value ? "" : rd["UserName"].ToString()!;
+                string hash = rd["PasswordHash"] == DBNull.Value ? "" : rd["PasswordHash"].ToString()!;
+                string rol = rd["Rol"] == DBNull.Value ? "Usuario" : rd["Rol"].ToString()!;
 
-            bool ok = BCrypt.Net.BCrypt.Verify(datos.Contrasena, hash);
-            if (!ok) return Unauthorized(new { message = "Contraseña incorrecta" });
+                bool ok = BCrypt.Net.BCrypt.Verify(datos.Contrasena, hash);
+                if (!ok) return Unauthorized(new { message = "Contraseña incorrecta" });
 
-            string token = GenerarToken(datos.Correo, nombre, rol);
-
-            return Ok(new { userName = nombre, correo = datos.Correo, rol = rol, token = token });
+                string token = GenerarToken(datos.Correo, nombre, rol);
+                return Ok(new { userName = nombre, correo = datos.Correo, rol = rol, token = token });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LOGIN ERROR] {ex}");
+                return StatusCode(500, new { message = "Error interno al iniciar sesión." });
+            }
         }
 
         private string GenerarToken(string correo, string nombre, string rol)
@@ -86,14 +92,21 @@ namespace DELICATA_ELEGANZA.Controllers
             var jwtKey = _configuration["Jwt:Key"]
                 ?? throw new InvalidOperationException("Jwt:Key no configurado");
 
+            var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+            if (keyBytes.Length < 32)
+            {
+              
+                Array.Resize(ref keyBytes, 32);
+            }
+
             var claims = new[]
             {
         new Claim(ClaimTypes.Name, nombre),
         new Claim(ClaimTypes.Email, correo),
-        new Claim(ClaimTypes.Role, rol)   
+        new Claim(ClaimTypes.Role, rol)
     };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var key = new SymmetricSecurityKey(keyBytes);
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
