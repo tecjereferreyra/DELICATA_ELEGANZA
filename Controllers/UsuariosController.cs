@@ -93,11 +93,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 ?? throw new InvalidOperationException("Jwt:Key no configurado");
 
             var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
-            if (keyBytes.Length < 32)
-            {
-              
-                Array.Resize(ref keyBytes, 32);
-            }
+            
 
             var claims = new[]
             {
