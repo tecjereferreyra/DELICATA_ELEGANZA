@@ -14,8 +14,12 @@
 body, html {
     overscroll-behavior-x: none;
     overscroll-behavior-y: contain;
+    overflow-anchor: none;
 }
 
+.modal, .modal-overlay, .mobile-menu {
+    overflow-anchor: none;
+}
 .carrusel-slide, .carrusel-wrapper {
     overflow: hidden
 }

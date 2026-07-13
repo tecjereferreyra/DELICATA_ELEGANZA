@@ -390,6 +390,13 @@ function abrirModalProducto() {
     modal.removeAttribute("aria-hidden");
     modal.inert = false;
 
+ 
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+        viewportMeta.dataset.original = viewportMeta.getAttribute("content");
+        viewportMeta.setAttribute("content", "width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no");
+    }
+
     requestAnimationFrame(() => {
         modal.classList.add("show");
         initZoom();
@@ -597,6 +604,12 @@ function cerrarModalProducto() {
     document.querySelector(".modal-img-container")?._resetZoomTouch?.();
     const imgContainer = modal.querySelector(".modal-img-container");
     if (imgContainer) imgContainer._zoomInit = false;
+
+    // Restaura el viewport original
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta?.dataset.original) {
+        viewportMeta.setAttribute("content", viewportMeta.dataset.original);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -987,6 +1000,14 @@ function renderizarProductosProgresivo(reiniciar = false) {
     const btnVerMas = document.getElementById("btnVerMas");
     btnVerMas.style.display = productosRenderizados < productosFiltrados.length ? "block" : "none";
 }
+function irAlContenedorProductos() {
+    const contenedor = document.getElementById("contenedor-productos");
+    if (!contenedor) return;
+    const navbar = document.querySelector("header.navbar");
+    const navbarH = navbar ? navbar.getBoundingClientRect().height : 80;
+    const y = contenedor.getBoundingClientRect().top + window.pageYOffset - navbarH - 24;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+}
 const categoriaLinks = document.querySelectorAll('.categories a');
 const normalizar = texto =>
     texto.toString().toLowerCase()
@@ -1021,7 +1042,8 @@ categoriaLinks.forEach(link => {
         categoriaActivaActual = normalizar(target.dataset.cat || linkActivo.dataset.cat || "todos");
         subcategoriaActivaActual = normalizar(target.dataset.tipo || linkActivo.dataset.tipo || "");
         aplicarFiltros();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        irAlContenedorProductos();
+
     });
 });
 const COLOR_SINONIMOS = {
@@ -2262,7 +2284,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 activarBloqueoClick(600);
                 unlockScroll();
                 aplicarFiltros();
-                window.scrollTo({ top: 0, behavior: "instant" });
+                irAlContenedorProductos();
                 setTimeout(() => { _menuCerradoRecien = false; }, 500);
                 return;
             }
@@ -2304,7 +2326,7 @@ document.addEventListener("DOMContentLoaded", () => {
             activarBloqueoClick(600);
             unlockScroll();
             aplicarFiltros();
-            window.scrollTo({ top: 0, behavior: "instant" });
+            irAlContenedorProductos();
             setTimeout(() => { _menuCerradoRecien = false; }, 500);
         });
     });
@@ -3015,7 +3037,8 @@ async function guardarNuevoProducto() {
     if (nuevosIds.length > 0) {
         for (const id of nuevosIds) {
             try {
-                const p = await fetch(`/api/Productos/${id}`).then(r => r.json());
+                const p = await fetch(`/api/Productos/${id}`, { cache: "no-store" })
+                    .then(r => r.json())
                 const prod = normalizarProducto(p);
                 recalcularCamposBusqueda(prod);
                 productosData.push(prod);
@@ -3031,7 +3054,7 @@ async function guardarNuevoProducto() {
 async function abrirEditarProducto(id) {
     window._scrollAntesDeCRUD = window.pageYOffset;
     await cargarOpcionesDatalist();
-    fetch(`/api/Productos/${id}`)
+    fetch(`/api/Productos/${id}`, { cache: "no-store" })
         .then(r => {
             if (!r.ok) throw new Error("Error al obtener producto");
             return r.json();
@@ -3470,7 +3493,7 @@ async function guardarEdicionProducto() {
         _fkCargadas = false;
         const _savedScrollEditar = window._scrollAntesDeCRUD ?? _scrollLockedAt;
         cerrarModalCRUD("modalEditar");
-        fetch(`/api/Productos/${id}`)
+        fetch(`/api/Productos/${id}`, { cache: "no-store" })
             .then(r => r.json())
             .then(p => {
                 const actualizado = normalizarProducto(p);
