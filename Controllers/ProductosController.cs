@@ -238,7 +238,7 @@ namespace DELICATA_ELEGANZA.Controllers
 
             if (producto == null)
                 return NotFound();
-
+            string imagenViejaUrl = null;
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -266,7 +266,10 @@ namespace DELICATA_ELEGANZA.Controllers
                 producto.id_genero = await GetOrCreateGenero(productoDto.Genero);
 
                 if (imagen != null && imagen.Length > 0)
+                {
+                    imagenViejaUrl = producto.ImagenUrl;
                     producto.ImagenUrl = await ProcesarImagenAsync(imagen);
+                }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -277,7 +280,25 @@ namespace DELICATA_ELEGANZA.Controllers
                 _logger.LogError(ex, "Error al actualizar producto {Id}", id);
                 return StatusCode(500, new { mensaje = "Error al actualizar el producto" });
             }
-
+            if (!string.IsNullOrEmpty(imagenViejaUrl))
+            {
+                var publicId = ExtraerPublicIdDeUrl(imagenViejaUrl);
+                if (publicId != null)
+                {
+                    try
+                    {
+                        var resultado = await _cloudinary.DestroyAsync(new DeletionParams(publicId));
+                        if (resultado.Result != "ok" && resultado.Result != "not found")
+                            _logger.LogWarning(
+                                "Cloudinary no pudo borrar {PublicId} (imagen anterior) del producto {Id}: {Resultado}",
+                                publicId, id, resultado.Result);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error al borrar imagen anterior {PublicId} de Cloudinary (producto {Id})", publicId, id);
+                    }
+                }
+            }
             return NoContent();
         }
 
