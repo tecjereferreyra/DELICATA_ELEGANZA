@@ -1946,13 +1946,16 @@ function initZoomTouch() {
     let touchStartX = 0, touchStartY = 0;
     let usedTwoFingers = false;
 
+    const pointers = new Map();
+
     function getActiveImg() {
         return modalImgContainer.querySelector(".carrusel-slide.active img")
             || modalImgContainer.querySelector("img");
     }
     function lerp(a, b, t) { return a + (b - a) * t; }
-    function dist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
-    function midpoint(a, b) { return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 }; }
+    function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+    function midpoint(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+    function puntosActivos() { return Array.from(pointers.values()); }
 
     function clampXY(x, y, s) {
         const maxX = (rect.width * (s - 1)) / 2;
@@ -1968,7 +1971,6 @@ function initZoomTouch() {
         }
     }
 
-    // El loop solo se usa para animar (double-tap y el "settle" al soltar), no durante el gesto activo.
     function loop() {
         const img = getActiveImg();
         if (!img) { animId = null; return; }
@@ -2029,73 +2031,81 @@ function initZoomTouch() {
         return e.target.closest(".carrusel-btn, .carrusel-dots, .dot");
     }
 
-    modalImgContainer.addEventListener("touchstart", (e) => {
+    modalImgContainer.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "mouse") return;
         if (esControl(e)) return;
+
         const img = getActiveImg();
         if (img !== lastImg) { resetZoomInstant(); lastImg = img; }
         rect = modalImgContainer.getBoundingClientRect();
 
         if (animId) { cancelAnimationFrame(animId); animId = null; }
 
-        if (e.touches.length === 2) {
+        try { modalImgContainer.setPointerCapture(e.pointerId); } catch (_) { }
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (pointers.size === 2) {
             e.preventDefault();
             usedTwoFingers = true;
-            startDist = dist(e.touches[0], e.touches[1]);
+            isPanning = false;
+            const [a, b] = puntosActivos();
+            startDist = dist(a, b);
             startScale = scale;
-            const mid = midpoint(e.touches[0], e.touches[1]);
+            const mid = midpoint(a, b);
             if (img) {
                 const ox = ((mid.x - rect.left) / rect.width) * 100;
                 const oy = ((mid.y - rect.top) / rect.height) * 100;
                 img.style.transformOrigin = `${ox}% ${oy}%`;
             }
-            isPanning = false;
-        } else if (e.touches.length === 1) {
+        } else if (pointers.size === 1) {
             e.preventDefault();
             touchStartTime = Date.now();
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
+            touchStartX = e.clientX;
+            touchStartY = e.clientY;
             usedTwoFingers = false;
             if (scale > 1.02) {
                 isPanning = true;
-                panStartX = e.touches[0].clientX - tx;
-                panStartY = e.touches[0].clientY - ty;
+                panStartX = e.clientX - tx;
+                panStartY = e.clientY - ty;
             }
         }
     }, { passive: false });
 
-    modalImgContainer.addEventListener("touchmove", (e) => {
+    modalImgContainer.addEventListener("pointermove", (e) => {
+        if (!pointers.has(e.pointerId)) return;
         if (esControl(e)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
         const img = getActiveImg();
         if (!img) return;
 
-        if (e.touches.length === 2) {
+        if (pointers.size === 2) {
             e.preventDefault();
-            e.stopPropagation();
-            const newDist = dist(e.touches[0], e.touches[1]);
+            const [a, b] = puntosActivos();
+            const newDist = dist(a, b);
             const factor = startDist > 0 ? (newDist / startDist) : 1;
             scale = targetScale = Math.max(1, Math.min(MAX_SCALE, startScale * factor));
 
-            const mid = midpoint(e.touches[0], e.touches[1]);
+            const mid = midpoint(a, b);
             const ox = ((mid.x - rect.left) / rect.width) * 100;
             const oy = ((mid.y - rect.top) / rect.height) * 100;
             img.style.transformOrigin = `${ox}% ${oy}%`;
 
             [tx, ty] = clampXY(tx, ty, scale);
             targetTx = tx; targetTy = ty;
-            apply(); // 1:1 con el gesto, sin esperar al loop
-        } else if (e.touches.length === 1) {
-            // Veníamos de pellizcar con 2 dedos y soltaron uno: enganchamos
-            // el paneo con el dedo que queda SIN resetear el zoom.
+            apply();
+        } else if (pointers.size === 1) {
             if (!isPanning && scale > 1.02) {
                 isPanning = true;
-                panStartX = e.touches[0].clientX - tx;
-                panStartY = e.touches[0].clientY - ty;
+                const [p] = puntosActivos();
+                panStartX = p.x - tx;
+                panStartY = p.y - ty;
             }
             if (isPanning) {
                 e.preventDefault();
-                e.stopPropagation();
-                let nx = e.touches[0].clientX - panStartX;
-                let ny = e.touches[0].clientY - panStartY;
+                const [p] = puntosActivos();
+                let nx = p.x - panStartX;
+                let ny = p.y - panStartY;
                 [tx, ty] = clampXY(nx, ny, scale);
                 targetTx = tx; targetTy = ty;
                 apply();
@@ -2103,16 +2113,17 @@ function initZoomTouch() {
         }
     }, { passive: false });
 
-    modalImgContainer.addEventListener("touchend", (e) => {
-        if (esControl(e)) return;
+    function finalizarPuntero(e) {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.delete(e.pointerId);
+        try { modalImgContainer.releasePointerCapture(e.pointerId); } catch (_) { }
 
-        if (e.touches.length === 0) {
+        if (pointers.size === 0) {
             isPanning = false;
 
-            const touch = e.changedTouches && e.changedTouches[0];
-            if (!usedTwoFingers && touch && touchStartTime) {
+            if (!usedTwoFingers && touchStartTime) {
                 const elapsed = Date.now() - touchStartTime;
-                const moved = Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY);
+                const moved = Math.hypot(e.clientX - touchStartX, e.clientY - touchStartY);
                 if (elapsed < 300 && moved < 12) {
                     const now = Date.now();
                     if (now - lastTap < 300) {
@@ -2128,28 +2139,15 @@ function initZoomTouch() {
 
             if (targetScale < 1.08) resetZoom();
             else ensureLoop();
-        } else if (e.touches.length === 1) {
+        } else if (pointers.size === 1) {
             isPanning = false;
         }
-    });
+    }
 
-    const finalizarGesto = () => {
-        isPanning = false;
-        touchStartTime = 0;
-        if (targetScale < 1.08) resetZoom();
-        else ensureLoop();
-    };
-    modalImgContainer.addEventListener("touchcancel", finalizarGesto);
-
-    const cancelarGestoNativo = (e) => e.preventDefault();
-    modalImgContainer.addEventListener("gesturestart", cancelarGestoNativo);
-    modalImgContainer.addEventListener("gesturechange", cancelarGestoNativo);
-    modalImgContainer.addEventListener("gestureend", cancelarGestoNativo);
+    modalImgContainer.addEventListener("pointerup", finalizarPuntero);
+    modalImgContainer.addEventListener("pointercancel", finalizarPuntero);
 
     modalImgContainer._resetZoomTouch = resetZoomInstant;
-
-
-
 }
 document.addEventListener("DOMContentLoaded", () => {
     cargarProductos();
