@@ -1349,6 +1349,9 @@ header.navbar .title {
     overflow: hidden;
     position: relative;
     touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
     .modal-img-container img {
@@ -1362,6 +1365,10 @@ header.navbar .title {
         will-change: transform;
         touch-action: none;
         pointer-events: none;
+        -webkit-touch-callout: none;
+        -webkit-user-drag: none;
+        -webkit-user-select: none;
+        user-select: none;
     }
 
 .modal-extra, .modal-info-grid {

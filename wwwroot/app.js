@@ -2045,6 +2045,7 @@ function initZoomTouch() {
             }
             isPanning = false;
         } else if (e.touches.length === 1) {
+            e.preventDefault();
             touchStartTime = Date.now();
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
