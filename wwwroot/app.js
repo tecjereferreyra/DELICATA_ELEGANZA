@@ -80,21 +80,27 @@ document.addEventListener('touchstart', (e) => {
     _touchStartY = e.touches[0].clientY;
 }, { passive: true });
 
-function _preventBgScroll(e) {
-    if (e.touches && e.touches.length > 1) return;
 
-    const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .modal-overlay, .mobile-menu');
-    if (scrollable) {
-        const atTop = scrollable.scrollTop === 0;
-        const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
-        const deltaY = _touchStartY - e.touches[0].clientY;
-        if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
+    function _preventBgScroll(e) {
+       
+        if (e.touches && e.touches.length > 1) {
             e.preventDefault();
+            return;
         }
-        return;
+
+        const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .modal-overlay, .mobile-menu');
+        if (scrollable) {
+            const atTop = scrollable.scrollTop === 0;
+            const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
+            const deltaY = _touchStartY - e.touches[0].clientY;
+            if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
+                e.preventDefault();
+            }
+            return;
+        }
+        e.preventDefault();
     }
-    e.preventDefault();
-}
+
 
 function _preventWheel(e) {
     const scrollable = e.target.closest('.modal-box, .modal-overlay, .modal-content, .user-modal-content, .mobile-menu');
@@ -120,13 +126,16 @@ const _preventKeyScroll = (e) => {
 function _restoreScroll() {
     window.scrollTo(0, _scrollLockedAt);
 }
-
+function _blockNativeGesture(e) { e.preventDefault(); }
 function lockScroll() {
     if (document.documentElement.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
     document.addEventListener('wheel', _preventWheel, { passive: false });
     document.addEventListener('keydown', _preventKeyScroll);
     document.addEventListener('touchmove', _preventBgScroll, { passive: false });
+    document.addEventListener('gesturestart', _blockNativeGesture, { passive: false });
+    document.addEventListener('gesturechange', _blockNativeGesture, { passive: false });
+    document.addEventListener('gestureend', _blockNativeGesture, { passive: false });
     document.documentElement.classList.add('scroll-locked');
 }
 
@@ -137,6 +146,9 @@ function unlockScroll() {
     document.removeEventListener('wheel', _preventWheel);
     document.removeEventListener('keydown', _preventKeyScroll);
     document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+    document.removeEventListener('gesturestart', _blockNativeGesture);
+    document.removeEventListener('gesturechange', _blockNativeGesture);
+    document.removeEventListener('gestureend', _blockNativeGesture);
 }
 (function fixStickyNavbarChromeIOS() {
     if (!/CriOS/.test(navigator.userAgent)) return;
@@ -578,7 +590,7 @@ function resetZoomCarrusel() {
     imgContainer?._resetZoomTouch?.();
     imgContainer?._resetZoomMouse?.();
     document.querySelectorAll("#carruselWrapper img").forEach(img => {
-        img.style.transition = "none";
+        img.style.transition = "transform .25s ease";
         img.style.transform = "translate(0px,0px) scale(1)";
     });
 }
