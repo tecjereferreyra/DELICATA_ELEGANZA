@@ -777,6 +777,16 @@ function crearTarjetaDOM(prod, index = 0) {
     `;
     body.insertAdjacentHTML("beforeend", infoHTML + disponibilidad);
     card.appendChild(body);
+    if (esAdminActual) {
+        const badge = body.querySelector(".disponible");
+        if (badge) {
+            badge.style.cursor = "pointer";
+            badge.addEventListener("click", (e) => {
+                e.stopPropagation();
+                abrirDialogoStock(prod);
+            });
+        }
+    }
     card.addEventListener("mouseenter", () => {
         if (!prod._imagenesCache) {
             fetch(`/api/Productos/${prod.IdProducto}`)
@@ -801,7 +811,68 @@ function crearTarjetaDOM(prod, index = 0) {
     cardObserver.observe(card);
     return card;
 }
+function abrirDialogoStock(prod) {
+    const enStock = prod.Stock > 0;
+    const stockActual = prod.Stock ?? 0;
 
+    const mensaje = enStock
+        ? `¿Deseás marcar "${prod.Nombre}" como SIN STOCK? (stock actual: ${stockActual})`
+        : `¿Deseás marcar "${prod.Nombre}" como DISPONIBLE?`;
+
+    if (!confirm(mensaje)) return;
+
+    if (enStock) {
+        // Pasa a sin stock: descuenta todo a 0
+        actualizarStockProducto(prod, 0);
+    } else {
+        // Pasa a disponible: pide cuánto stock cargar
+        const valor = prompt("¿Cuánto stock querés cargar?", "1");
+        if (valor === null) return; // canceló
+
+        const nuevoStock = parseInt(valor, 10);
+        if (isNaN(nuevoStock) || nuevoStock < 0) {
+            mostrarToast("Ingresá un número válido de stock", "error");
+            return;
+        }
+        actualizarStockProducto(prod, nuevoStock);
+    }
+}
+
+async function actualizarStockProducto(prod, nuevoStock) {
+    try {
+        const resp = await fetch(`/api/Productos/${prod.IdProducto}/stock`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}`
+            },
+            body: JSON.stringify({ Stock: nuevoStock })
+        });
+
+        if (!resp.ok) {
+            mostrarToast("No se pudo actualizar el stock", "error");
+            return;
+        }
+
+        const data = await resp.json();
+        prod.Stock = data.stock;
+        prod.Disponible = data.disponible;
+
+        // Actualiza el badge en el DOM sin recargar toda la grilla
+        const card = document.querySelector(`.product-card[data-id="${prod.IdProducto}"]`);
+        if (card) {
+            const badge = card.querySelector(".disponible");
+            if (badge) {
+                badge.className = `disponible ${data.disponible ? "en-stock" : "sin-stock"}`;
+                badge.textContent = data.disponible ? "✦ Disponible" : "✦ Sin stock";
+            }
+        }
+
+        mostrarToast(data.disponible ? "Producto marcado como disponible" : "Producto marcado sin stock", "exito");
+    } catch (err) {
+        mostrarToast("Error de conexión al actualizar stock", "error");
+    }
+}
 function abrirModalAdmin(idModal) {
     const modalEl = document.getElementById(idModal);
     if (!modalEl) { console.error("No existe el modal admin:", idModal); return; }

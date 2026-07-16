@@ -216,7 +216,39 @@ namespace DELICATA_ELEGANZA.Controllers
 
             return Ok(productoDTO);
         }
+        public class StockUpdateDTO
+        {
+            public int Stock { get; set; }
+        }
 
+        [Authorize(Roles = "Administrador")]
+        [HttpPatch("{id}/stock")]
+        public async Task<IActionResult> ActualizarStock(int id, [FromBody] StockUpdateDTO dto)
+        {
+            if (dto.Stock < 0)
+                return BadRequest(new { mensaje = "El stock no puede ser negativo" });
+
+            _cache.Remove("productos_lista");
+
+            var producto = await _context.Productos.FirstOrDefaultAsync(p => p.id_producto == id);
+            if (producto == null)
+                return NotFound();
+
+            producto.Stock = dto.Stock;
+            producto.Disponible = dto.Stock > 0;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar stock del producto {Id}", id);
+                return StatusCode(500, new { mensaje = "Error al actualizar el stock" });
+            }
+
+            return Ok(new { id_producto = producto.id_producto, stock = producto.Stock, disponible = producto.Disponible });
+        }
         // ============================================================
         // PUT: api/Productos/5
         // ============================================================
