@@ -1955,8 +1955,7 @@ function initZoomTouch() {
         dbg.id = 'zoomDebug';
         dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#000;color:#0f0;font-size:12px;padding:6px;font-family:monospace;pointer-events:none;white-space:pre-wrap;';
         document.body.appendChild(dbg);
-    } function log(msg) { dbg.textContent = msg + '\n' + dbg.textContent.split('\n').slice(0, 8).join('\n'); }
-    // --- FIN DEBUG ---
+    }
     function getActiveImg() {
         return modalImgContainer.querySelector(".carrusel-slide.active img")
             || modalImgContainer.querySelector("img");
@@ -2043,7 +2042,6 @@ function initZoomTouch() {
     modalImgContainer.addEventListener("pointerdown", (e) => {
         if (e.pointerType === "mouse") return;
         if (esControl(e)) return;
-        log(`down id=${e.pointerId} type=${e.pointerType} size=${pointers.size + 1}`); // <-- AGREGAR
 
         const img = getActiveImg();
         if (img !== lastImg) { resetZoomInstant(); lastImg = img; }
@@ -2056,7 +2054,6 @@ function initZoomTouch() {
 
         if (pointers.size === 2) {
             e.preventDefault();
-            log(`PINCH iniciado dist=${startDist.toFixed(1)}`); // <-- AGREGAR
             usedTwoFingers = true;
             isPanning = false;
             const [a, b] = puntosActivos();
@@ -2096,7 +2093,7 @@ function initZoomTouch() {
             const newDist = dist(a, b);
             const factor = startDist > 0 ? (newDist / startDist) : 1;
             scale = targetScale = Math.max(1, Math.min(MAX_SCALE, startScale * factor));
-            log(`move scale=${scale.toFixed(2)}`);
+
             const mid = midpoint(a, b);
             const ox = ((mid.x - rect.left) / rect.width) * 100;
             const oy = ((mid.y - rect.top) / rect.height) * 100;

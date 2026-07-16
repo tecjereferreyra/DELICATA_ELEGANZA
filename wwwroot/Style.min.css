@@ -3203,7 +3203,7 @@ footer.footer {
             opacity: 0 !important
         }
 
-        .de-logo:hover, .modal-img-container:hover img, .product-card:hover img {
+        .de-logo:hover, .product-card:hover img {
             transform: none !important
         }
 
