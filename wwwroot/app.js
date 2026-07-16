@@ -1955,7 +1955,8 @@ function initZoomTouch() {
         dbg.id = 'zoomDebug';
         dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#000;color:#0f0;font-size:12px;padding:6px;font-family:monospace;pointer-events:none;white-space:pre-wrap;';
         document.body.appendChild(dbg);
-    }
+    } function log(msg) { dbg.textContent = msg + '\n' + dbg.textContent.split('\n').slice(0, 8).join('\n'); }
+    // --- FIN DEBUG ---
     function getActiveImg() {
         return modalImgContainer.querySelector(".carrusel-slide.active img")
             || modalImgContainer.querySelector("img");
