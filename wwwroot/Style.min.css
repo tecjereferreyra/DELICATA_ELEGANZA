@@ -1182,31 +1182,34 @@ header.navbar .title {
     margin-top: 10px;
     gap: 10px
 }
-.toggle-nuevos {
-    display: block;
-    margin: 10px auto 0;
-    padding: .5rem 1.4rem;
-    border-radius: 25px;
-    border: 1px solid rgba(177,151,116,.35);
-    background: linear-gradient(160deg,#fffdf9 0,#f7f0e6 100%);
+.btn-nuevos-flotante {
+    position: fixed;
+    right: 1.2rem;
+    bottom: 5.6rem;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(17,17,17,.92);
     color: var(--color-marca-oro);
-    font-family: Cinzel, serif;
-    font-weight: 600;
-    font-size: .85rem;
-    letter-spacing: .02em;
+    font-size: 1.25rem;
+    box-shadow: 0 6px 20px var(--color-sombra-premium);
     cursor: pointer;
-    transition: transform .2s, box-shadow .2s, background .2s;
+    z-index: 900;
+    transition: transform .28s cubic-bezier(.34, 1.56, .64, 1), box-shadow .28s;
 }
 
-    .toggle-nuevos:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(142,118,85,.15);
+    .btn-nuevos-flotante:hover {
+        transform: scale(1.12) translateY(-3px);
+        box-shadow: 0 10px 28px var(--color-sombra-premium);
     }
 
-    .toggle-nuevos.active {
+    .btn-nuevos-flotante.active {
         background: var(--color-marca-oro);
-        color: #fff;
-        box-shadow: 0 6px 16px rgba(177,151,116,.35);
+        color: rgba(17,17,17,.92);
     }
 .disponible {
     margin-top: 10px;

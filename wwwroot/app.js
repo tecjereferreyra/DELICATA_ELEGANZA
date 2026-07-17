@@ -1126,11 +1126,8 @@ categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
         if (_menuCerradoRecien) { e.preventDefault(); return; }
         e.preventDefault();
-        if (_menuCerradoRecien) { e.preventDefault(); return; }
-        e.preventDefault();
         modoNuevosActivo = false;
         document.getElementById("toggleNuevos")?.classList.remove("active");
-        const target = e.target.closest('[data-cat]') || e.target;
         const target = e.target.closest('[data-cat]') || e.target;
         categoriaLinks.forEach(l => l.classList.remove('active-cat'));
         const linkActivo = e.currentTarget;
