@@ -610,7 +610,7 @@ body.page-carrito {
 }
 #toast-container {
     position: fixed;
-    bottom: 5.5rem;
+    bottom: calc(5.5rem + 30px);
     right: 1.2rem;
     z-index: 99999;
     display: flex;
@@ -663,7 +663,7 @@ body.page-carrito {
         font-size: .72rem
     }
     #toast-container {
-        bottom: 5rem;
+        bottom: calc(5rem + 30px);
         right: .8rem;
         left: .8rem;
         align-items: flex-end
