@@ -1182,7 +1182,32 @@ header.navbar .title {
     margin-top: 10px;
     gap: 10px
 }
+.toggle-nuevos {
+    display: block;
+    margin: 10px auto 0;
+    padding: .5rem 1.4rem;
+    border-radius: 25px;
+    border: 1px solid rgba(177,151,116,.35);
+    background: linear-gradient(160deg,#fffdf9 0,#f7f0e6 100%);
+    color: var(--color-marca-oro);
+    font-family: Cinzel, serif;
+    font-weight: 600;
+    font-size: .85rem;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s, background .2s;
+}
 
+    .toggle-nuevos:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(142,118,85,.15);
+    }
+
+    .toggle-nuevos.active {
+        background: var(--color-marca-oro);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(177,151,116,.35);
+    }
 .disponible {
     margin-top: 10px;
     font-family: Cinzel,serif;

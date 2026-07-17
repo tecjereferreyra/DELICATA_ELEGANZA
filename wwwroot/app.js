@@ -11,6 +11,9 @@ let _cerrarModalTimeout = null;
 let _menuCerradoRecien = false;
 let categoriaActivaActual = "todos";
 let subcategoriaActivaActual = "";
+let modoNuevosActivo = false;
+let filtroPrevioNuevos = null;
+const CANTIDAD_NUEVOS = 12;
 const BLOQUE_CARGA = 12;
 window.addEventListener("pageshow", (e) => {
     if (e.persisted) cargarProductos(true);
@@ -1123,6 +1126,11 @@ categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
         if (_menuCerradoRecien) { e.preventDefault(); return; }
         e.preventDefault();
+        if (_menuCerradoRecien) { e.preventDefault(); return; }
+        e.preventDefault();
+        modoNuevosActivo = false;
+        document.getElementById("toggleNuevos")?.classList.remove("active");
+        const target = e.target.closest('[data-cat]') || e.target;
         const target = e.target.closest('[data-cat]') || e.target;
         categoriaLinks.forEach(l => l.classList.remove('active-cat'));
         const linkActivo = e.currentTarget;
@@ -1598,6 +1606,16 @@ const CATEGORIAS_MAP = {
 };
 const aplicarFiltros = (preservarPaginacion = false) => {
     const productosYaRenderizadosPrevios = productosRenderizados;
+    if (modoNuevosActivo) {
+        productosFiltrados = [...productosData]
+            .sort((a, b) => (b.IdProducto ?? 0) - (a.IdProducto ?? 0))
+            .slice(0, CANTIDAD_NUEVOS);
+        productosRenderizados = 0;
+        const btnVerMas = document.getElementById("btnVerMas");
+        if (btnVerMas) btnVerMas.style.display = "none";
+        renderizarProductosProgresivo(true);
+        return;
+    }
     const textoBusqueda = normalizarBusqueda(
         normalizar(domCache.searchInput?.value || "")
             .replace(/[\/,]+/g, " ")
@@ -2229,8 +2247,8 @@ function initZoomTouch() {
     modalImgContainer._resetZoomTouch = resetZoomInstant;
 }
 document.addEventListener("DOMContentLoaded", () => {
-    cargarProductos();
     verificarUsuarioAutorizado();
+    cargarProductos();
     document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === "Go") {
             const active = document.activeElement;
@@ -2313,7 +2331,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const busquedaDebounced = debounce(aplicarFiltros, 300);
     if (domCache.searchInput) {
-        domCache.searchInput.addEventListener("input", busquedaDebounced);
+        domCache.searchInput.addEventListener("input", () => {
+            modoNuevosActivo = false;
+            document.getElementById("toggleNuevos")?.classList.remove("active");
+            busquedaDebounced();
+        });
         domCache.searchInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter" || e.key === "Go") {
                 e.preventDefault();
@@ -2323,6 +2345,31 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     if (domCache.btnBuscar) domCache.btnBuscar.addEventListener("click", aplicarFiltrosYScroll);
+    document.getElementById("toggleNuevos")?.addEventListener("click", function () {
+        modoNuevosActivo = !modoNuevosActivo;
+        this.classList.toggle("active", modoNuevosActivo);
+
+        if (modoNuevosActivo) {
+            filtroPrevioNuevos = {
+                categoria: categoriaActivaActual,
+                subcategoria: subcategoriaActivaActual,
+                busqueda: domCache.searchInput?.value || ""
+            };
+            categoriaLinks.forEach(l => l.classList.remove("active-cat"));
+            if (domCache.searchInput) domCache.searchInput.value = "";
+        } else if (filtroPrevioNuevos) {
+            categoriaActivaActual = filtroPrevioNuevos.categoria;
+            subcategoriaActivaActual = filtroPrevioNuevos.subcategoria;
+            if (domCache.searchInput) domCache.searchInput.value = filtroPrevioNuevos.busqueda;
+            const linkPrevio = [...categoriaLinks].find(l =>
+                normalizar(l.dataset.cat || "todos") === categoriaActivaActual
+            );
+            linkPrevio?.classList.add("active-cat");
+            filtroPrevioNuevos = null;
+        }
+
+        aplicarFiltrosYScroll();
+    });
     hamburger = document.querySelector(".hamburger");
     mobileMenu = document.querySelector(".mobile-menu");
     hamburger?.addEventListener("click", (e) => {
@@ -2373,6 +2420,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 mobileMenu.setAttribute("aria-hidden", true);
                 document.body.style.backgroundColor = '';
                 categoriaLinks.forEach(l => l.classList.remove('active-cat'));
+                modoNuevosActivo = false;
+                document.getElementById("toggleNuevos")?.classList.remove("active");
                 categoriaActivaActual = normalizar(cat);
                 subcategoriaActivaActual = "";
                 _menuCerradoRecien = true;
@@ -2415,6 +2464,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 normalizar(l.dataset.tipo || "") === tipoNorm
             );
             if (linkDesktop) linkDesktop.classList.add('active-cat');
+            modoNuevosActivo = false;
+            document.getElementById("toggleNuevos")?.classList.remove("active");
             categoriaActivaActual = catNorm || "todos";
             subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
