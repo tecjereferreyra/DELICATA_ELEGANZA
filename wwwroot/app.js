@@ -13,7 +13,7 @@ let categoriaActivaActual = "todos";
 let subcategoriaActivaActual = "";
 let modoNuevosActivo = false;
 let filtroPrevioNuevos = null;
-const CANTIDAD_NUEVOS = 45;
+const CANTIDAD_NUEVOS = 40;
 const BLOQUE_CARGA = 12;
 window.addEventListener("pageshow", (e) => {
     if (e.persisted) cargarProductos(true);
