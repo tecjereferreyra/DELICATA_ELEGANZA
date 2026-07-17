@@ -13,7 +13,7 @@ let categoriaActivaActual = "todos";
 let subcategoriaActivaActual = "";
 let modoNuevosActivo = false;
 let filtroPrevioNuevos = null;
-const CANTIDAD_NUEVOS = 12;
+const CANTIDAD_NUEVOS = 45;
 const BLOQUE_CARGA = 12;
 window.addEventListener("pageshow", (e) => {
     if (e.persisted) cargarProductos(true);
@@ -1126,8 +1126,6 @@ categoriaLinks.forEach(link => {
     link.addEventListener('click', e => {
         if (_menuCerradoRecien) { e.preventDefault(); return; }
         e.preventDefault();
-        modoNuevosActivo = false;
-        document.getElementById("toggleNuevos")?.classList.remove("active");
         const target = e.target.closest('[data-cat]') || e.target;
         categoriaLinks.forEach(l => l.classList.remove('active-cat'));
         const linkActivo = e.currentTarget;
@@ -1603,26 +1601,6 @@ const CATEGORIAS_MAP = {
 };
 const aplicarFiltros = (preservarPaginacion = false) => {
     const productosYaRenderizadosPrevios = productosRenderizados;
-    if (modoNuevosActivo) {
-        productosFiltrados = [...productosData]
-            .sort((a, b) => (b.IdProducto ?? 0) - (a.IdProducto ?? 0))
-            .slice(0, CANTIDAD_NUEVOS);
-        productosRenderizados = 0;
-        const btnVerMas = document.getElementById("btnVerMas");
-        if (btnVerMas) btnVerMas.style.display = "none";
-        renderizarProductosProgresivo(true);
-        return;
-    }
-    const textoBusqueda = normalizarBusqueda(
-        normalizar(domCache.searchInput?.value || "")
-            .replace(/[\/,]+/g, " ")
-            .replace(/-/g, " ")
-            .replace(/\balt\.?\b/gi, "alto")
-            .replace(/\blrg\.?\b/gi, "largo")
-            .replace(/\bpor\b/gi, "")
-            .replace(/\bx\b/g, "")
-            .trim()
-    );
     const categoriaActivaRaw = categoriaActivaActual;
     const categoriaActiva = categoriaActivaRaw;
 
@@ -1656,6 +1634,31 @@ const aplicarFiltros = (preservarPaginacion = false) => {
                 subcategoriaActivaActual.includes(tipo);
         });
     }
+
+    if (modoNuevosActivo) {
+        productosFiltrados = [...base]
+            .sort((a, b) => (b.IdProducto ?? 0) - (a.IdProducto ?? 0))
+            .slice(0, CANTIDAD_NUEVOS);
+        productosRenderizados = 0;
+        renderizarProductosProgresivo(true);
+        while (productosRenderizados < productosFiltrados.length) {
+            renderizarProductosProgresivo();
+        }
+        const btnVerMas = document.getElementById("btnVerMas");
+        if (btnVerMas) btnVerMas.style.display = "none";
+        return;
+    }
+
+    const textoBusqueda = normalizarBusqueda(
+        normalizar(domCache.searchInput?.value || "")
+            .replace(/[\/,]+/g, " ")
+            .replace(/-/g, " ")
+            .replace(/\balt\.?\b/gi, "alto")
+            .replace(/\blrg\.?\b/gi, "largo")
+            .replace(/\bpor\b/gi, "")
+            .replace(/\bx\b/g, "")
+            .trim()
+    );
     if (textoBusqueda !== "") {
         const filtros = extraerFiltrosBusqueda(textoBusqueda);
         const tipoExacto = extraerTipoExacto(textoBusqueda);
@@ -2428,8 +2431,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 mobileMenu.setAttribute("aria-hidden", true);
                 document.body.style.backgroundColor = '';
                 categoriaLinks.forEach(l => l.classList.remove('active-cat'));
-                modoNuevosActivo = false;
-                document.getElementById("toggleNuevos")?.classList.remove("active");
                 categoriaActivaActual = normalizar(cat);
                 subcategoriaActivaActual = "";
                 _menuCerradoRecien = true;
@@ -2472,8 +2473,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 normalizar(l.dataset.tipo || "") === tipoNorm
             );
             if (linkDesktop) linkDesktop.classList.add('active-cat');
-            modoNuevosActivo = false;
-            document.getElementById("toggleNuevos")?.classList.remove("active");
             categoriaActivaActual = catNorm || "todos";
             subcategoriaActivaActual = tipoNorm;
             _menuCerradoRecien = true;
