@@ -1823,6 +1823,8 @@ function openUserModalAsLogin() {
                     unlockScroll();
                 }, 700);
                 verificarUsuarioAutorizado();
+                document.getElementById("contenedor-productos")?.replaceChildren();
+                aplicarFiltros();
             } else if (res.status === 401) {
                 showLoginMessage("Credenciales incorrectas.", "error");
             } else {
@@ -1895,6 +1897,8 @@ function openUserModalAsRegister() {
                 localStorage.setItem("usuarioDelicata", nombre);
                 localStorage.setItem("correoDelicata", correo);
                 verificarUsuarioAutorizado();
+                document.getElementById("contenedor-productos")?.replaceChildren();
+                aplicarFiltros();
                 setTimeout(() => {
                     userModal.style.display = "none";
                     unlockScroll();
@@ -2346,6 +2350,13 @@ document.addEventListener("DOMContentLoaded", () => {
         modoNuevosActivo = !modoNuevosActivo;
         this.classList.toggle("active", modoNuevosActivo);
 
+        const icono = document.getElementById("iconoNuevos");
+        if (icono) {
+            icono.innerHTML = modoNuevosActivo
+                ? '<path d="M20 11H7.83l4.88-4.88a1 1 0 10-1.42-1.41L4.7 11.29a1 1 0 000 1.42l6.59 6.59a1 1 0 001.42-1.42L7.83 13H20a1 1 0 000-2z"></path>'
+                : '<path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"></path>';
+        }
+
         if (modoNuevosActivo) {
             filtroPrevioNuevos = {
                 categoria: categoriaActivaActual,
@@ -2696,6 +2707,8 @@ function mostrarLogoutConfirm() {
         cerrarLogout();
         try {
             verificarUsuarioAutorizado?.();
+            document.getElementById("contenedor-productos")?.replaceChildren();
+            aplicarFiltros?.();
             mostrarToast?.("Sesión cerrada correctamente", "success");
         } catch (e) {
             console.error(e);
