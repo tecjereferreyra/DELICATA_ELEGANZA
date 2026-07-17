@@ -2354,7 +2354,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (icono) {
             icono.innerHTML = modoNuevosActivo
                 ? '<path d="M20 11H7.83l4.88-4.88a1 1 0 10-1.42-1.41L4.7 11.29a1 1 0 000 1.42l6.59 6.59a1 1 0 001.42-1.42L7.83 13H20a1 1 0 000-2z"></path>'
-                : '<path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"></path>';
+                : '<path d="M12 5l1.8 5.2L19 12l-5.2 1.8L12 19l-1.8-5.2L5 12l5.2-1.8z"></path>';
         }
 
         if (modoNuevosActivo) {
