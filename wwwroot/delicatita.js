@@ -263,6 +263,25 @@
         };
     }
 
+    // Todos los tipos de producto que existen en el catálogo (cualquier categoría)
+    function getTodosLosTipos() {
+        const excluidos = ["sin tipo", "—", "-", ""];
+        const set = new Set();
+        getCatalogo().forEach(function (p) {
+            const tipo = p.Tipo;
+            if (tipo && excluidos.indexOf(normalizarTexto(tipo)) === -1) set.add(tipo);
+        });
+        return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
+    }
+
+    function detectarTipoExacto(texto) {
+        const tipos = getTodosLosTipos();
+        for (let i = 0; i < tipos.length; i++) {
+            if (texto.indexOf(normalizarTexto(tipos[i])) !== -1) return tipos[i];
+        }
+        return null;
+    }
+
     /* ---------- Detección de categorías del catálogo dentro de un texto ---------- */
     function detectarCategoriaExacta(texto) {
         const categorias = getCategorias();
@@ -286,6 +305,16 @@
     function productosPorCategoria(categoria) {
         const norm = normalizarTexto(categoria);
         return getCatalogo().filter(function (p) { return p.Categoria && normalizarTexto(p.Categoria) === norm; });
+    }
+
+    function productosPorTipo(tipo, categoria) {
+        const normTipo = normalizarTexto(tipo);
+        const normCat = categoria ? normalizarTexto(categoria) : null;
+        return getCatalogo().filter(function (p) {
+            if (!p.Tipo || normalizarTexto(p.Tipo) !== normTipo) return false;
+            if (normCat && p.Categoria && normalizarTexto(p.Categoria) !== normCat) return false;
+            return true;
+        });
     }
 
     function respuestaCuidadosCategoria(categoria) {
@@ -363,38 +392,57 @@
         return normalizarTexto([p.Nombre, p.Marca, p.Categoria, p.Tipo, p.Color, p.Material, p.Modelo].join(" "));
     }
 
-    /* ---------- Conexión con el filtro de categorías del main (app.js) ----------
-     * app.js maneja el filtrado real mediante los links "<a data-cat="...">" dentro
-     * de ".categories" (o ".mobile-categories li[data-cat]"): al hacer click ahí,
-     * setea categoriaActivaActual/subcategoriaActivaActual, llama a aplicarFiltros()
-     * y hace scroll con irAlContenedorProductos(). En vez de duplicar esa lógica acá,
-     * buscamos el link real de la categoría pedida y lo "clickeamos" por código, así
-     * el resultado es exactamente el mismo que si el usuario lo hubiera tocado él mismo.
+    /* ---------- Conexión con el filtro de categorías/tipos del main (app.js) ----------
+     * app.js maneja el filtrado real mediante los links "<a data-cat="..." data-tipo="...">"
+     * dentro de ".categories" (desktop) y "<li data-cat data-tipo>" dentro de ".mobile-categories"
+     * (mobile): al hacer click ahí, setea categoriaActivaActual/subcategoriaActivaActual, llama a
+     * aplicarFiltros() y hace scroll con irAlContenedorProductos(). En vez de duplicar esa lógica
+     * acá, buscamos el link real (categoría, o categoría+tipo puntual) y lo "clickeamos" por código,
+     * así el resultado es exactamente el mismo que si el usuario lo hubiera tocado él mismo.
+     * Preferimos siempre los links de escritorio (aunque estén ocultos por CSS en mobile), porque
+     * no disparan el bloqueo de "click fantasma" que sí dispara el menú mobile al cerrarse.
      */
-    function irACategoriaEnMain(categoria) {
-        const objetivo = normalizarTexto(categoria);
-        if (!objetivo) return false;
+    function irACategoriaEnMain(categoria, tipo) {
+        const objetivoCat = normalizarTexto(categoria || "");
+        const objetivoTipo = normalizarTexto(tipo || "");
+        if (!objetivoCat && !objetivoTipo) return false;
 
-        const selectores = '.categories a[data-cat], .mobile-categories li[data-cat]';
-        const candidatos = Array.from(document.querySelectorAll(selectores));
+        const candidatos = Array.from(document.querySelectorAll(
+            '.categories a[data-cat], .mobile-categories li[data-cat]'
+        ));
         if (!candidatos.length) return false;
 
-        // 1) Coincidencia exacta de data-cat
-        let elegido = candidatos.find(function (el) {
-            return normalizarTexto(el.dataset.cat || "") === objetivo;
-        });
+        function catCoincide(el) {
+            if (!objetivoCat) return true;
+            const cat = normalizarTexto(el.dataset.cat || "");
+            return cat === objetivoCat || cat.indexOf(objetivoCat) !== -1 || objetivoCat.indexOf(cat) !== -1;
+        }
 
-        // 2) Si no hay exacta, coincidencia parcial (por si el nombre no es idéntico)
-        if (!elegido) {
+        let elegido = null;
+
+        if (objetivoTipo) {
+            // 1) Categoría + tipo exactos (ej: Marroquinería > Carteras)
             elegido = candidatos.find(function (el) {
-                const cat = normalizarTexto(el.dataset.cat || "");
-                return cat && (cat.indexOf(objetivo) !== -1 || objetivo.indexOf(cat) !== -1);
+                return catCoincide(el) && normalizarTexto(el.dataset.tipo || "") === objetivoTipo;
             });
+            // 2) Si no sabemos la categoría, buscamos el tipo en cualquier categoría
+            //    (algunos tipos existen en más de una, ej: "Aros" en Bijouterie y en Fiesta;
+            //    en ese caso se elige la primera coincidencia del menú).
+            if (!elegido && !objetivoCat) {
+                elegido = candidatos.find(function (el) {
+                    return normalizarTexto(el.dataset.tipo || "") === objetivoTipo;
+                });
+            }
+        }
+
+        if (!elegido && objetivoCat) {
+            // Categoría sola, sin tipo puntual
+            elegido = candidatos.find(function (el) { return catCoincide(el) && !el.dataset.tipo; });
+            if (!elegido) elegido = candidatos.find(catCoincide);
         }
 
         if (!elegido) return false;
 
-        // Si el elemento clickeable no es el <a>/<li> con data-cat sino un hijo, buscamos el clickeable real
         const clickeable = elegido.matches('a, li') ? elegido : (elegido.closest('a, li') || elegido);
         clickeable.click();
         return true;
@@ -585,6 +633,28 @@
         });
     }
 
+    // Igual que renderChipsGenerico, pero agrega un primer chip "← Volver" que no manda
+    // mensaje al chat, sino que ejecuta una acción para retroceder un paso en el flujo.
+    function renderChipsConVolver(items, alVolver) {
+        chipsEl.innerHTML = "";
+
+        const btnVolver = document.createElement("button");
+        btnVolver.type = "button";
+        btnVolver.className = "delicatita-chip delicatita-chip-volver";
+        btnVolver.innerHTML = "&larr; Volver";
+        btnVolver.addEventListener("click", alVolver);
+        chipsEl.appendChild(btnVolver);
+
+        items.forEach(function (it) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "delicatita-chip";
+            btn.textContent = it.etiqueta;
+            btn.addEventListener("click", function () { procesarConsulta(it.mensaje); });
+            chipsEl.appendChild(btn);
+        });
+    }
+
     // Chips originales (Horarios, Ubicación, Marcas, etc.)
     function renderChipsPrincipales() {
         renderChipsGenerico(SUGERENCIAS.map(function (texto) { return { etiqueta: texto, mensaje: texto }; }));
@@ -593,13 +663,27 @@
     // Reemplaza los chips originales por las categorías del catálogo (paso 1 de recomendaciones)
     function renderChipsCategoriasRecomendacion() {
         const categorias = getCategorias();
-        renderChipsGenerico(categorias.map(function (c) { return { etiqueta: c, mensaje: "recomendaciones de " + c }; }));
+        renderChipsConVolver(
+            categorias.map(function (c) { return { etiqueta: c, mensaje: "recomendaciones de " + c }; }),
+            function () {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+                renderChipsPrincipales();
+            }
+        );
     }
 
     // Reemplaza los chips por los tipos de producto de la categoría elegida (paso 2)
     function renderChipsTiposDeCategoria(categoria, opciones) {
         const lista = opciones || getOpcionesDeCategoria(categoria) || [];
-        renderChipsGenerico(lista.map(function (o) { return { etiqueta: o, mensaje: "recomendaciones de " + o }; }));
+        renderChipsConVolver(
+            lista.map(function (o) { return { etiqueta: o, mensaje: "recomendaciones de " + o }; }),
+            function () {
+                contextoPendiente = "categoria";
+                categoriaEnCurso = null;
+                renderChipsCategoriasRecomendacion();
+            }
+        );
     }
 
     // Aplica en la UI lo que haya pedido la respuesta del motor de reglas: volver a los
@@ -732,14 +816,14 @@
         if (contieneAlguna(t, ["marca", "marcas"])) {
             const marcas = getMarcas();
             if (!marcas.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
-            return { texto: "Trabajamos, entre otras, con estas marcas:\n" + marcas.join(", ") + "." };
+            return { texto: "Trabajamos, entre otras, con estas marcas:\n" + marcas.map(function (m) { return "• " + m; }).join("\n") };
         }
 
         // Materiales
         if (contieneAlguna(t, ["material", "materiales"])) {
             const materiales = getMateriales();
             if (!materiales.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
-            return { texto: "Trabajamos con estos materiales:\n" + materiales.join(", ") + "." };
+            return { texto: "Trabajamos con estos materiales:\n" + materiales.map(function (m) { return "• " + m; }).join("\n") };
         }
 
         // Qué productos / categorías se venden
@@ -749,20 +833,31 @@
             return { texto: "Nuestras categorías de productos son:\n" + categorias.join(", ") + "." };
         }
 
-        // Mostrar todos los productos de una categoría puntual (esto cierra el chat y
-        // muestra las tarjetas en el main, usando el filtro real de categorías del sitio)
-        const pideVerCategoriaCompleta = contieneAlguna(t, [
-            "todos los productos", "mostrame todo", "muestrame todo", "ver todos los productos",
-            "todo el catalogo de", "mostrame los productos de", "muestrame los productos de",
-            "quiero ver todos", "quiero ver solo", "quiero ver los"
-        ]) || (t.indexOf("ver") !== -1 && (t.indexOf("todos") !== -1 || t.indexOf("solo") !== -1));
+        // Mostrar todos los productos de una categoría o de un tipo puntual (esto cierra el
+        // chat y muestra las tarjetas en el main, usando el filtro real del sitio). No se activa
+        // si el mensaje es en realidad una consulta de cuidado ("quiero ver recomendaciones de aros").
+        const esConsultaCuidado = contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"]);
+        const pideVerCategoriaCompleta = !esConsultaCuidado && (
+            /\bver\b/.test(t) ||
+            contieneAlguna(t, [
+                "todos los productos", "mostrame todo", "muestrame todo",
+                "todo el catalogo de", "mostrame los productos de", "muestrame los productos de",
+                "quiero ver todos", "quiero ver solo", "quiero ver los"
+            ])
+        );
 
         if (pideVerCategoriaCompleta) {
+            const tipoExacto = detectarTipoExacto(t);
+            if (tipoExacto) {
+                const categoriaExacta = detectarCategoriaExacta(t);
+                return { verEnMain: { tipo: tipoExacto, categoria: categoriaExacta } };
+            }
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) {
-                return { verEnMain: categoriaExacta };
+                return { verEnMain: { categoria: categoriaExacta } };
             }
-            return { texto: "¿De qué categoría te gustaría ver todos los productos? Contame el nombre y te los muestro." };
+            // Ni tipo ni categoría reconocidos: no forzamos nada, seguimos con el resto de
+            // las reglas (por ejemplo, puede ser una búsqueda más general del catálogo).
         }
 
         // Recomendaciones / cuidados de uso
@@ -836,19 +931,22 @@
             const respuesta = generarRespuesta(limpio);
 
             if (respuesta.verEnMain) {
-                const enganchado = irACategoriaEnMain(respuesta.verEnMain);
+                const destino = respuesta.verEnMain;
+                const enganchado = irACategoriaEnMain(destino.categoria, destino.tipo);
                 if (enganchado) {
                     cerrarPanel();
                     return;
                 }
-                // Fallback por si no se encuentra el link de esa categoría en el main:
-                // mostramos las tarjetas acá mismo, como antes.
-                const productos = productosPorCategoria(respuesta.verEnMain);
+                // Fallback por si no se encuentra el link en el main: mostramos las tarjetas acá mismo.
+                const etiquetaDestino = destino.tipo || destino.categoria;
+                const productos = destino.tipo
+                    ? productosPorTipo(destino.tipo, destino.categoria)
+                    : productosPorCategoria(destino.categoria);
                 if (!productos.length) {
-                    agregarMensajeTexto("Por el momento no tengo productos cargados en la categoría " + respuesta.verEnMain + ".", "bot");
+                    agregarMensajeTexto("Por el momento no tengo productos cargados en " + etiquetaDestino + ".", "bot");
                     return;
                 }
-                agregarMensajeTexto("Estos son los productos que tenemos en " + respuesta.verEnMain + ":", "bot");
+                agregarMensajeTexto("Estos son los productos que tenemos en " + etiquetaDestino + ":", "bot");
                 productos.slice(0, 6).forEach(agregarTarjetaProducto);
                 return;
             }
@@ -883,9 +981,28 @@
         }, 450);
     }
 
+    /* ---------- Bloqueo de scroll del body (reutiliza lockScroll/unlockScroll de app.js,
+       que ya usan el resto de los modales del sitio; si no existieran, hay un fallback simple) ---------- */
+    function bloquearScrollFondo() {
+        if (typeof window.lockScroll === "function") {
+            window.lockScroll();
+        } else {
+            document.body.style.overflow = "hidden";
+        }
+    }
+
+    function desbloquearScrollFondo() {
+        if (typeof window.unlockScroll === "function") {
+            window.unlockScroll();
+        } else {
+            document.body.style.overflow = "";
+        }
+    }
+
     /* ---------- Apertura / cierre del panel ---------- */
     function abrirPanel() {
         panelEl.classList.add("abierto");
+        bloquearScrollFondo();
         if (!chatIniciado) {
             chatIniciado = true;
             renderChipsPrincipales();
@@ -901,6 +1018,7 @@
 
     function cerrarPanel() {
         panelEl.classList.remove("abierto");
+        desbloquearScrollFondo();
     }
 
     /* ---------- Tooltips de los botones flotantes ---------- */

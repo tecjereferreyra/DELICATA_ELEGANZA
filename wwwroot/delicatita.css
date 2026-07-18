@@ -55,7 +55,7 @@
     position: fixed;
     right: 1.2rem;
     bottom: calc(5.6rem + 82px + 64px);
-    width: min(360px,calc(100vw - 2.4rem));
+    width: min(460px,calc(100vw - 2.4rem));
     max-height: min(560px,calc(100dvh - 8rem));
     background: var(--color-fondo-principal,#f4ece0);
     border-radius: 18px;
@@ -242,9 +242,9 @@
     }
 
 .delicatita-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .4rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
     padding: 0 1rem .8rem;
     flex-shrink: 0
 }
@@ -254,18 +254,29 @@
     background: 0 0;
     color: var(--color-texto-marron,#3b2f22);
     font-family: Poppins,sans-serif;
-    font-size: .74rem;
-    padding: .35rem .75rem;
-    border-radius: 999px;
+    font-size: .72rem;
+    padding: .45rem .5rem;
+    border-radius: 12px;
     cursor: pointer;
     transition: background .2s,color .2s;
-    white-space: nowrap
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.4em
 }
 
-    .delicatita-chip:hover {
-        background: var(--color-marca-oro,#c9a84c);
-        color: rgba(17,17,17,.92)
-    }
+.delicatita-chip-volver {
+    border-style: dashed;
+    font-weight: 600;
+}
+
+.delicatita-chip:hover {
+    background: var(--color-marca-oro,#c9a84c);
+    color: rgba(17,17,17,.92)
+}
 
 .delicatita-input-row {
     display: flex;
@@ -368,7 +379,7 @@
     .delicatita-panel {
         right: .6rem;
         left: auto;
-        width: min(280px,calc(100vw - 1.2rem));
+        width: min(320px,calc(100vw - 1.2rem));
         bottom: calc(5.6rem + 82px + 64px);
         max-height: min(64dvh,480px)
     }
@@ -380,6 +391,18 @@
 
     .delicatita-msg, .delicatita-msg-producto {
         max-width: 88%
+    }
+
+    .delicatita-chips {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .4rem;
+        padding: 0 .8rem .7rem
+    }
+
+    .delicatita-chip {
+        font-size: .7rem;
+        padding: .4rem .4rem;
+        min-height: 2.2em
     }
 
     .delicatita-input-row {
