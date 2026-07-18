@@ -279,6 +279,7 @@
 
     .delicatita-input-row input {
         flex: 1;
+        min-width: 0;
         border: 1px solid var(--color-gris-input,#d8c3a5);
         border-radius: 999px;
         padding: .55rem 1rem;
@@ -380,6 +381,22 @@
     .delicatita-msg, .delicatita-msg-producto {
         max-width: 88%
     }
+
+    .delicatita-input-row {
+        gap: .35rem;
+        padding: .6rem .6rem
+    }
+
+        .delicatita-input-row input {
+            padding: .5rem .8rem;
+            font-size: .82rem
+        }
+
+        .delicatita-input-row button {
+            width: 34px;
+            height: 34px;
+            font-size: .85rem
+        }
 }
 
 @media (max-width:340px) {

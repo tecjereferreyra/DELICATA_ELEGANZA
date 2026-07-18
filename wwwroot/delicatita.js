@@ -161,6 +161,62 @@
                 "Dejalo secar abierto antes de guardarlo, para evitar humedad y malos olores.\n" +
                 "No lo fuerces al abrir o cerrar con viento fuerte.\n" +
                 "Revisá de tanto en tanto el mecanismo y las varillas."
+        },
+        {
+            claves: ["bomba de vacio electrica", "bomba electrica", "bomba de vacio elec"],
+            etiqueta: "Bomba de vacío eléctrica",
+            texto:
+                "Cargá la batería por completo antes de cada viaje largo.\n" +
+                "No la uses con prendas mojadas; dejalas secar antes de envasar.\n" +
+                "Guardala en un lugar seco y limpiá la boquilla después de cada uso."
+        },
+        {
+            claves: ["bomba de vacio manual", "bomba manual"],
+            etiqueta: "Bomba de vacío manual",
+            texto:
+                "Revisá que la válvula de la bolsa esté bien cerrada antes de bombear.\n" +
+                "No fuerces el mecanismo si sentís resistencia; puede indicar que la bolsa ya está al vacío.\n" +
+                "Guardala en un lugar seco junto con las bolsas."
+        },
+        {
+            claves: ["balanza de equipaje", "balanza para valija", "balanza de valija", "pesa valija", "pesa equipaje"],
+            etiqueta: "Balanza de equipaje",
+            texto:
+                "Colocá la pila indicada antes del viaje para evitar sorpresas en el check-in.\n" +
+                "Enganchala del asa de la valija y levantá de a poco hasta que el número se estabilice.\n" +
+                "Guardala en un lugar seco; evitá golpes que puedan descalibrarla."
+        },
+        {
+            claves: ["porta valores", "portavalores", "riñonera de viaje"],
+            etiqueta: "Porta valores",
+            texto:
+                "Usalo debajo de la ropa para mayor seguridad al viajar.\n" +
+                "Evitá sobrecargarlo; guardá solo documentos y valores esenciales.\n" +
+                "Limpialo con un paño húmedo y dejalo secar bien antes de guardarlo."
+        },
+        {
+            claves: ["candado"],
+            etiqueta: "Candados",
+            texto:
+                "Anotá o guardá la combinación en un lugar seguro, separado de la valija.\n" +
+                "Lubricá el mecanismo de tanto en tanto si notás que traba.\n" +
+                "Revisá que cierre bien antes de cada viaje."
+        },
+        {
+            claves: ["almohada de viaje", "almohadas de viaje", "almohada cervical"],
+            etiqueta: "Almohadas de viaje",
+            texto:
+                "Lavala siguiendo la etiqueta; muchas admiten lavado a mano.\n" +
+                "Dejala secar completamente antes de guardarla, para evitar olores.\n" +
+                "Guardala en su bolsa o comprimida solo cuando esté bien seca."
+        },
+        {
+            claves: ["rueda de valija", "ruedas de valija", "ruedas de valijas", "rueda de maleta"],
+            etiqueta: "Ruedas de valijas",
+            texto:
+                "Verificá que el modelo sea compatible con tu valija antes de instalarlas.\n" +
+                "Limpiá el eje de tanto en tanto para que giren sin trabarse.\n" +
+                "Ajustá bien los tornillos o el sistema de fijación luego de instalarlas."
         }
     ];
 
@@ -246,6 +302,43 @@
         return normalizarTexto([p.Nombre, p.Marca, p.Categoria, p.Tipo, p.Color, p.Material, p.Modelo].join(" "));
     }
 
+    /* ---------- Conexión con el filtro de categorías del main (app.js) ----------
+     * app.js maneja el filtrado real mediante los links "<a data-cat="...">" dentro
+     * de ".categories" (o ".mobile-categories li[data-cat]"): al hacer click ahí,
+     * setea categoriaActivaActual/subcategoriaActivaActual, llama a aplicarFiltros()
+     * y hace scroll con irAlContenedorProductos(). En vez de duplicar esa lógica acá,
+     * buscamos el link real de la categoría pedida y lo "clickeamos" por código, así
+     * el resultado es exactamente el mismo que si el usuario lo hubiera tocado él mismo.
+     */
+    function irACategoriaEnMain(categoria) {
+        const objetivo = normalizarTexto(categoria);
+        if (!objetivo) return false;
+
+        const selectores = '.categories a[data-cat], .mobile-categories li[data-cat]';
+        const candidatos = Array.from(document.querySelectorAll(selectores));
+        if (!candidatos.length) return false;
+
+        // 1) Coincidencia exacta de data-cat
+        let elegido = candidatos.find(function (el) {
+            return normalizarTexto(el.dataset.cat || "") === objetivo;
+        });
+
+        // 2) Si no hay exacta, coincidencia parcial (por si el nombre no es idéntico)
+        if (!elegido) {
+            elegido = candidatos.find(function (el) {
+                const cat = normalizarTexto(el.dataset.cat || "");
+                return cat && (cat.indexOf(objetivo) !== -1 || objetivo.indexOf(cat) !== -1);
+            });
+        }
+
+        if (!elegido) return false;
+
+        // Si el elemento clickeable no es el <a>/<li> con data-cat sino un hijo, buscamos el clickeable real
+        const clickeable = elegido.matches('a, li') ? elegido : (elegido.closest('a, li') || elegido);
+        clickeable.click();
+        return true;
+    }
+
     function buscarProductos(texto) {
         const catalogo = getCatalogo();
         if (!catalogo.length) return [];
@@ -262,12 +355,18 @@
             .filter(function (r) { return r.puntaje > 0; })
             .sort(function (a, b) { return b.puntaje - a.puntaje; });
 
+
         return conPuntaje.slice(0, 3).map(function (r) { return r.p; });
     }
 
     /* ---------- Construcción de la UI ---------- */
     let panelEl, mensajesEl, inputEl, botonEl, chipsEl;
     let chatIniciado = false;
+
+    // Recuerda si el bot acaba de preguntar "¿sobre qué categoría/tipo de producto
+    // querés recomendaciones?", para poder interpretar la respuesta libre siguiente
+    // (ej: "aros", "bombas de vacío eléctrica") sin que el usuario tenga que tocar un botón.
+    let contextoPendiente = null;
 
     function crearElementos() {
         // Botón flotante
@@ -429,6 +528,24 @@
         const t = normalizarTexto(textoOriginal);
         const nPalabras = contarPalabras(t);
 
+        // Si el bot acababa de preguntar sobre qué categoría/tipo de producto quiere
+        // recomendaciones, interpretamos esta respuesta como esa categoría/tipo,
+        // sin necesidad de que el usuario escriba "recomendaciones de..." de nuevo.
+        if (contextoPendiente === "recomendacion") {
+            contextoPendiente = null;
+
+            const subtipo = respuestaComplementoSubtipo(t);
+            if (subtipo) return { texto: subtipo };
+
+            const categoriaEnTexto = detectarCategoriaOGrupo(t);
+            if (categoriaEnTexto) {
+                const resultado = respuestaCuidadosCategoria(categoriaEnTexto);
+                if (resultado.botones) contextoPendiente = "recomendacion";
+                return resultado;
+            }
+            // Si no coincide con nada conocido, seguimos con el flujo normal de abajo.
+        }
+
         // Despedida
         if (nPalabras <= 4 && contieneAlguna(t, ["gracias", "chau", "adios", "hasta luego", "nos vemos"])) {
             return { texto: "Gracias por escribirnos. Que tengas un excelente día." };
@@ -493,18 +610,18 @@
             return { texto: "Nuestras categorías de productos son:\n" + categorias.join(", ") + "." };
         }
 
-        // Mostrar todos los productos de una categoría puntual
-        if (contieneAlguna(t, ["todos los productos", "mostrame todo", "muestrame todo", "ver todos los productos", "todo el catalogo de"])) {
+        // Mostrar todos los productos de una categoría puntual (esto cierra el chat y
+        // muestra las tarjetas en el main, usando el filtro real de categorías del sitio)
+        const pideVerCategoriaCompleta = contieneAlguna(t, [
+            "todos los productos", "mostrame todo", "muestrame todo", "ver todos los productos",
+            "todo el catalogo de", "mostrame los productos de", "muestrame los productos de",
+            "quiero ver todos", "quiero ver solo", "quiero ver los"
+        ]) || (t.indexOf("ver") !== -1 && (t.indexOf("todos") !== -1 || t.indexOf("solo") !== -1));
+
+        if (pideVerCategoriaCompleta) {
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) {
-                const productos = productosPorCategoria(categoriaExacta);
-                if (!productos.length) {
-                    return { texto: "Por el momento no tengo productos cargados en la categoría " + categoriaExacta + "." };
-                }
-                return {
-                    productos: productos.slice(0, 6),
-                    textoProductos: "Estos son los productos que tenemos en " + categoriaExacta + ":"
-                };
+                return { verEnMain: categoriaExacta };
             }
             return { texto: "¿De qué categoría te gustaría ver todos los productos? Contame el nombre y te los muestro." };
         }
@@ -517,9 +634,14 @@
 
             // 2) ¿Menciona una categoría o grupo conocido?
             const categoriaEnTexto = detectarCategoriaOGrupo(t);
-            if (categoriaEnTexto) return respuestaCuidadosCategoria(categoriaEnTexto);
+            if (categoriaEnTexto) {
+                const resultado = respuestaCuidadosCategoria(categoriaEnTexto);
+                if (resultado.botones) contextoPendiente = "recomendacion";
+                return resultado;
+            }
 
             // 3) Genérico: mostrar todas las categorías como accesos directos
+            contextoPendiente = "recomendacion";
             return menuCategorias();
         }
 
@@ -572,6 +694,24 @@
         setTimeout(function () {
             ocultarEscribiendo(escribiendoEl);
             const respuesta = generarRespuesta(limpio);
+
+            if (respuesta.verEnMain) {
+                const enganchado = irACategoriaEnMain(respuesta.verEnMain);
+                if (enganchado) {
+                    cerrarPanel();
+                    return;
+                }
+                // Fallback por si no se encuentra el link de esa categoría en el main:
+                // mostramos las tarjetas acá mismo, como antes.
+                const productos = productosPorCategoria(respuesta.verEnMain);
+                if (!productos.length) {
+                    agregarMensajeTexto("Por el momento no tengo productos cargados en la categoría " + respuesta.verEnMain + ".", "bot");
+                    return;
+                }
+                agregarMensajeTexto("Estos son los productos que tenemos en " + respuesta.verEnMain + ":", "bot");
+                productos.slice(0, 6).forEach(agregarTarjetaProducto);
+                return;
+            }
 
             if (respuesta.productos) {
                 agregarMensajeTexto(
