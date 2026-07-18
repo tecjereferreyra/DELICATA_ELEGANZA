@@ -130,6 +130,17 @@ function _restoreScroll() {
     window.scrollTo(0, _scrollLockedAt);
 }
 function _blockNativeGesture(e) { e.preventDefault(); }
+
+function forzarRepintadoNotchIOS() {
+    if (!/iP(hone|ad|od)/.test(navigator.userAgent)) return;
+    requestAnimationFrame(() => {
+        document.documentElement.style.webkitTransform = "translateZ(0)";
+        requestAnimationFrame(() => {
+            document.documentElement.style.webkitTransform = "";
+        });
+    });
+}
+
 function lockScroll() {
     if (document.documentElement.classList.contains('scroll-locked')) return;
     _scrollLockedAt = window.pageYOffset || document.documentElement.scrollTop;
@@ -152,6 +163,7 @@ function unlockScroll() {
     document.removeEventListener('gesturestart', _blockNativeGesture);
     document.removeEventListener('gesturechange', _blockNativeGesture);
     document.removeEventListener('gestureend', _blockNativeGesture);
+    forzarRepintadoNotchIOS();
 }
 (function fixStickyNavbarChromeIOS() {
     if (!/CriOS/.test(navigator.userAgent)) return;
@@ -630,6 +642,9 @@ function cerrarModalProducto() {
         delete metaOriginal.dataset.original;
         viewportMeta.parentNode.replaceChild(metaOriginal, viewportMeta);
     }
+    
+    forzarRepintadoNotchIOS();
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {

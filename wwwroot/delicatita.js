@@ -11,7 +11,7 @@
 
     const HORARIOS_TEXTO =
         "Atendemos de lunes a sábado.\n" +
-        "Mañana: de 09:00 a 12:30 hs.\n" +
+        "Mañana: de 09:30 a 12:30 hs.\n" +
         "Tarde: de 16:00 a 20:30 hs.";
 
     const STORAGE_KEY = "delicatitaDescubierta";
@@ -254,11 +254,7 @@
         return null;
     }
 
-    /* ---------- Recomendaciones específicas por tipo de producto puntual ----------
-     * Más específicas que CUIDADOS (que da un texto genérico compartido por toda la
-     * categoría). Estas se revisan primero: si "aros" tiene su propia entrada acá, se
-     * usa esta en vez del texto genérico de "Bijouterie y accesorios".
-     */
+   
     const TIPOS_ESPECIFICOS = [
         // --- Bijouterie / Fiesta ---
         {
@@ -1053,8 +1049,7 @@
             if (categoriaExacta) {
                 return { verEnMain: { categoria: categoriaExacta } };
             }
-            // Ni tipo ni categoría reconocidos: no forzamos nada, seguimos con el resto de
-            // las reglas (por ejemplo, puede ser una búsqueda más general del catálogo).
+            
         }
 
         // Recomendaciones / cuidados de uso
@@ -1063,9 +1058,7 @@
             const subtipo = respuestaComplementoSubtipo(t);
             if (subtipo) return { texto: subtipo, chips: "principal" };
 
-            // 2) ¿Nombró directamente un tipo de producto con recomendación específica propia?
-            //    (ej: "dame recomendaciones de aros") -> respuesta directa y puntual, sin pasar
-            //    por el menú de categorías.
+            
             const especifico = respuestaTipoEspecifico(t);
             if (especifico) return { texto: especifico, chips: "principal" };
 
@@ -1097,9 +1090,7 @@
             };
         }
 
-        // Mención suelta de una categoría del catálogo (ej: "bijouterie") -> preguntar qué desea
-        // Solo si el mensaje es prácticamente la categoría sola, para no interferir con búsquedas
-        // de productos más específicas (ej: "tienen collar dorado").
+       
         if (nPalabras <= 2) {
             const categoriaSuelta = detectarCategoriaExacta(t);
             if (categoriaSuelta) return preguntaCategoria(categoriaSuelta);
@@ -1236,7 +1227,8 @@
 
     function cerrarPanel() {
         panelEl.classList.remove("abierto");
-        desbloquearScrollFondo();
+        desbloquearScrollFondo();     
+        if (typeof window.forzarRepintadoNotchIOS === "function") window.forzarRepintadoNotchIOS();
     }
 
     /* ---------- Tooltips de los botones flotantes ---------- */
