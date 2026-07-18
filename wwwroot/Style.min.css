@@ -1014,7 +1014,206 @@ header.navbar .title {
 .categories a:nth-child(6), .categories a:nth-child(7), .categories a:nth-child(8) {
     animation-delay: .8s
 }
+.dialog-stock-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+    z-index: 100050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .38s cubic-bezier(.4, 0, .2, 1), background .38s cubic-bezier(.4, 0, .2, 1)
+}
 
+    .dialog-stock-overlay.show {
+        opacity: 1;
+        pointer-events: all;
+        background: rgba(0, 0, 0, .5);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px)
+    }
+
+    .dialog-stock-overlay.closing {
+        opacity: 0;
+        background: rgba(0, 0, 0, 0);
+        backdrop-filter: blur(0px);
+        pointer-events: none
+    }
+
+.dialog-stock-box {
+    background: var(--color-fondo-principal);
+    border-radius: 20px;
+    padding: 2rem 1.8rem;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 20px 55px rgba(0, 0, 0, .28);
+    border: 1px solid var(--color-gris-input);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.1rem;
+    transform: translateY(24px) scale(.95);
+    opacity: 0;
+    transition: transform .42s cubic-bezier(.22, 1, .36, 1), opacity .32s cubic-bezier(.4, 0, .2, 1)
+}
+
+.dialog-stock-overlay.show .dialog-stock-box {
+    transform: translateY(0) scale(1);
+    opacity: 1
+}
+
+.dialog-stock-overlay.closing .dialog-stock-box {
+    transform: translateY(16px) scale(.97);
+    opacity: 0;
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1), opacity .22s cubic-bezier(.4, 0, .2, 1)
+}
+
+.dialog-stock-icono {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem
+}
+
+    .dialog-stock-icono.en-stock {
+        background: rgba(90, 160, 105, .14);
+        color: #4c8a5a
+    }
+
+    .dialog-stock-icono.sin-stock {
+        background: rgba(200, 90, 90, .14);
+        color: #b6483f
+    }
+
+.dialog-stock-titulo {
+    font-family: Cinzel, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-texto-marron);
+    text-align: center;
+    line-height: 1.3
+}
+
+.dialog-stock-label {
+    font-size: .78rem;
+    color: var(--color-marca-oro);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    text-align: center
+}
+
+.dialog-stock-detalle {
+    font-size: .82rem;
+    color: var(--color-texto-marron);
+    text-align: center;
+    line-height: 1.4
+}
+
+.dialog-stock-controles {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    background: #fff;
+    border-radius: 50px;
+    padding: .35rem .8rem;
+    border: 1px solid var(--color-gris-input)
+}
+
+.dialog-stock-btn {
+    background: 0 0;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-texto-marron);
+    transition: background .2s, transform .15s
+}
+
+    .dialog-stock-btn:hover {
+        background: var(--color-gris-input);
+        transform: scale(1.12)
+    }
+
+    .dialog-stock-btn:disabled {
+        opacity: .35;
+        cursor: not-allowed
+    }
+
+.dialog-stock-num {
+    font-family: Cinzel, serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-texto-marron);
+    width: 60px;
+    text-align: center;
+    border: none;
+    background: 0 0;
+    outline: 0;
+    -moz-appearance: textfield
+}
+
+    .dialog-stock-num::-webkit-outer-spin-button,
+    .dialog-stock-num::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0
+    }
+
+.dialog-stock-actions {
+    display: flex;
+    gap: .8rem;
+    width: 100%;
+    justify-content: center
+}
+
+.dialog-btn-cancelar, .dialog-btn-confirmar {
+    font-family: Cinzel, serif;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 20px;
+    padding: .6rem 1.4rem;
+    transition: transform .2s, box-shadow .2s, background .2s
+}
+
+.dialog-btn-cancelar {
+    color: var(--color-marca-oro);
+    background: rgba(17, 17, 17, .92)
+}
+
+    .dialog-btn-cancelar:hover {
+        transform: translateY(-2px)
+    }
+
+.dialog-btn-confirmar {
+    color: #fff;
+    background: linear-gradient(135deg, var(--color-marca-oro), #6e5a3f);
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1.6rem
+}
+
+    .dialog-btn-confirmar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px var(--color-sombra-premium)
+    }
+
+    .dialog-btn-confirmar.dialog-btn-peligro {
+        background: linear-gradient(135deg, #c0564c, #8e3a32)
+    }
 .grid-productos {
     display: grid;
     grid-template-columns: repeat(4,1fr);

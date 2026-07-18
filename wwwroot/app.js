@@ -815,29 +815,110 @@ function crearTarjetaDOM(prod, index = 0) {
     return card;
 }
 function abrirDialogoStock(prod) {
+    // Remover overlay previo si existe (por si quedó uno abierto)
+    document.getElementById("dialogStockOverlay")?.remove();
+
     const enStock = prod.Stock > 0;
     const stockActual = prod.Stock ?? 0;
 
-    const mensaje = enStock
-        ? `¿Deseás marcar "${prod.Nombre}" como SIN STOCK? (stock actual: ${stockActual})`
-        : `¿Deseás marcar "${prod.Nombre}" como DISPONIBLE?`;
-
-    if (!confirm(mensaje)) return;
+    const overlay = document.createElement("div");
+    overlay.id = "dialogStockOverlay";
+    overlay.className = "dialog-stock-overlay";
 
     if (enStock) {
-        // Pasa a sin stock: descuenta todo a 0
-        actualizarStockProducto(prod, 0);
+        // Caso 1: está en stock -> confirmar que se quiere pasar a "sin stock"
+        overlay.innerHTML = `
+            <div class="dialog-stock-box">
+                <div class="dialog-stock-icono sin-stock"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="dialog-stock-titulo">${safeText(prod.Nombre)}</div>
+                <div class="dialog-stock-label">¿Marcar como sin stock?</div>
+                <div class="dialog-stock-detalle">
+                    Stock actual: <strong>${stockActual}</strong> unidad${stockActual !== 1 ? "es" : ""}.<br>
+                    Se va a poner en 0.
+                </div>
+                <div class="dialog-stock-actions">
+                    <button type="button" class="dialog-btn-cancelar" id="dsCancelar">Cancelar</button>
+                    <button type="button" class="dialog-btn-confirmar dialog-btn-peligro" id="dsConfirmar">
+                        <i class="fa-solid fa-ban"></i> Sin stock
+                    </button>
+                </div>
+            </div>
+        `;
     } else {
-        // Pasa a disponible: pide cuánto stock cargar
-        const valor = prompt("¿Cuánto stock querés cargar?", "1");
-        if (valor === null) return; // canceló
+        // Caso 2: está sin stock -> pedir cuánto stock cargar (con contador +/-)
+        overlay.innerHTML = `
+            <div class="dialog-stock-box">
+                <div class="dialog-stock-icono en-stock"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="dialog-stock-titulo">${safeText(prod.Nombre)}</div>
+                <div class="dialog-stock-label">¿Cuánto stock querés cargar?</div>
+                <div class="dialog-stock-controles">
+                    <button type="button" class="dialog-stock-btn" id="dsMenos">−</button>
+                    <input type="number" class="dialog-stock-num" id="dsNum" value="1" min="0" inputmode="numeric">
+                    <button type="button" class="dialog-stock-btn" id="dsMas">+</button>
+                </div>
+                <div class="dialog-stock-actions">
+                    <button type="button" class="dialog-btn-cancelar" id="dsCancelar">Cancelar</button>
+                    <button type="button" class="dialog-btn-confirmar" id="dsConfirmar">
+                        <i class="fa-solid fa-check"></i> Marcar disponible
+                    </button>
+                </div>
+            </div>
+        `;
+    }
 
-        const nuevoStock = parseInt(valor, 10);
-        if (isNaN(nuevoStock) || nuevoStock < 0) {
-            mostrarToast("Ingresá un número válido de stock", "error");
-            return;
-        }
-        actualizarStockProducto(prod, nuevoStock);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add("show"));
+
+    const cerrarDialog = () => {
+        overlay.classList.remove("show");
+        overlay.classList.add("closing");
+        setTimeout(() => overlay.remove(), 380);
+        document.removeEventListener("keydown", handleEsc);
+    };
+
+    overlay.querySelector("#dsCancelar")?.addEventListener("click", cerrarDialog);
+    overlay.addEventListener("click", e => { if (e.target === overlay) cerrarDialog(); });
+
+    const handleEsc = e => { if (e.key === "Escape") cerrarDialog(); };
+    document.addEventListener("keydown", handleEsc);
+
+    if (enStock) {
+        overlay.querySelector("#dsConfirmar")?.addEventListener("click", () => {
+            cerrarDialog();
+            actualizarStockProducto(prod, 0);
+        });
+    } else {
+        const numEl = overlay.querySelector("#dsNum");
+        const btnMenos = overlay.querySelector("#dsMenos");
+        const btnMas = overlay.querySelector("#dsMas");
+
+        const clamp = () => {
+            let v = parseInt(numEl.value, 10);
+            if (isNaN(v) || v < 0) v = 0;
+            numEl.value = v;
+            btnMenos.disabled = v <= 0;
+        };
+        clamp();
+
+        btnMenos.addEventListener("click", () => {
+            numEl.value = Math.max(0, (parseInt(numEl.value, 10) || 0) - 1);
+            clamp();
+        });
+        btnMas.addEventListener("click", () => {
+            numEl.value = (parseInt(numEl.value, 10) || 0) + 1;
+            clamp();
+        });
+        numEl.addEventListener("input", clamp);
+
+        overlay.querySelector("#dsConfirmar")?.addEventListener("click", () => {
+            const nuevoStock = parseInt(numEl.value, 10);
+            if (isNaN(nuevoStock) || nuevoStock < 0) {
+                mostrarToast("Ingresá un número válido de stock", "error");
+                return;
+            }
+            cerrarDialog();
+            actualizarStockProducto(prod, nuevoStock);
+        });
     }
 }
 

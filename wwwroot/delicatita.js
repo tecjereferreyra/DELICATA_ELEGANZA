@@ -254,6 +254,187 @@
         return null;
     }
 
+    /* ---------- Recomendaciones específicas por tipo de producto puntual ----------
+     * Más específicas que CUIDADOS (que da un texto genérico compartido por toda la
+     * categoría). Estas se revisan primero: si "aros" tiene su propia entrada acá, se
+     * usa esta en vez del texto genérico de "Bijouterie y accesorios".
+     */
+    const TIPOS_ESPECIFICOS = [
+        // --- Bijouterie / Fiesta ---
+        {
+            claves: ["aro", "aros"],
+            etiqueta: "Aros",
+            texto:
+                "Quitátelos antes de dormir, bañarte o nadar, para que no pierdan el brillo.\n" +
+                "Evitá el contacto con perfumes, cremas o alcohol en gel.\n" +
+                "Guardalos en un lugar seco, separados entre sí para que no se rayen."
+        },
+        {
+            claves: ["cadena", "cadenas"],
+            etiqueta: "Cadenas",
+            texto:
+                "Guardala extendida o en su bolsita, para que no se enrede ni se tuerza.\n" +
+                "Evitá tironear del broche; abrilo y cerralo con cuidado.\n" +
+                "Limpiala con un paño suave, sin productos abrasivos."
+        },
+        {
+            claves: ["dije", "dijes"],
+            etiqueta: "Dijes",
+            texto:
+                "Revisá de tanto en tanto que el enganche esté firme, para que no se pierda.\n" +
+                "Evitá el contacto directo con agua, perfumes y cremas.\n" +
+                "Guardalo en un compartimento aparte para que no se raye con otras piezas."
+        },
+        {
+            claves: ["collar", "collares"],
+            etiqueta: "Collares",
+            texto:
+                "Guardalo extendido o colgado, no enroscado, para que la cadena no se enrede.\n" +
+                "Es la última prenda que te ponés y la primera que te sacás, para minimizar el contacto con perfumes y cosméticos.\n" +
+                "Limpialo con un paño seco después de cada uso."
+        },
+        {
+            claves: ["pulsera", "pulseras"],
+            etiqueta: "Pulseras",
+            texto:
+                "Sacátela antes de lavarte las manos, cocinar o hacer actividad física.\n" +
+                "Evitá golpes contra superficies duras que puedan deformar eslabones o dijes.\n" +
+                "Guardala por separado para que no se enganche con otras piezas."
+        },
+        {
+            claves: ["chal", "chales"],
+            etiqueta: "Chales",
+            texto:
+                "Doblalo con cuidado, sin colgarlo, para que no se deforme ni se estire.\n" +
+                "Preferí el lavado a mano o en seco, según la etiqueta.\n" +
+                "Evitá el contacto prolongado con perfumes y desodorantes."
+        },
+        {
+            claves: ["sobres de fiesta", "sobre de fiesta", "cartera sobre", "sobres"],
+            etiqueta: "Sobres",
+            texto:
+                "Guardalo relleno con papel de seda para que mantenga su forma plana.\n" +
+                "Evitá sobrecargarlo; suelen tener menos refuerzo que una cartera grande.\n" +
+                "Limpiá el exterior con un paño suave, según el material."
+        },
+        // --- Marroquinería ---
+        {
+            claves: ["bandolera", "bandoleras"],
+            etiqueta: "Bandoleras",
+            texto:
+                "Ajustá la correa a una altura cómoda para no forzar las costuras.\n" +
+                "Evitá sobrecargarla más allá de su capacidad; hidratá el cuero de tanto en tanto.\n" +
+                "Guardala rellena con papel o tela para que mantenga su forma."
+        },
+        {
+            claves: ["billetera", "billeteras"],
+            etiqueta: "Billeteras",
+            texto:
+                "No la sobrecargues con monedas, tarjetas o papeles de más; deforma las costuras.\n" +
+                "Limpiala con un paño ligeramente húmedo y dejala secar a la sombra.\n" +
+                "Guardala en un lugar seco, lejos de fuentes de calor directo."
+        },
+        {
+            claves: ["bolso", "bolsos"],
+            etiqueta: "Bolsos",
+            texto:
+                "Vaciá los bolsillos internos cuando no lo uses, para que no pierda su forma.\n" +
+                "Evitá apoyarlo en superficies mojadas o sucias.\n" +
+                "Hidratá el cuero periódicamente si el material lo requiere."
+        },
+        {
+            claves: ["cartera", "carteras"],
+            etiqueta: "Carteras",
+            texto:
+                "Guardala rellena con papel de seda o tela para que conserve su forma.\n" +
+                "Evitá sobrecargarla; el peso extra tensiona asas y costuras.\n" +
+                "Limpiala con un paño suave humedecido y dejala secar a la sombra, lejos del sol directo."
+        },
+        {
+            claves: ["mochila", "mochilas"],
+            etiqueta: "Mochilas",
+            texto:
+                "Distribuí el peso entre los compartimentos para no forzar costuras ni correas.\n" +
+                "Aireala después de cada uso, sobre todo si estuvo en contacto con humedad.\n" +
+                "Limpiá correas y base con un paño húmedo de tanto en tanto."
+        },
+        {
+            claves: ["morral", "morrales"],
+            etiqueta: "Morrales",
+            texto:
+                "Ajustá bien las correas para no forzar las costuras al cargarlo.\n" +
+                "Evitá superar el peso que indica el fabricante.\n" +
+                "Guardalo vacío o semi-relleno, en un lugar ventilado."
+        },
+        {
+            claves: ["mini bag", "mini bags", "minibag", "minibags"],
+            etiqueta: "Mini Bags",
+            texto:
+                "Al ser más chica, evitá sobrecargarla: guardá solo lo esencial.\n" +
+                "Limpiala con un paño suave, prestando atención a herrajes y cierres.\n" +
+                "Guardala rellena con papel para que no pierda su forma."
+        },
+        {
+            claves: ["portanotebook", "portanotebooks", "porta notebook", "porta notebooks"],
+            etiqueta: "Portanotebooks",
+            texto:
+                "Revisá que el compartimento acolchado esté seco antes de guardar el equipo.\n" +
+                "Evitá guardar objetos punzantes junto al notebook, para no dañar el forro.\n" +
+                "Limpiá el exterior con un paño húmedo, sin mojar el interior."
+        },
+        {
+            claves: ["riñonera", "riñoneras", "rinonera", "rinoneras"],
+            etiqueta: "Riñoneras",
+            texto:
+                "Ajustá bien la correa para que no cargue todo el peso de un solo lado.\n" +
+                "Evitá sobrecargarla más allá de lo que soporta cómodamente.\n" +
+                "Limpiala con un paño húmedo y dejala secar antes de guardarla."
+        },
+        // --- Artículos de viaje ---
+        {
+            claves: ["valija", "valijas"],
+            etiqueta: "Valijas",
+            texto:
+                "Revisá ruedas, manijas y cierres antes de cada viaje.\n" +
+                "No superes el peso máximo indicado, para no forzar costuras ni ruedas.\n" +
+                "Guardala en un lugar ventilado, no dentro de bolsas cerradas herméticamente."
+        },
+        {
+            claves: ["complementos de viaje", "complemento de viaje"],
+            etiqueta: "Complementos de viaje",
+            texto:
+                "Revisá pilas, baterías o mecanismos antes de cada viaje, según el producto.\n" +
+                "Guardá cada accesorio en su estuche o bolsita original.\n" +
+                "Limpiá y dejá secar bien antes de guardarlos, para evitar humedad y olores."
+        },
+        // --- Pañolería (chalinas: invierno o verano) ---
+        {
+            claves: ["invierno"],
+            etiqueta: "Chalinas de invierno",
+            texto:
+                "Preferí el lavado a mano con agua fría, sobre todo si es lana o tejido grueso.\n" +
+                "No retuerzas la prenda al escurrir; presioná suavemente entre toallas.\n" +
+                "Guardala doblada, no colgada, para que no se estire ni pierda la forma."
+        },
+        {
+            claves: ["verano"],
+            etiqueta: "Chalinas de verano",
+            texto:
+                "Al ser telas livianas, evitá el planchado directo; usá temperatura baja o un paño intermedio.\n" +
+                "Lavala a mano y dejala secar a la sombra, para que no pierda el color.\n" +
+                "Guardala doblada en un lugar seco, lejos de la luz solar directa."
+        }
+    ];
+
+    function respuestaTipoEspecifico(texto) {
+        for (let i = 0; i < TIPOS_ESPECIFICOS.length; i++) {
+            const s = TIPOS_ESPECIFICOS[i];
+            const coincide = s.claves.some(function (c) { return texto.indexOf(normalizarTexto(c)) !== -1; });
+            if (coincide) return s.etiqueta + ":\n" + s.texto;
+        }
+        return null;
+    }
+
     function menuComplementos() {
         return {
             texto: "Dentro de Complementos tenemos varios tipos de productos. ¿Sobre cuál te gustaría conocer las recomendaciones de cuidado?",
@@ -319,6 +500,13 @@
 
     function respuestaCuidadosCategoria(categoria) {
         const norm = normalizarTexto(categoria);
+
+        // 1) ¿Hay una recomendación específica para este tipo puntual? (aros, carteras, valijas, etc.)
+        //    Se chequea primero porque es más precisa que el texto genérico de categoría.
+        const especifico = respuestaTipoEspecifico(norm) || respuestaComplementoSubtipo(norm);
+        if (especifico) return { texto: especifico };
+
+        // 2) "Complementos" como categoría genérica (sin tipo puntual reconocido) -> menú de subtipos
         if (norm.indexOf("complemento") !== -1) return menuComplementos();
 
         const grupo = CUIDADOS.find(function (g) {
@@ -721,11 +909,20 @@
                 return { texto: subtipo, chips: "principal" };
             }
 
+            // ¿Es un tipo de producto con recomendación específica? (aros, carteras, valijas, etc.)
+            const especifico = respuestaTipoEspecifico(t);
+            if (especifico) {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+                return { texto: especifico, chips: "principal" };
+            }
+
             // ¿Nombró una categoría exacta del catálogo? (ej: "marroquineria") -> preguntamos el tipo
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) return iniciarFlujoTipo(categoriaExacta);
 
-            // ¿Nombró un tipo de producto puntual conocido? (ej: "aros", "carteras") -> respuesta directa
+            // ¿Nombró un tipo de producto puntual conocido, sin recomendación específica propia?
+            // -> usamos el texto genérico de su categoría (grupo de CUIDADOS)
             const grupo = detectarGrupoCuidadoPorClave(t);
             if (grupo) {
                 contextoPendiente = null;
@@ -866,17 +1063,22 @@
             const subtipo = respuestaComplementoSubtipo(t);
             if (subtipo) return { texto: subtipo, chips: "principal" };
 
-            // 2) ¿Nombró una categoría exacta del catálogo? (ej: "recomendaciones de marroquineria")
+            // 2) ¿Nombró directamente un tipo de producto con recomendación específica propia?
+            //    (ej: "dame recomendaciones de aros") -> respuesta directa y puntual, sin pasar
+            //    por el menú de categorías.
+            const especifico = respuestaTipoEspecifico(t);
+            if (especifico) return { texto: especifico, chips: "principal" };
+
+            // 3) ¿Nombró una categoría exacta del catálogo? (ej: "recomendaciones de marroquineria")
             //    -> preguntamos sobre qué tipo de producto dentro de esa categoría, mostrando sus chips.
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) return iniciarFlujoTipo(categoriaExacta);
 
-            // 3) ¿Nombró directamente un tipo de producto puntual? (ej: "dame recomendaciones de aros")
-            //    -> respuesta directa, sin pasar por el menú de categorías.
+            // 4) ¿Nombró un tipo puntual sin recomendación específica propia? -> texto genérico de su categoría
             const grupo = detectarGrupoCuidadoPorClave(t);
             if (grupo) return { texto: grupo.titulo + ":\n" + grupo.texto, chips: "principal" };
 
-            // 4) Genérico: preguntamos la categoría y mostramos los chips de categorías
+            // 5) Genérico: preguntamos la categoría y mostramos los chips de categorías
             return iniciarFlujoCategorias();
         }
 
@@ -981,22 +1183,38 @@
         }, 450);
     }
 
-    /* ---------- Bloqueo de scroll del body (reutiliza lockScroll/unlockScroll de app.js,
-       que ya usan el resto de los modales del sitio; si no existieran, hay un fallback simple) ---------- */
+    /* ---------- Bloqueo de scroll del body, propio de Delicatita ----------
+     * Ojo: NO reutilizamos window.lockScroll()/unlockScroll() de app.js, porque esas
+     * funciones bloquean el scroll de forma global (rueda del mouse, touch Y TECLADO:
+     * barra espaciadora, flechas, Page Up/Down), sin hacer excepción para cuando el
+     * foco está en un input de texto. Eso es lo que hacía que la barra espaciadora no
+     * funcionara al escribir en el chat, y también bloqueaba el scroll interno del panel.
+     * Esta versión usa "position: fixed" en el body, que inmoviliza el fondo sin tocar
+     * el teclado en absoluto, y no afecta el scroll de ".delicatita-mensajes" porque esa
+     * lista tiene su propio overflow-y:auto, independiente del scroll del body.
+     */
+    let _delicatitaScrollY = 0;
+
     function bloquearScrollFondo() {
-        if (typeof window.lockScroll === "function") {
-            window.lockScroll();
-        } else {
-            document.body.style.overflow = "hidden";
-        }
+        if (document.documentElement.classList.contains("delicatita-scroll-lock")) return;
+        _delicatitaScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        document.documentElement.classList.add("delicatita-scroll-lock");
+        document.body.style.position = "fixed";
+        document.body.style.top = (-_delicatitaScrollY) + "px";
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
     }
 
     function desbloquearScrollFondo() {
-        if (typeof window.unlockScroll === "function") {
-            window.unlockScroll();
-        } else {
-            document.body.style.overflow = "";
-        }
+        if (!document.documentElement.classList.contains("delicatita-scroll-lock")) return;
+        document.documentElement.classList.remove("delicatita-scroll-lock");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        window.scrollTo(0, _delicatitaScrollY);
     }
 
     /* ---------- Apertura / cierre del panel ---------- */
