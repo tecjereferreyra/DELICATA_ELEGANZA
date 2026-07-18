@@ -313,6 +313,18 @@
             transform: scale(1.08)
         }
 
+.delicatita-botones-inline {
+    align-self: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    max-width: 100%
+}
+
+.delicatita-chip-inline {
+    margin: 0
+}
+
 .delicatita-typing {
     align-self: flex-start;
     display: flex;
@@ -354,15 +366,73 @@
 @media (max-width:480px) {
     .delicatita-panel {
         right: .6rem;
-        left: .6rem;
-        width: auto;
+        left: auto;
+        width: min(280px,calc(100vw - 1.2rem));
         bottom: calc(5.6rem + 82px + 64px);
-        max-height: min(70dvh,560px)
+        max-height: min(64dvh,480px)
+    }
+
+    .delicatita-mensajes {
+        padding: .8rem;
+        font-size: .82rem
+    }
+
+    .delicatita-msg, .delicatita-msg-producto {
+        max-width: 88%
+    }
+}
+
+@media (max-width:340px) {
+    .delicatita-panel {
+        width: calc(100vw - 1.2rem)
+    }
+}
+
+/* ---------- Tooltips de los botones flotantes (Novedades, Carrito, Asistente) ---------- */
+.tooltip-boton {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 12px);
+    transform: translateY(-50%) translateX(6px);
+    white-space: nowrap;
+    font-family: Cinzel,serif;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    background: rgba(17,17,17,.92);
+    color: var(--color-marca-oro);
+    padding: .45rem .9rem;
+    border-radius: 20px;
+    box-shadow: 0 6px 20px var(--color-sombra-premium);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s cubic-bezier(.4,0,.2,1),transform .3s cubic-bezier(.22,1,.36,1);
+    z-index: 901
+}
+
+    .tooltip-boton.mostrar {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0)
+    }
+
+@media (hover:hover) and (pointer:fine) {
+    .btn-nuevos-flotante:hover .tooltip-boton,
+    .btn-carrito-flotante:hover .tooltip-boton,
+    .btn-delicatita-flotante:hover .tooltip-boton {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0)
+    }
+}
+
+@media (max-width:480px) {
+    .tooltip-boton {
+        font-size: .68rem;
+        padding: .4rem .8rem
     }
 }
 
 @media (prefers-reduced-motion:reduce) {
-    .btn-delicatita-flotante, .delicatita-panel, .delicatita-typing span {
+    .btn-delicatita-flotante, .delicatita-panel, .delicatita-typing span, .tooltip-boton {
         animation: none !important;
         transition: none !important
     }

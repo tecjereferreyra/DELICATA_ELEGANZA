@@ -1,5 +1,4 @@
-﻿
-(function () {
+﻿(function () {
     "use strict";
 
     /* ---------- Datos fijos del negocio ---------- */
@@ -129,15 +128,117 @@
         }
     ];
 
-    function respuestaCuidados(texto) {
+    /* ---------- Recomendaciones específicas para subtipos de Complementos ---------- */
+    const COMPLEMENTOS_SUBTIPOS = [
+        {
+            claves: ["caja bijou", "cajas bijou", "caja de bijou", "cajas de bijou", "joyero", "joyeros"],
+            etiqueta: "Cajas bijou",
+            texto:
+                "Guardá cada pieza en su compartimento para que no se rayen o enreden entre sí.\n" +
+                "Mantené la caja cerrada cuando no la uses, lejos de la humedad y del sol directo.\n" +
+                "Limpiá el interior de tanto en tanto con un paño seco."
+        },
+        {
+            claves: ["abanico", "abanicos"],
+            etiqueta: "Abanicos",
+            texto:
+                "Abrilo y cerralo con cuidado, sin forzar las varillas.\n" +
+                "Evitá mojarlo o exponerlo a humedad prolongada.\n" +
+                "Guardalo extendido o en su funda, en un lugar plano y seco."
+        },
+        {
+            claves: ["cinto", "cintos", "cinturon", "cinturones"],
+            etiqueta: "Cintos",
+            texto:
+                "Enrollalo o colgalo sin doblarlo siempre en el mismo punto, para no marcar el material.\n" +
+                "Limpialo con un paño húmedo y dejalo secar antes de guardarlo.\n" +
+                "Evitá el contacto con perfumes y productos químicos."
+        },
+        {
+            claves: ["paraguas"],
+            etiqueta: "Paraguas",
+            texto:
+                "Dejalo secar abierto antes de guardarlo, para evitar humedad y malos olores.\n" +
+                "No lo fuerces al abrir o cerrar con viento fuerte.\n" +
+                "Revisá de tanto en tanto el mecanismo y las varillas."
+        }
+    ];
+
+    function respuestaComplementoSubtipo(texto) {
+        for (let i = 0; i < COMPLEMENTOS_SUBTIPOS.length; i++) {
+            const s = COMPLEMENTOS_SUBTIPOS[i];
+            const coincide = s.claves.some(function (c) { return texto.indexOf(normalizarTexto(c)) !== -1; });
+            if (coincide) return s.etiqueta + ":\n" + s.texto;
+        }
+        return null;
+    }
+
+    function menuComplementos() {
+        return {
+            texto: "Dentro de Complementos tenemos varios tipos de productos. ¿Sobre cuál te gustaría conocer las recomendaciones de cuidado?",
+            botones: COMPLEMENTOS_SUBTIPOS.map(function (s) {
+                return { etiqueta: s.etiqueta, mensaje: "recomendaciones de " + s.etiqueta };
+            })
+        };
+    }
+
+    /* ---------- Detección de categorías del catálogo dentro de un texto ---------- */
+    function detectarCategoriaExacta(texto) {
+        const categorias = getCategorias();
+        for (let i = 0; i < categorias.length; i++) {
+            if (texto.indexOf(normalizarTexto(categorias[i])) !== -1) return categorias[i];
+        }
+        return null;
+    }
+
+    function detectarCategoriaOGrupo(texto) {
+        const exacta = detectarCategoriaExacta(texto);
+        if (exacta) return exacta;
         for (let i = 0; i < CUIDADOS.length; i++) {
             const grupo = CUIDADOS[i];
             const coincide = grupo.claves.some(function (c) { return texto.indexOf(normalizarTexto(c)) !== -1; });
-            if (coincide) return grupo.titulo + ":\n" + grupo.texto;
+            if (coincide) return grupo.titulo;
         }
-        const indice = CUIDADOS.map(function (g) { return "• " + g.titulo; }).join("\n");
-        return "Tengo recomendaciones de cuidado para estas categorías:\n" + indice +
-            "\n\nContame sobre cuál te gustaría conocer las recomendaciones.";
+        return null;
+    }
+
+    function productosPorCategoria(categoria) {
+        const norm = normalizarTexto(categoria);
+        return getCatalogo().filter(function (p) { return p.Categoria && normalizarTexto(p.Categoria) === norm; });
+    }
+
+    function respuestaCuidadosCategoria(categoria) {
+        const norm = normalizarTexto(categoria);
+        if (norm.indexOf("complemento") !== -1) return menuComplementos();
+
+        const grupo = CUIDADOS.find(function (g) {
+            return g.claves.some(function (c) {
+                const cNorm = normalizarTexto(c);
+                return norm.indexOf(cNorm) !== -1 || cNorm.indexOf(norm) !== -1;
+            });
+        });
+        if (grupo) return { texto: grupo.titulo + ":\n" + grupo.texto };
+
+        return { texto: "Todavía no tengo recomendaciones específicas para " + categoria + ", pero puedo ayudarte con otra consulta." };
+    }
+
+    function menuCategorias() {
+        const categorias = getCategorias();
+        if (!categorias.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
+        return {
+            texto: "Estas son todas nuestras categorías. Elegí una para ver las recomendaciones de cuidado:",
+            botones: categorias.map(function (c) { return { etiqueta: c, mensaje: "recomendaciones de " + c }; })
+        };
+    }
+
+    function preguntaCategoria(categoria) {
+        return {
+            texto: "¿Querés recomendaciones de cuidado sobre " + categoria + ", o preferís que te muestre todos los productos de esa categoría?",
+            botones: [
+                { etiqueta: "Recomendaciones", mensaje: "recomendaciones de " + categoria },
+                { etiqueta: "Ver todos los productos", mensaje: "mostrame todos los productos de " + categoria }
+            ]
+        };
     }
 
     /* ---------- Búsqueda de productos en el catálogo ---------- */
@@ -177,7 +278,8 @@
         botonEl.setAttribute("aria-label", "Hablar con Delicatita, asistente virtual");
         botonEl.innerHTML =
             '<i class="fa-solid fa-comment-dots" aria-hidden="true"></i>' +
-            '<span class="punto-nuevo" id="delicatitaPuntoNuevo"></span>';
+            '<span class="punto-nuevo" id="delicatitaPuntoNuevo"></span>' +
+            '<span class="tooltip-boton">Asistente virtual</span>';
         document.body.appendChild(botonEl);
 
         // Panel de chat
@@ -231,6 +333,21 @@
         a.rel = "noopener noreferrer";
         a.innerHTML = '<i class="' + icono + '" aria-hidden="true"></i> ' + etiqueta;
         mensajesEl.appendChild(a);
+        scrollAbajo();
+    }
+
+    function agregarBotones(botones) {
+        const wrap = document.createElement("div");
+        wrap.className = "delicatita-botones-inline";
+        botones.forEach(function (b) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "delicatita-chip delicatita-chip-inline";
+            btn.textContent = b.etiqueta;
+            btn.addEventListener("click", function () { procesarConsulta(b.mensaje); });
+            wrap.appendChild(btn);
+        });
+        mensajesEl.appendChild(wrap);
         scrollAbajo();
     }
 
@@ -317,6 +434,18 @@
             return { texto: "Gracias por escribirnos. Que tengas un excelente día." };
         }
 
+        // Saludo (solo si el mensaje es corto, para no tapar preguntas más largas)
+        if (nPalabras <= 5 && contieneAlguna(t, [
+            "hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches",
+            "como estas", "como andas", "como te va", "que tal", "todo bien"
+        ])) {
+            return {
+                texto: "¡Hola! Todo bien por acá, gracias. Soy Delicatita, el asistente virtual de Delicata Eleganza. " +
+                    "Puedo ayudarte con horarios, ubicación, marcas, materiales, recomendaciones de cuidado " +
+                    "y datos sobre nuestros productos. ¿En qué puedo ayudarte?"
+            };
+        }
+
         // Horarios
         if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren"])) {
             return { texto: HORARIOS_TEXTO };
@@ -364,9 +493,34 @@
             return { texto: "Nuestras categorías de productos son:\n" + categorias.join(", ") + "." };
         }
 
+        // Mostrar todos los productos de una categoría puntual
+        if (contieneAlguna(t, ["todos los productos", "mostrame todo", "muestrame todo", "ver todos los productos", "todo el catalogo de"])) {
+            const categoriaExacta = detectarCategoriaExacta(t);
+            if (categoriaExacta) {
+                const productos = productosPorCategoria(categoriaExacta);
+                if (!productos.length) {
+                    return { texto: "Por el momento no tengo productos cargados en la categoría " + categoriaExacta + "." };
+                }
+                return {
+                    productos: productos.slice(0, 6),
+                    textoProductos: "Estos son los productos que tenemos en " + categoriaExacta + ":"
+                };
+            }
+            return { texto: "¿De qué categoría te gustaría ver todos los productos? Contame el nombre y te los muestro." };
+        }
+
         // Recomendaciones / cuidados de uso
         if (contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"])) {
-            return { texto: respuestaCuidados(t) };
+            // 1) ¿Es un subtipo puntual de Complementos? (cajas bijou, abanicos, cintos, paraguas)
+            const subtipo = respuestaComplementoSubtipo(t);
+            if (subtipo) return { texto: subtipo };
+
+            // 2) ¿Menciona una categoría o grupo conocido?
+            const categoriaEnTexto = detectarCategoriaOGrupo(t);
+            if (categoriaEnTexto) return respuestaCuidadosCategoria(categoriaEnTexto);
+
+            // 3) Genérico: mostrar todas las categorías como accesos directos
+            return menuCategorias();
         }
 
         // Ayuda / qué podés hacer
@@ -376,20 +530,20 @@
                     "• Horarios y días de atención\n" +
                     "• Ubicación del local\n" +
                     "• Marcas y materiales que trabajamos\n" +
-                    "• Recomendaciones de cuidado por tipo de producto\n" +
+                    "• Recomendaciones de cuidado por categoría o tipo de producto\n" +
+                    "• Mostrarte todos los productos de una categoría\n" +
                     "• Datos de un producto puntual del catálogo\n" +
                     "• Nuestras redes sociales\n\n" +
                     "También podés tocar una de las sugerencias de abajo."
             };
         }
 
-        // Saludo (solo si el mensaje es corto, para no tapar preguntas más largas)
-        if (nPalabras <= 3 && contieneAlguna(t, ["hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches"])) {
-            return {
-                texto: "¡Hola! Soy Delicatita, el asistente virtual de Delicata Eleganza. " +
-                    "Puedo ayudarte con horarios, ubicación, marcas, materiales, recomendaciones de cuidado " +
-                    "y datos sobre nuestros productos. ¿En qué puedo ayudarte?"
-            };
+        // Mención suelta de una categoría del catálogo (ej: "bijouterie") -> preguntar qué desea
+        // Solo si el mensaje es prácticamente la categoría sola, para no interferir con búsquedas
+        // de productos más específicas (ej: "tienen collar dorado").
+        if (nPalabras <= 2) {
+            const categoriaSuelta = detectarCategoriaExacta(t);
+            if (categoriaSuelta) return preguntaCategoria(categoriaSuelta);
         }
 
         // Búsqueda de producto puntual en el catálogo
@@ -421,9 +575,10 @@
 
             if (respuesta.productos) {
                 agregarMensajeTexto(
-                    respuesta.productos.length === 1
+                    respuesta.textoProductos ||
+                    (respuesta.productos.length === 1
                         ? "Encontré este producto en el catálogo:"
-                        : "Encontré estos productos en el catálogo:",
+                        : "Encontré estos productos en el catálogo:"),
                     "bot"
                 );
                 respuesta.productos.forEach(agregarTarjetaProducto);
@@ -437,6 +592,9 @@
             }
             if (respuesta.acciones) {
                 respuesta.acciones.forEach(function (a) { agregarAccion(a.etiqueta, a.icono, a.url); });
+            }
+            if (respuesta.botones) {
+                agregarBotones(respuesta.botones);
             }
         }, 450);
     }
@@ -461,10 +619,52 @@
         panelEl.classList.remove("abierto");
     }
 
+    /* ---------- Tooltips de los botones flotantes ---------- */
+    function esTactil() {
+        try { return window.matchMedia("(hover: none)").matches; } catch (e) { return false; }
+    }
+
+    function mostrarTooltipTemporal(el, duracion) {
+        if (!el) return;
+        const tip = el.querySelector(".tooltip-boton");
+        if (!tip) return;
+        tip.classList.add("mostrar");
+        setTimeout(function () { tip.classList.remove("mostrar"); }, duracion || 1800);
+    }
+
+    // En desktop, el tooltip aparece solo con :hover (CSS). En táctil no hay hover,
+    // así que la primera vez que se carga la página lo mostramos solo un instante,
+    // como un toast, para enseñar qué es cada botón sin que el usuario tenga que tocarlo.
+    function iniciarOnboardingTooltips() {
+        if (!esTactil()) return;
+
+        const TOOLTIP_KEY = "delicatitaTooltipsVistos";
+        let vistos = false;
+        try { vistos = localStorage.getItem(TOOLTIP_KEY) === "1"; } catch (e) { /* no disponible */ }
+        if (vistos) return;
+
+        setTimeout(function () { mostrarTooltipTemporal(document.getElementById("toggleNuevos")); }, 700);
+        setTimeout(function () { mostrarTooltipTemporal(document.querySelector(".btn-carrito-flotante")); }, 2600);
+
+        try { localStorage.setItem(TOOLTIP_KEY, "1"); } catch (e) { /* no disponible */ }
+    }
+
     /* ---------- Revelar el botón al usar "Ver novedades" ---------- */
     function revelarBoton() {
         botonEl.classList.add("visible");
         try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) { /* almacenamiento no disponible */ }
+
+        // El botón del asistente recién existe visualmente acá, así que su tooltip
+        // de bienvenida se dispara en este momento (una sola vez), y no antes.
+        if (esTactil()) {
+            const TOOLTIP_ASISTENTE_KEY = "delicatitaTooltipAsistenteVisto";
+            let visto = false;
+            try { visto = localStorage.getItem(TOOLTIP_ASISTENTE_KEY) === "1"; } catch (e) { /* no disponible */ }
+            if (!visto) {
+                setTimeout(function () { mostrarTooltipTemporal(botonEl); }, 700);
+                try { localStorage.setItem(TOOLTIP_ASISTENTE_KEY, "1"); } catch (e) { /* no disponible */ }
+            }
+        }
     }
 
     /* ---------- Inicialización ---------- */
@@ -496,5 +696,8 @@
 
         // Se revela (si todavía no lo estaba) al tocar "Ver novedades"
         document.getElementById("toggleNuevos").addEventListener("click", revelarBoton);
+
+        // Enseña brevemente qué es cada botón flotante en dispositivos táctiles
+        iniciarOnboardingTooltips();
     });
 })();
