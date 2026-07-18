@@ -68,6 +68,31 @@
         return listaUnica("Categoria", ["Sin categoría", "—"]);
     }
 
+    // Tipos de producto (campo "Tipo") que existen dentro de una categoría puntual,
+    // ej: dentro de "Bijouteria" -> ["Aros", "Collares", "Pulseras", ...]
+    function getTiposDeCategoria(categoria) {
+        const norm = normalizarTexto(categoria);
+        const excluidos = ["sin tipo", "—", "-", ""];
+        const set = new Set();
+        getCatalogo().forEach(function (p) {
+            if (p.Categoria && normalizarTexto(p.Categoria) === norm) {
+                const tipo = p.Tipo;
+                if (tipo && excluidos.indexOf(normalizarTexto(tipo)) === -1) set.add(tipo);
+            }
+        });
+        return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
+    }
+
+    // Para "Complementos" usamos la lista curada (COMPLEMENTOS_SUBTIPOS, definida más abajo);
+    // para el resto de las categorías, los tipos reales del catálogo.
+    function getOpcionesDeCategoria(categoria) {
+        const norm = normalizarTexto(categoria);
+        if (norm.indexOf("complemento") !== -1) {
+            return COMPLEMENTOS_SUBTIPOS.map(function (s) { return s.etiqueta; });
+        }
+        return getTiposDeCategoria(categoria);
+    }
+
     /* ---------- Recomendaciones de cuidado (genéricas por categoría) ---------- */
     const CUIDADOS = [
         {
@@ -247,13 +272,13 @@
         return null;
     }
 
-    function detectarCategoriaOGrupo(texto) {
-        const exacta = detectarCategoriaExacta(texto);
-        if (exacta) return exacta;
+    // Busca coincidencia por una palabra clave puntual de tipo de producto (ej: "aro", "cartera"),
+    // a diferencia de detectarCategoriaExacta que busca el nombre de una categoría completa del catálogo.
+    function detectarGrupoCuidadoPorClave(texto) {
         for (let i = 0; i < CUIDADOS.length; i++) {
             const grupo = CUIDADOS[i];
             const coincide = grupo.claves.some(function (c) { return texto.indexOf(normalizarTexto(c)) !== -1; });
-            if (coincide) return grupo.titulo;
+            if (coincide) return grupo;
         }
         return null;
     }
@@ -278,13 +303,49 @@
         return { texto: "Todavía no tengo recomendaciones específicas para " + categoria + ", pero puedo ayudarte con otra consulta." };
     }
 
-    function menuCategorias() {
+    // Paso 1 del flujo de recomendaciones: preguntar la categoría y mostrar sus chips
+    // en el lugar de los chips originales (Horarios, Ubicación, etc.).
+    function iniciarFlujoCategorias(reintentar) {
         const categorias = getCategorias();
         if (!categorias.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
+        contextoPendiente = "categoria";
+        categoriaEnCurso = null;
         return {
-            texto: "Estas son todas nuestras categorías. Elegí una para ver las recomendaciones de cuidado:",
-            botones: categorias.map(function (c) { return { etiqueta: c, mensaje: "recomendaciones de " + c }; })
+            texto: (reintentar ? "No encontré esa categoría. " : "") +
+                "Elegí una categoría (tocando un botón de abajo, o escribiéndola) para ver las recomendaciones de cuidado:",
+            chips: "categorias"
         };
+    }
+
+    // Paso 2: dada una categoría, si tiene tipos de producto puntuales (aros, carteras, etc.)
+    // se pregunta cuál, mostrando esos tipos como chips; si no tiene, se responde directo.
+    function iniciarFlujoTipo(categoria, reintentar) {
+        const opciones = getOpcionesDeCategoria(categoria);
+        if (!opciones || !opciones.length) {
+            const resultado = respuestaCuidadosCategoria(categoria);
+            resultado.chips = "principal";
+            return resultado;
+        }
+        contextoPendiente = "tipo";
+        categoriaEnCurso = categoria;
+        return {
+            texto: (reintentar ? "No encontré ese tipo de producto dentro de " + categoria + ". " : "") +
+                "¿Sobre qué tipo de producto dentro de " + categoria + " te gustaría conocer las recomendaciones de cuidado?",
+            chips: { modo: "tipos", categoria: categoria, opciones: opciones }
+        };
+    }
+
+    // Palabras de otras intenciones claras (horarios, ubicación, etc.) para poder abandonar
+    // el flujo de recomendaciones si el usuario cambia de tema en medio de una pregunta.
+    function esOtraIntencionClara(texto) {
+        return contieneAlguna(texto, [
+            "horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren",
+            "donde", "ubicacion", "direccion", "local", "como llegar", "mapa",
+            "instagram", "facebook", "redes", "whatsapp", "contacto", "mail", "correo",
+            "marca", "marcas", "material", "materiales",
+            "gracias", "chau", "adios", "hasta luego", "nos vemos",
+            "hola", "buenas", "ayuda", "que podes hacer", "que sabes hacer", "menu"
+        ]);
     }
 
     function preguntaCategoria(categoria) {
@@ -363,10 +424,11 @@
     let panelEl, mensajesEl, inputEl, botonEl, chipsEl;
     let chatIniciado = false;
 
-    // Recuerda si el bot acaba de preguntar "¿sobre qué categoría/tipo de producto
-    // querés recomendaciones?", para poder interpretar la respuesta libre siguiente
-    // (ej: "aros", "bombas de vacío eléctrica") sin que el usuario tenga que tocar un botón.
+    // Recuerda en qué paso del flujo de recomendaciones estamos ("categoria" | "tipo" | null),
+    // para poder interpretar la respuesta libre siguiente (ej: "aros", "marroquineria")
+    // sin que el usuario tenga que tocar un botón, y para saber qué chips mostrar.
     let contextoPendiente = null;
+    let categoriaEnCurso = null;
 
     function crearElementos() {
         // Botón flotante
@@ -402,7 +464,7 @@
             '<div class="delicatita-input-row">' +
             '  <input type="text" id="delicatitaInput" placeholder="Escribí tu consulta..." autocomplete="off">' +
             '  <button type="button" id="delicatitaEnviar" aria-label="Enviar">' +
-            '    <i class="fa-solid fa-paper-plane"></i>' +
+            '    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
             '  </button>' +
             '</div>';
         document.body.appendChild(panelEl);
@@ -511,41 +573,118 @@
         "Horarios", "Ubicación", "Marcas", "Materiales", "Redes sociales", "Recomendaciones de cuidado"
     ];
 
-    function renderChips() {
+    function renderChipsGenerico(items) {
         chipsEl.innerHTML = "";
-        SUGERENCIAS.forEach(function (texto) {
+        items.forEach(function (it) {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "delicatita-chip";
-            btn.textContent = texto;
-            btn.addEventListener("click", function () { procesarConsulta(texto); });
+            btn.textContent = it.etiqueta;
+            btn.addEventListener("click", function () { procesarConsulta(it.mensaje); });
             chipsEl.appendChild(btn);
         });
     }
 
+    // Chips originales (Horarios, Ubicación, Marcas, etc.)
+    function renderChipsPrincipales() {
+        renderChipsGenerico(SUGERENCIAS.map(function (texto) { return { etiqueta: texto, mensaje: texto }; }));
+    }
+
+    // Reemplaza los chips originales por las categorías del catálogo (paso 1 de recomendaciones)
+    function renderChipsCategoriasRecomendacion() {
+        const categorias = getCategorias();
+        renderChipsGenerico(categorias.map(function (c) { return { etiqueta: c, mensaje: "recomendaciones de " + c }; }));
+    }
+
+    // Reemplaza los chips por los tipos de producto de la categoría elegida (paso 2)
+    function renderChipsTiposDeCategoria(categoria, opciones) {
+        const lista = opciones || getOpcionesDeCategoria(categoria) || [];
+        renderChipsGenerico(lista.map(function (o) { return { etiqueta: o, mensaje: "recomendaciones de " + o }; }));
+    }
+
+    // Aplica en la UI lo que haya pedido la respuesta del motor de reglas: volver a los
+    // chips originales, mostrar categorías, o mostrar los tipos de una categoría puntual.
+    function aplicarChips(chips) {
+        if (!chips) return;
+        if (chips === "principal") {
+            renderChipsPrincipales();
+        } else if (chips === "categorias") {
+            renderChipsCategoriasRecomendacion();
+        } else if (chips.modo === "tipos") {
+            renderChipsTiposDeCategoria(chips.categoria, chips.opciones);
+        }
+    }
+
     /* ---------- Motor de respuestas (reglas por palabras clave) ---------- */
+
+    // Punto de entrada: si estamos en medio del flujo de recomendaciones (esperando
+    // categoría o tipo de producto), intenta resolverlo acá antes que nada. Si el
+    // mensaje no tiene nada que ver, abandona el flujo y sigue con las reglas normales.
     function generarRespuesta(textoOriginal) {
         const t = normalizarTexto(textoOriginal);
         const nPalabras = contarPalabras(t);
+        let forzarChipsPrincipales = false;
 
-        // Si el bot acababa de preguntar sobre qué categoría/tipo de producto quiere
-        // recomendaciones, interpretamos esta respuesta como esa categoría/tipo,
-        // sin necesidad de que el usuario escriba "recomendaciones de..." de nuevo.
-        if (contextoPendiente === "recomendacion") {
-            contextoPendiente = null;
+        if (contextoPendiente === "categoria" || contextoPendiente === "tipo") {
+            const etapaPrevia = contextoPendiente;
+            const categoriaGuardada = categoriaEnCurso;
 
+            // ¿Es un subtipo puntual de Complementos? (cajas bijou, abanicos, bomba de vacío, etc.)
             const subtipo = respuestaComplementoSubtipo(t);
-            if (subtipo) return { texto: subtipo };
-
-            const categoriaEnTexto = detectarCategoriaOGrupo(t);
-            if (categoriaEnTexto) {
-                const resultado = respuestaCuidadosCategoria(categoriaEnTexto);
-                if (resultado.botones) contextoPendiente = "recomendacion";
-                return resultado;
+            if (subtipo) {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+                return { texto: subtipo, chips: "principal" };
             }
-            // Si no coincide con nada conocido, seguimos con el flujo normal de abajo.
+
+            // ¿Nombró una categoría exacta del catálogo? (ej: "marroquineria") -> preguntamos el tipo
+            const categoriaExacta = detectarCategoriaExacta(t);
+            if (categoriaExacta) return iniciarFlujoTipo(categoriaExacta);
+
+            // ¿Nombró un tipo de producto puntual conocido? (ej: "aros", "carteras") -> respuesta directa
+            const grupo = detectarGrupoCuidadoPorClave(t);
+            if (grupo) {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+                return { texto: grupo.titulo + ":\n" + grupo.texto, chips: "principal" };
+            }
+
+            // Si estábamos esperando un tipo, probamos contra la lista concreta de esa categoría
+            if (etapaPrevia === "tipo" && categoriaGuardada) {
+                const opciones = getOpcionesDeCategoria(categoriaGuardada) || [];
+                const encontrada = opciones.find(function (o) {
+                    const on = normalizarTexto(o);
+                    return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
+                });
+                if (encontrada) {
+                    contextoPendiente = null;
+                    categoriaEnCurso = null;
+                    const resultado = respuestaCuidadosCategoria(encontrada);
+                    resultado.chips = "principal";
+                    return resultado;
+                }
+            }
+
+            // No coincidió con nada del flujo de recomendaciones. Si el mensaje parece
+            // referirse a otra cosa (horarios, ubicación, etc.), abandonamos el flujo y
+            // dejamos que las reglas normales de abajo lo resuelvan.
+            if (esOtraIntencionClara(t)) {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+                forzarChipsPrincipales = true;
+            } else {
+                return (etapaPrevia === "tipo" && categoriaGuardada)
+                    ? iniciarFlujoTipo(categoriaGuardada, true)
+                    : iniciarFlujoCategorias(true);
+            }
         }
 
+        const resultado = generarRespuestaBase(t, nPalabras, textoOriginal);
+        if (forzarChipsPrincipales && !resultado.chips) resultado.chips = "principal";
+        return resultado;
+    }
+
+    function generarRespuestaBase(t, nPalabras, textoOriginal) {
         // Despedida
         if (nPalabras <= 4 && contieneAlguna(t, ["gracias", "chau", "adios", "hasta luego", "nos vemos"])) {
             return { texto: "Gracias por escribirnos. Que tengas un excelente día." };
@@ -628,21 +767,22 @@
 
         // Recomendaciones / cuidados de uso
         if (contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"])) {
-            // 1) ¿Es un subtipo puntual de Complementos? (cajas bijou, abanicos, cintos, paraguas)
+            // 1) ¿Es un subtipo puntual de Complementos? (cajas bijou, abanicos, bomba de vacío, etc.)
             const subtipo = respuestaComplementoSubtipo(t);
-            if (subtipo) return { texto: subtipo };
+            if (subtipo) return { texto: subtipo, chips: "principal" };
 
-            // 2) ¿Menciona una categoría o grupo conocido?
-            const categoriaEnTexto = detectarCategoriaOGrupo(t);
-            if (categoriaEnTexto) {
-                const resultado = respuestaCuidadosCategoria(categoriaEnTexto);
-                if (resultado.botones) contextoPendiente = "recomendacion";
-                return resultado;
-            }
+            // 2) ¿Nombró una categoría exacta del catálogo? (ej: "recomendaciones de marroquineria")
+            //    -> preguntamos sobre qué tipo de producto dentro de esa categoría, mostrando sus chips.
+            const categoriaExacta = detectarCategoriaExacta(t);
+            if (categoriaExacta) return iniciarFlujoTipo(categoriaExacta);
 
-            // 3) Genérico: mostrar todas las categorías como accesos directos
-            contextoPendiente = "recomendacion";
-            return menuCategorias();
+            // 3) ¿Nombró directamente un tipo de producto puntual? (ej: "dame recomendaciones de aros")
+            //    -> respuesta directa, sin pasar por el menú de categorías.
+            const grupo = detectarGrupoCuidadoPorClave(t);
+            if (grupo) return { texto: grupo.titulo + ":\n" + grupo.texto, chips: "principal" };
+
+            // 4) Genérico: preguntamos la categoría y mostramos los chips de categorías
+            return iniciarFlujoCategorias();
         }
 
         // Ayuda / qué podés hacer
@@ -722,6 +862,7 @@
                     "bot"
                 );
                 respuesta.productos.forEach(agregarTarjetaProducto);
+                if (respuesta.chips) aplicarChips(respuesta.chips);
                 return;
             }
 
@@ -736,6 +877,9 @@
             if (respuesta.botones) {
                 agregarBotones(respuesta.botones);
             }
+            if (respuesta.chips) {
+                aplicarChips(respuesta.chips);
+            }
         }, 450);
     }
 
@@ -744,7 +888,7 @@
         panelEl.classList.add("abierto");
         if (!chatIniciado) {
             chatIniciado = true;
-            renderChips();
+            renderChipsPrincipales();
             agregarMensajeTexto(
                 "¡Hola! Soy Delicatita, el asistente virtual de Delicata Eleganza. " +
                 "Puedo contarte sobre horarios, ubicación, marcas, materiales, recomendaciones de cuidado " +
