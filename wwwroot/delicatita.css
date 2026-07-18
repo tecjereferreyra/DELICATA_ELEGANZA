@@ -1,0 +1,369 @@
+﻿.btn-delicatita-flotante, .delicatita-header {
+    color: var(--color-marca-oro);
+    align-items: center
+}
+
+.btn-delicatita-flotante {
+    position: fixed;
+    right: 1.2rem;
+    bottom: calc(5.6rem + 82px);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    display: none;
+    justify-content: center;
+    background: rgba(17,17,17,.92);
+    font-size: 1.35rem;
+    box-shadow: 0 6px 20px var(--color-sombra-premium);
+    cursor: pointer;
+    z-index: 900;
+    transition: transform .28s cubic-bezier(.34, 1.56, .64, 1),box-shadow .28s,opacity .35s;
+    opacity: 0;
+    transform: scale(.6)
+}
+
+    .btn-delicatita-flotante.visible {
+        display: flex;
+        animation: .45s cubic-bezier(.34,1.56,.64,1) forwards delicatitaAparecer
+    }
+
+@keyframes delicatitaAparecer {
+    to {
+        opacity: 1;
+        transform: scale(1)
+    }
+}
+
+.btn-delicatita-flotante:hover {
+    transform: scale(1.12) translateY(-3px);
+    box-shadow: 0 10px 28px var(--color-sombra-premium)
+}
+
+.btn-delicatita-flotante .punto-nuevo {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-marca-oro);
+    box-shadow: 0 0 0 2px rgba(17,17,17,.92)
+}
+
+.delicatita-panel {
+    position: fixed;
+    right: 1.2rem;
+    bottom: calc(5.6rem + 82px + 64px);
+    width: min(360px,calc(100vw - 2.4rem));
+    max-height: min(560px,calc(100dvh - 8rem));
+    background: var(--color-fondo-principal,#f4ece0);
+    border-radius: 18px;
+    box-shadow: 0 18px 45px rgba(0,0,0,.28);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 950;
+    opacity: 0;
+    transform: translateY(16px) scale(.97);
+    pointer-events: none;
+    transition: opacity .3s,transform .3s cubic-bezier(.34, 1.56, .64, 1)
+}
+
+    .delicatita-panel.abierto {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto
+    }
+
+.delicatita-header {
+    background: rgba(17,17,17,.92);
+    padding: .9rem 1.1rem;
+    display: flex;
+    gap: .7rem;
+    flex-shrink: 0
+}
+
+.delicatita-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-marca-oro);
+    color: rgba(17,17,17,.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Cinzel,serif;
+    font-weight: 700;
+    font-size: .95rem;
+    flex-shrink: 0
+}
+
+.delicatita-header-texto {
+    flex: 1;
+    min-width: 0
+}
+
+    .delicatita-header-texto strong {
+        display: block;
+        font-family: Cinzel,serif;
+        letter-spacing: .03em;
+        font-size: .95rem;
+        color: var(--color-marca-oro)
+    }
+
+    .delicatita-header-texto span {
+        display: block;
+        font-family: Poppins,sans-serif;
+        font-size: .72rem;
+        color: rgba(244,236,224,.75)
+    }
+
+.delicatita-cerrar {
+    background: 0 0;
+    border: none;
+    color: var(--color-marca-oro);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: .2rem .3rem;
+    line-height: 1
+}
+
+.delicatita-msg-producto, .delicatita-msg.bot {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    align-self: flex-start
+}
+
+.delicatita-mensajes {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    font-family: Poppins,sans-serif;
+    font-size: .88rem;
+    line-height: 1.45
+}
+
+.delicatita-msg {
+    max-width: 85%;
+    padding: .6rem .85rem;
+    border-radius: 14px;
+    white-space: pre-line
+}
+
+    .delicatita-msg.bot {
+        color: var(--color-texto-marron,#3b2f22);
+        border-bottom-left-radius: 4px
+    }
+
+    .delicatita-msg.usuario {
+        align-self: flex-end;
+        background: var(--color-marca-oro);
+        color: rgba(17,17,17,.92);
+        border-bottom-right-radius: 4px;
+        font-weight: 500
+    }
+
+    .delicatita-msg a {
+        color: inherit;
+        text-decoration: underline
+    }
+
+.delicatita-msg-producto {
+    max-width: 85%;
+    border-radius: 14px 14px 14px 4px;
+    overflow: hidden;
+    font-family: Poppins,sans-serif
+}
+
+    .delicatita-msg-producto img {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+        display: block;
+        background: #eae4d9
+    }
+
+    .delicatita-msg-producto .cuerpo {
+        padding: .6rem .8rem .7rem
+    }
+
+        .delicatita-msg-producto .cuerpo strong {
+            font-family: Cinzel,serif;
+            display: block;
+            margin-bottom: .25rem;
+            color: var(--color-texto-marron,#3b2f22);
+            font-size: .85rem
+        }
+
+        .delicatita-msg-producto .cuerpo ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: .78rem;
+            color: #555
+        }
+
+            .delicatita-msg-producto .cuerpo ul li {
+                display: flex;
+                justify-content: space-between;
+                gap: .5rem;
+                padding: .1rem 0;
+                border-bottom: 1px dashed #e4dccf
+            }
+
+                .delicatita-msg-producto .cuerpo ul li:last-child {
+                    border-bottom: none
+                }
+
+.delicatita-accion {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: rgba(17,17,17,.92);
+    color: var(--color-marca-oro);
+    text-decoration: none;
+    font-family: Cinzel,serif;
+    font-size: .72rem;
+    letter-spacing: .03em;
+    padding: .5rem .9rem;
+    border-radius: 999px;
+    box-shadow: 0 3px 10px var(--color-sombra-premium);
+    transition: transform .2s,box-shadow .2s
+}
+
+    .delicatita-accion:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px var(--color-sombra-premium)
+    }
+
+.delicatita-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    padding: 0 1rem .8rem;
+    flex-shrink: 0
+}
+
+.delicatita-chip {
+    border: 1px solid var(--color-marca-oro,#c9a84c);
+    background: 0 0;
+    color: var(--color-texto-marron,#3b2f22);
+    font-family: Poppins,sans-serif;
+    font-size: .74rem;
+    padding: .35rem .75rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s,color .2s;
+    white-space: nowrap
+}
+
+    .delicatita-chip:hover {
+        background: var(--color-marca-oro,#c9a84c);
+        color: rgba(17,17,17,.92)
+    }
+
+.delicatita-input-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .7rem .8rem;
+    border-top: 1px solid var(--color-gris-input,#d8c3a5);
+    background: #fff;
+    flex-shrink: 0
+}
+
+    .delicatita-input-row input {
+        flex: 1;
+        border: 1px solid var(--color-gris-input,#d8c3a5);
+        border-radius: 999px;
+        padding: .55rem 1rem;
+        font-family: Poppins,sans-serif;
+        font-size: .85rem;
+        outline: 0;
+        background: var(--color-fondo-principal,#f4ece0);
+        color: var(--color-texto-oscuro,#222)
+    }
+
+        .delicatita-input-row input:focus {
+            border-color: var(--color-marca-oro,#c9a84c)
+        }
+
+    .delicatita-input-row button {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: none;
+        background: var(--color-marca-oro,#c9a84c);
+        color: rgba(17,17,17,.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        font-size: .95rem;
+        transition: transform .2s
+    }
+
+        .delicatita-input-row button:hover {
+            transform: scale(1.08)
+        }
+
+.delicatita-typing {
+    align-self: flex-start;
+    display: flex;
+    gap: .25rem;
+    padding: .6rem .85rem;
+    background: #fff;
+    border-radius: 14px 14px 14px 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06)
+}
+
+    .delicatita-typing span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--color-marca-oro,#c9a84c);
+        animation: 1s ease-in-out infinite delicatitaTyping
+    }
+
+        .delicatita-typing span:nth-child(2) {
+            animation-delay: .15s
+        }
+
+        .delicatita-typing span:nth-child(3) {
+            animation-delay: .3s
+        }
+
+@keyframes delicatitaTyping {
+    0%,100%,60% {
+        opacity: .3;
+        transform: translateY(0)
+    }
+
+    30% {
+        opacity: 1;
+        transform: translateY(-3px)
+    }
+}
+
+@media (max-width:480px) {
+    .delicatita-panel {
+        right: .6rem;
+        left: .6rem;
+        width: auto;
+        bottom: calc(5.6rem + 82px + 64px);
+        max-height: min(70dvh,560px)
+    }
+}
+
+@media (prefers-reduced-motion:reduce) {
+    .btn-delicatita-flotante, .delicatita-panel, .delicatita-typing span {
+        animation: none !important;
+        transition: none !important
+    }
+}
