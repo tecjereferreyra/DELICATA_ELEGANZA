@@ -153,15 +153,6 @@ function unlockScroll() {
     document.removeEventListener('gesturechange', _blockNativeGesture);
     document.removeEventListener('gestureend', _blockNativeGesture);
 }
-
-const THEME_COLOR_CLARO = "#f4ece0";
-const THEME_COLOR_OSCURO = "#111111";
-function setThemeColorNotch(oscuro) {
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-        metaTheme.setAttribute('content', oscuro ? THEME_COLOR_OSCURO : THEME_COLOR_CLARO);
-    }
-}
 (function fixStickyNavbarChromeIOS() {
     if (!/CriOS/.test(navigator.userAgent)) return;
 
@@ -2484,7 +2475,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 i.querySelector(".mobile-arrow")?.classList.remove("rotated");
             });
         }
-        setThemeColorNotch(abierto);
+        const metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (metaTheme) {
+            metaTheme.setAttribute('content', '#111111');
+        }
         abierto ? lockScroll() : unlockScroll();
     });
     document.addEventListener("click", (e) => {
@@ -2497,10 +2491,8 @@ document.addEventListener("DOMContentLoaded", () => {
             hamburger.setAttribute("aria-expanded", "false");
             mobileMenu.setAttribute("aria-hidden", "true");
             document.body.style.backgroundColor = '';
-            setThemeColorNotch(false);
             unlockScroll();
         }
-    
     });
 
     document.querySelectorAll(".mobile-categories .has-sub").forEach(item => {
@@ -2519,7 +2511,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 hamburger.setAttribute("aria-expanded", false);
                 mobileMenu.setAttribute("aria-hidden", true);
                 document.body.style.backgroundColor = '';
-                setThemeColorNotch(false);
                 categoriaLinks.forEach(l => l.classList.remove('active-cat'));
                 categoriaActivaActual = normalizar(cat);
                 subcategoriaActivaActual = "";
@@ -2555,7 +2546,6 @@ document.addEventListener("DOMContentLoaded", () => {
             hamburger.setAttribute("aria-expanded", false);
             mobileMenu.setAttribute("aria-hidden", true);
             document.body.style.backgroundColor = '';
-            setThemeColorNotch(false);
             categoriaLinks.forEach(l => l.classList.remove('active-cat'));
             const catNorm = normalizar(cat);
             const tipoNorm = normalizar(tipo);
@@ -2580,7 +2570,6 @@ document.addEventListener("DOMContentLoaded", () => {
         hamburger.setAttribute("aria-expanded", false);
         mobileMenu.setAttribute("aria-hidden", true);
         document.body.style.backgroundColor = '';
-        setThemeColorNotch(false);
         unlockScroll();
     });
     const btnVerMas = document.getElementById("btnVerMas");

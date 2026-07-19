@@ -659,12 +659,10 @@
     }
 
     /* ---------- Construcción de la UI ---------- */
-    let panelEl, mensajesEl, inputEl, botonEl, chipsEl;
+    let panelEl, mensajesEl, inputEl, botonEl, chipsEl, backdropEl;
     let chatIniciado = false;
 
-    // Recuerda en qué paso del flujo de recomendaciones estamos ("categoria" | "tipo" | null),
-    // para poder interpretar la respuesta libre siguiente (ej: "aros", "marroquineria")
-    // sin que el usuario tenga que tocar un botón, y para saber qué chips mostrar.
+  
     let contextoPendiente = null;
     let categoriaEnCurso = null;
 
@@ -680,6 +678,12 @@
             '<span class="punto-nuevo" id="delicatitaPuntoNuevo"></span>' +
             '<span class="tooltip-boton">Asistente virtual</span>';
         document.body.appendChild(botonEl);
+
+       
+        backdropEl = document.createElement("div");
+        backdropEl.className = "delicatita-backdrop";
+        backdropEl.addEventListener("click", function () { cerrarPanel(); });
+        document.body.appendChild(backdropEl);
 
         // Panel de chat
         panelEl = document.createElement("div");
@@ -718,7 +722,8 @@
 
 
     function scrollAlInicioDe(el) {
-        mensajesEl.scrollTop = Math.max(0, el.offsetTop - 10);
+        const offset = el.getBoundingClientRect().top - mensajesEl.getBoundingClientRect().top + mensajesEl.scrollTop;
+        mensajesEl.scrollTop = Math.max(0, offset - 6);
     }
     function esMensajeLargo(texto) {
         const renglones = (texto.match(/\n/g) || []).length;
@@ -824,6 +829,15 @@
         "Horarios", "Ubicación", "Marcas", "Materiales", "Redes sociales", "Recomendaciones de cuidado"
     ];
 
+    function _suprimirHoverFantasma() {
+        chipsEl.style.pointerEvents = "none";
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                chipsEl.style.pointerEvents = "";
+            });
+        });
+    }
+
     function renderChipsGenerico(items) {
         chipsEl.innerHTML = "";
         items.forEach(function (it) {
@@ -834,10 +848,9 @@
             btn.addEventListener("click", function () { procesarConsulta(it.mensaje); });
             chipsEl.appendChild(btn);
         });
+        _suprimirHoverFantasma();
     }
 
-    // Igual que renderChipsGenerico, pero agrega un primer chip "← Volver" que no manda
-    // mensaje al chat, sino que ejecuta una acción para retroceder un paso en el flujo.
     function renderChipsConVolver(items, alVolver) {
         chipsEl.innerHTML = "";
 
@@ -856,9 +869,8 @@
             btn.addEventListener("click", function () { procesarConsulta(it.mensaje); });
             chipsEl.appendChild(btn);
         });
+        _suprimirHoverFantasma();
     }
-
-    // Chips originales (Horarios, Ubicación, Marcas, etc.)
     function renderChipsPrincipales() {
         renderChipsGenerico(SUGERENCIAS.map(function (texto) { return { etiqueta: texto, mensaje: texto }; }));
     }
@@ -1230,6 +1242,7 @@
     /* ---------- Apertura / cierre del panel ---------- */
     function abrirPanel() {
         panelEl.classList.add("abierto");
+        backdropEl.classList.add("activo");
         bloquearScrollFondo();
         if (!chatIniciado) {
             chatIniciado = true;
@@ -1246,6 +1259,7 @@
 
     function cerrarPanel() {
         panelEl.classList.remove("abierto");
+        backdropEl.classList.remove("activo");
         desbloquearScrollFondo();
     }
 
