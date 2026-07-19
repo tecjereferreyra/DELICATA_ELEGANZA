@@ -702,6 +702,7 @@
     let panelEl, mensajesEl, inputEl, botonEl, chipsEl, backdropEl;
     let chatIniciado = false;
     let _scrollAncladoAlInicio = false;
+    let _ultimoAnclaje = null;
   
     let contextoPendiente = null;
     let categoriaEnCurso = null;
@@ -778,9 +779,11 @@
         if (quien === "bot" && esMensajeLargo(texto)) {
             scrollAlInicioDe(div);
             _scrollAncladoAlInicio = true;
+            _ultimoAnclaje = div;
         } else {
             scrollAbajo();
             _scrollAncladoAlInicio = false;
+            _ultimoAnclaje = null;
         }
     }
 
@@ -1202,9 +1205,9 @@
 
             if (respuesta.verEnMain) {
                 const destino = respuesta.verEnMain;
+                cerrarPanel();
                 const enganchado = irACategoriaEnMain(destino.categoria, destino.tipo);
                 if (enganchado) {
-                    cerrarPanel();
                     return;
                 }
                 // Fallback por si no se encuentra el link en el main: mostramos las tarjetas acá mismo.
@@ -1248,19 +1251,14 @@
             if (respuesta.chips) {
                 aplicarChips(respuesta.chips);
             }
+
+            if (_ultimoAnclaje) {
+                scrollAlInicioDe(_ultimoAnclaje);
+            }
         }, 450);
     }
 
-    /* ---------- Bloqueo de scroll del body, propio de Delicatita ----------
-     * Ojo: NO reutilizamos window.lockScroll()/unlockScroll() de app.js, porque esas
-     * funciones bloquean el scroll de forma global (rueda del mouse, touch Y TECLADO:
-     * barra espaciadora, flechas, Page Up/Down), sin hacer excepción para cuando el
-     * foco está en un input de texto. Eso es lo que hacía que la barra espaciadora no
-     * funcionara al escribir en el chat, y también bloqueaba el scroll interno del panel.
-     * Esta versión usa "position: fixed" en el body, que inmoviliza el fondo sin tocar
-     * el teclado en absoluto, y no afecta el scroll de ".delicatita-mensajes" porque esa
-     * lista tiene su propio overflow-y:auto, independiente del scroll del body.
-     */
+
     let _delicatitaScrollY = 0;
 
     function bloquearScrollFondo() {
