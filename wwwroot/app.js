@@ -407,11 +407,11 @@ function abrirModalProducto() {
 
  
     const viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (viewportMeta) {
-        viewportMeta.dataset.original = viewportMeta.getAttribute("content");
-        const nuevoMeta = viewportMeta.cloneNode(true);
-        nuevoMeta.setAttribute("content", "width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no");
-        viewportMeta.parentNode.replaceChild(nuevoMeta, viewportMeta);
+    if (viewportMeta?.dataset.original) {
+        const metaOriginal = viewportMeta.cloneNode(true);
+        metaOriginal.setAttribute("content", viewportMeta.dataset.original);
+        delete metaOriginal.dataset.original;
+        viewportMeta.parentNode.replaceChild(metaOriginal, viewportMeta);
     }
 
     requestAnimationFrame(() => {
