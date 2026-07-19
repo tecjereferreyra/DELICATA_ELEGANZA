@@ -12,7 +12,7 @@
     const HORARIOS_TEXTO =
         "Atendemos de lunes a sábado.\n" +
         "Mañana: de 09:30 a 12:30 hs.\n" +
-        "Tarde: de 16:00 a 20:30 hs.";
+        "Tarde: de 16:30 a 20:30 hs.";
 
     const STORAGE_KEY = "delicatitaDescubierta";
 
@@ -530,9 +530,17 @@
         };
     }
 
-    // Paso 2: dada una categoría, si tiene tipos de producto puntuales (aros, carteras, etc.)
-    // se pregunta cuál, mostrando esos tipos como chips; si no tiene, se responde directo.
+
     function iniciarFlujoTipo(categoria, reintentar) {
+        const normCategoria = normalizarTexto(categoria);
+        if (normCategoria === "piercing" || normCategoria === "piercings") {
+            contextoPendiente = null;
+            categoriaEnCurso = null;
+            const resultado = respuestaCuidadosCategoria(categoria);
+            resultado.chips = "principal";
+            return resultado;
+        }
+
         const opciones = getOpcionesDeCategoria(categoria);
         if (!opciones || !opciones.length) {
             const resultado = respuestaCuidadosCategoria(categoria);
@@ -548,8 +556,6 @@
         };
     }
 
-    // Palabras de otras intenciones claras (horarios, ubicación, etc.) para poder abandonar
-    // el flujo de recomendaciones si el usuario cambia de tema en medio de una pregunta.
     function esOtraIntencionClara(texto) {
         return contieneAlguna(texto, [
             "horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren",
@@ -710,12 +716,25 @@
         mensajesEl.scrollTop = mensajesEl.scrollHeight;
     }
 
+
+    function scrollAlInicioDe(el) {
+        mensajesEl.scrollTop = Math.max(0, el.offsetTop - 10);
+    }
+    function esMensajeLargo(texto) {
+        const renglones = (texto.match(/\n/g) || []).length;
+        return renglones >= 4 || texto.length > 220;
+    }
+
     function agregarMensajeTexto(texto, quien) {
         const div = document.createElement("div");
         div.className = "delicatita-msg " + quien;
         div.textContent = texto;
         mensajesEl.appendChild(div);
-        scrollAbajo();
+        if (quien === "bot" && esMensajeLargo(texto)) {
+            scrollAlInicioDe(div);
+        } else {
+            scrollAbajo();
+        }
     }
 
     function agregarAccion(etiqueta, icono, url) {
@@ -777,8 +796,8 @@
             btn.style.marginTop = "-.3rem";
             btn.innerHTML = '<i class="fa-solid fa-eye"></i> Ver ficha completa';
             btn.addEventListener("click", function () {
-                window.abrirModal(p);
                 cerrarPanel();
+                window.abrirModal(p);
             });
             mensajesEl.appendChild(btn);
         }
@@ -1227,8 +1246,7 @@
 
     function cerrarPanel() {
         panelEl.classList.remove("abierto");
-        desbloquearScrollFondo();     
-        if (typeof window.forzarRepintadoNotchIOS === "function") window.forzarRepintadoNotchIOS();
+        desbloquearScrollFondo();
     }
 
     /* ---------- Tooltips de los botones flotantes ---------- */
