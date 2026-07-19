@@ -83,11 +83,13 @@
         return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
     }
 
-    // Para "Complementos" usamos la lista curada (COMPLEMENTOS_SUBTIPOS, definida más abajo);
-    // para el resto de las categorías, los tipos reales del catálogo.
+  
     function getOpcionesDeCategoria(categoria) {
         const norm = normalizarTexto(categoria);
         if (norm.indexOf("complemento") !== -1) {
+            if (norm.indexOf("viaje") !== -1) {
+                return COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) { return s.etiqueta; });
+            }
             return COMPLEMENTOS_SUBTIPOS.map(function (s) { return s.etiqueta; });
         }
         return getTiposDeCategoria(categoria);
@@ -186,7 +188,11 @@
                 "Dejalo secar abierto antes de guardarlo, para evitar humedad y malos olores.\n" +
                 "No lo fuerces al abrir o cerrar con viento fuerte.\n" +
                 "Revisá de tanto en tanto el mecanismo y las varillas."
-        },
+        }
+    ];
+
+   
+    const COMPLEMENTOS_VIAJE_SUBTIPOS = [
         {
             claves: ["bomba de vacio electrica", "bomba electrica", "bomba de vacio elec"],
             etiqueta: "Bomba de vacío eléctrica",
@@ -246,12 +252,18 @@
     ];
 
     function respuestaComplementoSubtipo(texto) {
-        for (let i = 0; i < COMPLEMENTOS_SUBTIPOS.length; i++) {
-            const s = COMPLEMENTOS_SUBTIPOS[i];
+        const todos = COMPLEMENTOS_SUBTIPOS.concat(COMPLEMENTOS_VIAJE_SUBTIPOS);
+        for (let i = 0; i < todos.length; i++) {
+            const s = todos[i];
             const coincide = s.claves.some(function (c) { return texto.indexOf(normalizarTexto(c)) !== -1; });
             if (coincide) return s.etiqueta + ":\n" + s.texto;
         }
         return null;
+    }
+
+
+    function esFraseComplementosDeViaje(texto) {
+        return texto.indexOf("complementos de viaje") !== -1 || texto.indexOf("complemento de viaje") !== -1;
     }
 
    
@@ -395,14 +407,6 @@
                 "No superes el peso máximo indicado, para no forzar costuras ni ruedas.\n" +
                 "Guardala en un lugar ventilado, no dentro de bolsas cerradas herméticamente."
         },
-        {
-            claves: ["complementos de viaje", "complemento de viaje"],
-            etiqueta: "Complementos de viaje",
-            texto:
-                "Revisá pilas, baterías o mecanismos antes de cada viaje, según el producto.\n" +
-                "Guardá cada accesorio en su estuche o bolsita original.\n" +
-                "Limpiá y dejá secar bien antes de guardarlos, para evitar humedad y olores."
-        },
         // --- Pañolería (chalinas: invierno o verano) ---
         {
             claves: ["invierno"],
@@ -435,6 +439,15 @@
         return {
             texto: "Dentro de Complementos tenemos varios tipos de productos. ¿Sobre cuál te gustaría conocer las recomendaciones de cuidado?",
             botones: COMPLEMENTOS_SUBTIPOS.map(function (s) {
+                return { etiqueta: s.etiqueta, mensaje: "recomendaciones de " + s.etiqueta };
+            })
+        };
+    }
+
+    function menuComplementosViaje() {
+        return {
+            texto: "Dentro de Complementos de viaje tenemos varios accesorios. ¿Sobre cuál te gustaría conocer las recomendaciones de cuidado?",
+            botones: COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) {
                 return { etiqueta: s.etiqueta, mensaje: "recomendaciones de " + s.etiqueta };
             })
         };
@@ -497,13 +510,15 @@
     function respuestaCuidadosCategoria(categoria) {
         const norm = normalizarTexto(categoria);
 
-        // 1) ¿Hay una recomendación específica para este tipo puntual? (aros, carteras, valijas, etc.)
-        //    Se chequea primero porque es más precisa que el texto genérico de categoría.
+
         const especifico = respuestaTipoEspecifico(norm) || respuestaComplementoSubtipo(norm);
         if (especifico) return { texto: especifico };
 
-        // 2) "Complementos" como categoría genérica (sin tipo puntual reconocido) -> menú de subtipos
-        if (norm.indexOf("complemento") !== -1) return menuComplementos();
+       
+        if (norm.indexOf("complemento") !== -1) {
+            if (norm.indexOf("viaje") !== -1) return menuComplementosViaje();
+            return menuComplementos();
+        }
 
         const grupo = CUIDADOS.find(function (g) {
             return g.claves.some(function (c) {
@@ -944,12 +959,14 @@
                 return { texto: especifico, chips: "principal" };
             }
 
-            // ¿Nombró una categoría exacta del catálogo? (ej: "marroquineria") -> preguntamos el tipo
+
+            if (esFraseComplementosDeViaje(t)) return iniciarFlujoTipo("Complementos de viaje");
+
+
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) return iniciarFlujoTipo(categoriaExacta);
 
-            // ¿Nombró un tipo de producto puntual conocido, sin recomendación específica propia?
-            // -> usamos el texto genérico de su categoría (grupo de CUIDADOS)
+
             const grupo = detectarGrupoCuidadoPorClave(t);
             if (grupo) {
                 contextoPendiente = null;
@@ -1093,8 +1110,10 @@
             const especifico = respuestaTipoEspecifico(t);
             if (especifico) return { texto: especifico, chips: "principal" };
 
-            // 3) ¿Nombró una categoría exacta del catálogo? (ej: "recomendaciones de marroquineria")
-            //    -> preguntamos sobre qué tipo de producto dentro de esa categoría, mostrando sus chips.
+
+            if (esFraseComplementosDeViaje(t)) return iniciarFlujoTipo("Complementos de viaje");
+
+
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) return iniciarFlujoTipo(categoriaExacta);
 
