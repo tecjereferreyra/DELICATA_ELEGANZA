@@ -1489,7 +1489,8 @@ header.navbar .title {
     opacity: 0;
     transition: opacity .3s,visibility .3s,background .3s;
     z-index: 1000;
-    background: 0 0
+    background: 0 0;
+    top: env(safe-area-inset-top, 0px);
 }
 
     .modal.show {

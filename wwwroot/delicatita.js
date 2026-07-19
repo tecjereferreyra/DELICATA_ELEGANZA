@@ -466,6 +466,31 @@
 
     function detectarTipoExacto(texto) {
         const tipos = getTodosLosTipos();
+
+        function tipoDelCatalogo(alias) {
+            if (!alias) return null;
+            return tipos.find(function (tp) { return normalizarTexto(tp) === normalizarTexto(alias); }) || null;
+        }
+
+  
+        if (typeof extraerTipoExacto === "function") {
+            const viaAlias = extraerTipoExacto(texto);
+            const encontrado = tipoDelCatalogo(viaAlias && viaAlias.tipo);
+            if (encontrado) return encontrado;
+        }
+
+
+        if (typeof TIPO_ALIAS_MAP !== "undefined" && typeof normalizarTermino === "function") {
+            const tokens = texto.split(/\s+/).filter(Boolean);
+            for (let i = 0; i < tokens.length; i++) {
+                const singular = normalizarTermino(tokens[i]);
+                if (TIPO_ALIAS_MAP[singular]) {
+                    const encontrado = tipoDelCatalogo(TIPO_ALIAS_MAP[singular]);
+                    if (encontrado) return encontrado;
+                }
+            }
+        }
+
         for (let i = 0; i < tipos.length; i++) {
             if (texto.indexOf(normalizarTexto(tipos[i])) !== -1) return tipos[i];
         }
@@ -676,7 +701,7 @@
     /* ---------- Construcción de la UI ---------- */
     let panelEl, mensajesEl, inputEl, botonEl, chipsEl, backdropEl;
     let chatIniciado = false;
-
+    let _scrollAncladoAlInicio = false;
   
     let contextoPendiente = null;
     let categoriaEnCurso = null;
@@ -752,8 +777,10 @@
         mensajesEl.appendChild(div);
         if (quien === "bot" && esMensajeLargo(texto)) {
             scrollAlInicioDe(div);
+            _scrollAncladoAlInicio = true;
         } else {
             scrollAbajo();
+            _scrollAncladoAlInicio = false;
         }
     }
 
@@ -765,7 +792,7 @@
         a.rel = "noopener noreferrer";
         a.innerHTML = '<i class="' + icono + '" aria-hidden="true"></i> ' + etiqueta;
         mensajesEl.appendChild(a);
-        scrollAbajo();
+        if (_scrollAncladoAlInicio) { _scrollAncladoAlInicio = false; } else { scrollAbajo(); }
     }
 
     function agregarBotones(botones) {
@@ -780,7 +807,7 @@
             wrap.appendChild(btn);
         });
         mensajesEl.appendChild(wrap);
-        scrollAbajo();
+        if (_scrollAncladoAlInicio) { _scrollAncladoAlInicio = false; } else { scrollAbajo(); }
     }
 
     function agregarTarjetaProducto(p) {
