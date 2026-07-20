@@ -1236,22 +1236,22 @@ const COLOR_SINONIMOS = {
     "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche"],
     "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "nieve", "ivory", "blanquito", "nacarado", "nacarada", "vainilla"],
     "rojo": ["rojo", "roja", "rojos", "rojas", "red", "carmesi", "carmesí", "escarlata", "cereza", "sangre", "rubi", "rubí"],
-    "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "azul cielo", "cielo", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero", "denim", "jean"],
+    "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "azul cielo", "cielo", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero", "denim", "jean", "azul oscuro", "azul pastel"],
 
-    "verde": ["verde", "verdes", "green", "oliva", "militar", "verde militar", "kaki", "esmeralda", "menta", "sage", "botella", "verde botella", "musgo", "selva", "lima", "verde francia", "verde ingles", "verde inglés", "verde seco", "verde bosque", "verde jade"],
+    "verde": ["verde", "verdes", "green", "oliva", "militar", "verde militar", "kaki", "esmeralda", "menta", "sage", "botella", "verde botella", "musgo", "selva", "lima", "verde francia", "verde ingles", "verde inglés", "verde seco", "verde bosque", "verde jade", "verde manzana", "verde oscuro", "verde pastel"],
     "marron": ["marron", "marrón", "marrones", "cafe", "café", "tabaco", "cognac", "camel", "cuero", "chocolate", "tierra", "havana", "walnut", "tobacco", "avellana", "canela"],
     "suela": ["suela", "teja", "madera", "castano", "castaño", "castañas", "nuez", "roble", "cobre", "cobre viejo"],
-    "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon", "salmón", "palo de rosa", "flamingo", "blush", "magenta", "hot pink"],
-    "lila": ["lila", "lilas", "violeta", "violetas", "morado", "morada", "purple", "lavanda", "lavender", "malva", "orquidea", "orquídea", "amatista", "uva", "berenjena"],
+    "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon", "salmón", "palo de rosa", "flamingo", "blush", "magenta", "hot pink", "rosa pastel"],
+    "lila": ["lila", "lilas", "violeta", "violetas", "morado", "morada", "purple", "lavanda", "lavender", "malva", "orquidea", "orquídea", "amatista", "uva", "berenjena", "violeta pastel"],
     "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada", "antracita", "grafito", "piedra", "humo", "ceniza", "gris topo"],
     "acero": ["acero", "acero inoxidable", "steel", "inox", "inoxidable", "metalico", "metálico", "cromado"],
     "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro", "champagne", "bronce"],
     "oro_rosa": ["oro rosa", "rose gold", "rosegold", "oro rosado"],
     "oro_blanco": ["oro blanco", "white gold", "plata brillante"],
     "ambar": ["ambar", "ámbar", "amber", "ambarino", "ambarina", "topacio", "miel oscura"],
-    "naranja": ["naranja", "naranjas", "orange", "oxido", "óxido", "mango", "calabaza", "ladrillo", "brick", "anaranjado", "anaranjada", "anaranjados", "anaranjadas", "bermellon", "bermellón"],
+    "naranja": ["naranja", "naranjas", "orange", "oxido", "óxido", "mango", "calabaza", "ladrillo", "brick", "anaranjado", "anaranjada", "anaranjados", "anaranjadas", "bermellon", "bermellón", "naranja pastel"],
     "terracota": ["terracota", "terracotta", "coral", "teja clara", "ocre rojo", "arcilla", "canyon"],
-    "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow", "ocre", "mostaza", "limón", "limon", "canario", "miel"],
+    "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow", "ocre", "mostaza", "limón", "limon", "canario", "miel", "amarillo pastel"],
     "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes", "vison", "visón", "bisón", "bison", "taupe", "natural", "crudo", "ecru", "lino", "caqui claro"],
     "rosa_palo": ["rosa palo", "nude rosa", "piel", "skin", "durazno", "peach", "albaricoque", "apricot", "melocoton", "melocotón"],
     "turquesa": ["turquesa", "turquoise", "agua", "aqua", "aguamarina", "tiffany", "verde agua", "aqua marine"],
@@ -1260,17 +1260,21 @@ const COLOR_SINONIMOS = {
     "tornasol": ["tornasol", "tornasoles", "tornasolado", "tornasolada", "tornasolados", "tornasoladas", "iridiscente", "iridiscentes", "irisado", "irisada", "holografico", "holográfico"],
     "tornasol_amarillo": ["tornasol amarillo", "tornasol dorado", "amarillo tornasol", "dorado tornasol"],
     "tornasol_azul": ["tornasol azul", "azul tornasol"],
+    "tornasol_rojo": ["tornasol rojo", "rojo tornasol", "rojo tornasolado", "tornasol rojizo"],
     "tornasol_verde": ["tornasol verde", "verde tornasol"],
     "tornasol_rosa": ["tornasol rosa", "tornasol rosado", "rosa tornasol"],
     "tornasol_violeta": ["tornasol violeta", "tornasol morado", "violeta tornasol"],
 };
+
 const COLOR_CSS = {
     "negro": "#111", "negra": "#111", "negros": "#111", "negras": "#111",
     "ebano": "#111", "carbon": "#1a1a1a", "carbón": "#1a1a1a", "noche": "#0d0d0d",
+    "black": "#111",
+    "oscuro": "#1a1a1a", "oscura": "#1a1a1a", "oscuros": "#1a1a1a", "oscuras": "#1a1a1a",
 
     "blanco": "#f5f5f5", "blanca": "#f5f5f5", "blancos": "#f5f5f5", "blancas": "#f5f5f5",
     "white": "#f5f5f5", "marfil": "#fffff0", "crema": "#fffdd0", "tiza": "#f0ece4",
-    "perla": "#f0e8d8", "nieve": "#fafafa", "ivory": "#fffff0",
+    "perla": "#f0e8d8", "nieve": "#fafafa", "ivory": "#fffff0", "blanquito": "#f5f5f5",
 
     "rojo": "#c62828", "roja": "#c62828", "rojos": "#c62828", "rojas": "#c62828",
     "red": "#c62828", "escarlata": "#d50000", "carmesi": "#b71c1c", "carmesí": "#b71c1c",
@@ -1285,6 +1289,8 @@ const COLOR_CSS = {
     "cobalto": "#1a3a8f", "zafiro": "#003153", "klein": "#002fa7",
     "royal": "#1a3a8f", "indigo": "#3949ab", "índigo": "#3949ab",
     "petroleo": "#00454a", "petróleo": "#00454a",
+    "azul marino": "#0d2b6b", "azul cielo": "#64b5f6", "cielo": "#64b5f6",
+    "azul oscuro": "#0a2a5e", "azul pastel": "#a9c9ec",
 
     "verde": "#2e7d32", "verdes": "#2e7d32", "green": "#2e7d32",
     "azul francia": "#318ce7",
@@ -1303,6 +1309,8 @@ const COLOR_CSS = {
     "esmeralda": "#004d40", "menta": "#80cbc4", "sage": "#7d9b76",
     "botella": "#1b4d2e", "musgo": "#556b2f", "selva": "#1a3a26",
     "lima": "#8bc34a", "verde francia": "#267f00",
+    "verde manzana": "#8db600",
+    "verde oscuro": "#0d3b1e", "verde pastel": "#b8ddc4",
 
     "marron": "#6d4c41", "marrón": "#6d4c41", "marrones": "#6d4c41",
     "cafe": "#6d4c41", "café": "#6d4c41", "tabaco": "#7a5230",
@@ -1313,11 +1321,13 @@ const COLOR_CSS = {
     "suela": "#8B5E3C", "teja": "#b05c34", "madera": "#8b6347",
     "castano": "#7b4f2e", "castaño": "#7b4f2e", "nuez": "#7a4e2d",
     "roble": "#8c6239", "cobre": "#b87333", "cobre viejo": "#a06535",
+    "castañas": "#7b4f2e",
 
     "rosa": "#e91e8c", "rosas": "#e91e8c", "pink": "#e91e8c",
     "fucsia": "#c2185b", "salmon": "#ff8a65", "salmón": "#ff8a65",
     "palo de rosa": "#d4a0a0", "flamingo": "#fc8eac", "blush": "#f4a7b9",
     "magenta": "#e040fb", "hot pink": "#ff4081",
+    "rosa pastel": "#f5c6d8",
 
     "rosa palo": "#e8c5b0", "nude rosa": "#e0b49a", "piel": "#d4a882",
     "skin": "#d4a882", "durazno": "#ffb347", "peach": "#ffcba4",
@@ -1328,12 +1338,13 @@ const COLOR_CSS = {
     "violetas": "#7e57c2", "morado": "#6a1b9a", "morada": "#6a1b9a",
     "purple": "#6a1b9a", "lavanda": "#b39ddb", "lavender": "#b39ddb",
     "malva": "#9c4f96", "orquidea": "#da70d6", "orquídea": "#da70d6",
-    "amatista": "#9b59b6",
+    "amatista": "#9b59b6", "violeta pastel": "#d8c2ec",
 
     "gris": "#757575", "grises": "#757575", "grey": "#757575", "gray": "#757575",
     "plata": "#b0bec5", "plateado": "#b0bec5", "plateada": "#b0bec5",
     "antracita": "#3d3d3d", "grafito": "#4a4a4a",
     "piedra": "#9e9e8f", "humo": "#8d8d8d", "ceniza": "#ababab",
+    "gris topo": "#8a7f70",
 
     "acero": "#8da9bc", "acero inoxidable": "#8da9bc", "steel": "#8da9bc",
     "inox": "#9eb4c4", "inoxidable": "#9eb4c4",
@@ -1345,6 +1356,8 @@ const COLOR_CSS = {
     "naranja": "#ef6c00", "naranjas": "#ef6c00", "orange": "#ef6c00",
     "oxido": "#bf4e0a", "óxido": "#bf4e0a", "mango": "#e67e22",
     "calabaza": "#d35400", "ladrillo": "#b94a2c", "brick": "#b94a2c",
+    "anaranjado": "#ef6c00", "anaranjada": "#ef6c00", "anaranjados": "#ef6c00", "anaranjadas": "#ef6c00",
+    "naranja pastel": "#f7bd8a",
 
     "terracota": "#c0522a", "terracotta": "#c0522a", "coral": "#e8735a",
     "teja clara": "#c1603a", "ocre rojo": "#b5451b", "arcilla": "#c1694f",
@@ -1353,6 +1366,7 @@ const COLOR_CSS = {
     "amarillo": "#f9a825", "amarilla": "#f9a825", "amarillos": "#f9a825", "amarillas": "#f9a825",
     "yellow": "#f9a825", "ocre": "#cc8800", "mostaza": "#c9a227",
     "limón": "#d4e157", "limon": "#d4e157", "canario": "#ffe082", "miel": "#e6ac00",
+    "amarillo pastel": "#fbe8a6",
 
     "beige": "#d4b896", "beis": "#d4b896", "nude": "#d4b49c", "arena": "#c2a882",
     "tostado": "#b8915a", "tostada": "#b8915a", "nute": "#ceb49a", "nutes": "#ceb49a",
@@ -1366,6 +1380,8 @@ const COLOR_CSS = {
 
     "multicolor": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
     "estampado": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
+    "colores": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
+    "multicolores": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
     "arcoiris": "linear-gradient(135deg,#e53935,#fb8c00,#fdd835,#43a047,#1e88e5,#8e24aa)",
     "arco iris": "linear-gradient(135deg,#e53935,#fb8c00,#fdd835,#43a047,#1e88e5,#8e24aa)",
     "rainbow": "linear-gradient(135deg,#e53935,#fb8c00,#fdd835,#43a047,#1e88e5,#8e24aa)",
@@ -1374,15 +1390,41 @@ const COLOR_CSS = {
     "camo": "linear-gradient(135deg,#4b5320,#6b6b2a,#3d3d2e,#7a7a52)",
 
     "tornasol": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "tornasoles": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
     "tornasolado": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "tornasolada": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "tornasolados": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "tornasoladas": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "iridiscente": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "iridiscentes": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "irisado": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "irisada": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "holografico": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "holográfico": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+
     "tornasol amarillo": "linear-gradient(135deg,#f7d046,#ffef8a,#f9a825,#fff3c4)",
     "tornasol dorado": "linear-gradient(135deg,#f7d046,#ffef8a,#c9a84c,#fff3c4)",
+    "amarillo tornasol": "linear-gradient(135deg,#f7d046,#ffef8a,#f9a825,#fff3c4)",
+    "dorado tornasol": "linear-gradient(135deg,#f7d046,#ffef8a,#c9a84c,#fff3c4)",
+
     "tornasol azul": "linear-gradient(135deg,#1565c0,#64b5f6,#00c6ff,#3949ab)",
+    "azul tornasol": "linear-gradient(135deg,#1565c0,#64b5f6,#00c6ff,#3949ab)",
+
+    "tornasol rojo": "linear-gradient(135deg,#c62828,#ff6659,#e91e8c,#8d0000)",
+    "rojo tornasol": "linear-gradient(135deg,#c62828,#ff6659,#e91e8c,#8d0000)",
+    "rojo tornasolado": "linear-gradient(135deg,#c62828,#ff6659,#e91e8c,#8d0000)",
+    "tornasol rojizo": "linear-gradient(135deg,#c62828,#ff6659,#e91e8c,#8d0000)",
+
     "tornasol verde": "linear-gradient(135deg,#00a86b,#80cbc4,#00e0a8,#2e7d32)",
+    "verde tornasol": "linear-gradient(135deg,#00a86b,#80cbc4,#00e0a8,#2e7d32)",
+
     "tornasol rosa": "linear-gradient(135deg,#e91e8c,#f4a7b9,#ff4081,#fc8eac)",
     "tornasol rosado": "linear-gradient(135deg,#e91e8c,#f4a7b9,#ff4081,#fc8eac)",
+    "rosa tornasol": "linear-gradient(135deg,#e91e8c,#f4a7b9,#ff4081,#fc8eac)",
+
     "tornasol violeta": "linear-gradient(135deg,#7e57c2,#ba68c8,#9b59b6,#b39ddb)",
     "tornasol morado": "linear-gradient(135deg,#7e57c2,#ba68c8,#9b59b6,#b39ddb)",
+    "violeta tornasol": "linear-gradient(135deg,#7e57c2,#ba68c8,#9b59b6,#b39ddb)",
 
     "bermellon": "#e34234", "bermellón": "#e34234",
     "tie dye": "linear-gradient(135deg,#e91e63,#9c27b0,#3f51b5,#00bcd4,#4caf50)",
@@ -1406,8 +1448,6 @@ const COLOR_CSS = {
 
     "canela": "#a0522d",
     "uva": "#6a3b8c", "berenjena": "#4b1e40",
-
-    "gris topo": "#8a7f70",
 };
 
 const COLOR_CSS_KEYS_ORDENADAS = Object.keys(COLOR_CSS).sort((a, b) => b.length - a.length);

@@ -618,6 +618,7 @@
     function irAGridConBusqueda(texto) {
         const input = document.getElementById("searchInput");
         if (!input || typeof aplicarFiltros !== "function") return false;
+        if (typeof desactivarModoNuevos === "function") desactivarModoNuevos();
         if (typeof categoriaActivaActual !== "undefined") categoriaActivaActual = "todos";
         if (typeof subcategoriaActivaActual !== "undefined") subcategoriaActivaActual = "";
         document.querySelectorAll(".categories a.active-cat, .mobile-categories li.active-cat")
