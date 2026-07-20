@@ -1234,7 +1234,7 @@ categoriaLinks.forEach(link => {
 });
 const COLOR_SINONIMOS = {
     "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche"],
-    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "perla", "nieve", "ivory", "blanquito"],
+    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "nieve", "ivory", "blanquito"],
     "rojo": ["rojo", "roja", "rojos", "rojas", "red", "bordo", "bordeau", "granate", "carmesi", "carmesí", "escarlata", "cereza", "vino", "sangre"],
     "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero"],
 
@@ -1421,8 +1421,10 @@ function renderSwatchesColor(prodActual) {
 function expandirConSinonimos(color) {
     if (!color || color === "—") return "";
     const colorNorm = normalizar(color);
+    const palabrasColor = colorNorm.split(/\s+/);
     for (const [canonical, sinonimos] of Object.entries(COLOR_SINONIMOS)) {
-        if (sinonimos.some(s => colorNorm.includes(s))) {
+        const coincide = sinonimos.some(s => colorNorm === s || palabrasColor.includes(s));
+        if (coincide) {
             return sinonimos.join(" ");
         }
     }

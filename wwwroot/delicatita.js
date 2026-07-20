@@ -690,7 +690,20 @@
 
         return conPuntaje.slice(0, 3).map(function (r) { return r.p; });
     }
+    /* ---------- ¿El texto realmente parece una consulta sobre productos? ---------- */
+    function pareceConsultaDeProducto(texto) {
+        if (detectarCategoriaExacta(texto)) return true;
+        if (detectarTipoExacto(texto)) return true;
 
+        const marcas = getMarcas().map(normalizarTexto);
+        if (marcas.some(function (m) { return texto.indexOf(m) !== -1; })) return true;
+
+        const materiales = getMateriales().map(normalizarTexto);
+        if (materiales.some(function (m) { return texto.indexOf(m) !== -1; })) return true;
+
+    // Último chequeo: ¿el texto matchea algún producto real del catálogo?
+        return buscarProductos(texto).length > 0;
+    }
     /* ---------- Construcción de la UI ---------- */
     let panelEl, mensajesEl, inputEl, botonEl, chipsEl, backdropEl;
     let chatIniciado = false;
@@ -1154,16 +1167,28 @@
             };
         }
 
-       
+
         if (nPalabras <= 2) {
             const categoriaSuelta = detectarCategoriaExacta(t);
             if (categoriaSuelta) return preguntaCategoria(categoriaSuelta);
         }
 
-        
-        return { irABuscador: textoOriginal };
+        if (pareceConsultaDeProducto(t)) {
+            return { irABuscador: textoOriginal };
+        }
 
-       
+        return {
+            texto: "No entendí tu pregunta, ¿podrías reformularla? Puedo ayudarte con:\n" +
+                "• Horarios y días de atención\n" +
+                "• Ubicación del local\n" +
+                "• Marcas y materiales que trabajamos\n" +
+                "• Recomendaciones de cuidado por categoría o tipo de producto\n" +
+                "• Mostrarte todos los productos de una categoría\n" +
+                "• Datos de un producto puntual del catálogo\n" +
+                "• Nuestras redes sociales\n\n" +
+                "También podés tocar una de las sugerencias de abajo.",
+            chips: "principal"
+        };
     }
 
     function procesarConsulta(texto) {
