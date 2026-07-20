@@ -35,6 +35,14 @@ const safeTextPreserve = (value, fallback = "—") =>
 
 const safeText = safeTextPreserve;
 
+
+function optimizarImagenCloudinary(url, ancho = 400) {
+    if (!url || typeof url !== "string") return url;
+    if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+    if (url.includes("/upload/f_auto") || url.includes(",f_auto")) return url; // ya optimizada
+    return url.replace("/upload/", `/upload/f_auto,q_auto,w_${ancho},c_limit/`);
+}
+
 const toNumber = (v, fallback = 0) => {
     if (v === null || v === undefined) return fallback;
     const n = Number(v);
@@ -493,7 +501,7 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
         const slide = document.createElement("div");
         slide.className = "carrusel-slide active";
         const img = document.createElement("img");
-        img.src = imagenes[0];
+        img.src = optimizarImagenCloudinary(imagenes[0], 500);
         img.alt = altTexto + " 1";
         img.loading = "eager";
         img.width = 400; img.height = 400;
@@ -508,7 +516,7 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
         const slide = document.createElement("div");
         slide.className = "carrusel-slide" + (idx === 0 ? " active" : "");
         const img = document.createElement("img");
-        img.src = url;
+        img.src = optimizarImagenCloudinary(url, 500);
         img.alt = altTexto + " " + (idx + 1);
         img.loading = idx === 0 ? "eager" : "lazy";
         img.width = 400; img.height = 400;
@@ -546,7 +554,7 @@ function completarCarrusel(imagenes, altTexto) {
     const primerImg = wrapper.querySelector(".carrusel-slide:first-child img");
     if (primerImg && imagenes[0]) {
         const urlNueva = new URL(imagenes[0], location.href).href;
-        if (primerImg.src !== urlNueva) primerImg.src = imagenes[0];
+        if (primerImg.src !== urlNueva) primerImg.src = optimizarImagenCloudinary(imagenes[0], 500);
     }
 
     wrapper.querySelectorAll(".carrusel-slide").forEach((slide, i) => {
@@ -752,7 +760,7 @@ function crearTarjetaDOM(prod, index = 0) {
     card.dataset.id = prod.IdProducto;
 
     const img = document.createElement("img");
-    img.src = safeText(prod.ImagenUrl);
+    img.src = optimizarImagenCloudinary(safeText(prod.ImagenUrl), 260);
     img.alt = safeText(prod.Nombre || prod.nombre);
     img.width = 254;
     img.height = 254;
@@ -1234,28 +1242,35 @@ categoriaLinks.forEach(link => {
 });
 const COLOR_SINONIMOS = {
     "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche"],
-    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "nieve", "ivory", "blanquito"],
-    "rojo": ["rojo", "roja", "rojos", "rojas", "red", "bordo", "bordeau", "granate", "carmesi", "carmesí", "escarlata", "cereza", "vino", "sangre"],
-    "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero"],
+    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "nieve", "ivory", "blanquito", "nacarado", "nacarada", "vainilla"],
+    "rojo": ["rojo", "roja", "rojos", "rojas", "red", "carmesi", "carmesí", "escarlata", "cereza", "sangre", "rubi", "rubí"],
+    "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "azul cielo", "cielo", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero", "denim", "jean"],
 
     "verde": ["verde", "verdes", "green", "oliva", "militar", "verde militar", "kaki", "esmeralda", "menta", "sage", "botella", "verde botella", "musgo", "selva", "lima", "verde francia", "verde ingles", "verde inglés", "verde seco", "verde bosque", "verde jade"],
-    "marron": ["marron", "marrón", "marrones", "cafe", "café", "tabaco", "cognac", "camel", "cuero", "chocolate", "tierra", "havana", "walnut", "tobacco", "avellana"],
+    "marron": ["marron", "marrón", "marrones", "cafe", "café", "tabaco", "cognac", "camel", "cuero", "chocolate", "tierra", "havana", "walnut", "tobacco", "avellana", "canela"],
     "suela": ["suela", "teja", "madera", "castano", "castaño", "castañas", "nuez", "roble", "cobre", "cobre viejo"],
     "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon", "salmón", "palo de rosa", "flamingo", "blush", "magenta", "hot pink"],
-    "lila": ["lila", "lilas", "violeta", "violetas", "morado", "morada", "purple", "lavanda", "lavender", "malva", "orquidea", "orquídea", "amatista"],
-    "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada", "antracita", "grafito", "piedra", "humo", "ceniza"],
+    "lila": ["lila", "lilas", "violeta", "violetas", "morado", "morada", "purple", "lavanda", "lavender", "malva", "orquidea", "orquídea", "amatista", "uva", "berenjena"],
+    "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada", "antracita", "grafito", "piedra", "humo", "ceniza", "gris topo"],
     "acero": ["acero", "acero inoxidable", "steel", "inox", "inoxidable", "metalico", "metálico", "cromado"],
     "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro", "champagne", "bronce"],
+    "oro_rosa": ["oro rosa", "rose gold", "rosegold", "oro rosado"],
+    "oro_blanco": ["oro blanco", "white gold", "plata brillante"],
+    "ambar": ["ambar", "ámbar", "amber", "ambarino", "ambarina", "topacio", "miel oscura"],
     "naranja": ["naranja", "naranjas", "orange", "oxido", "óxido", "mango", "calabaza", "ladrillo", "brick", "anaranjado", "anaranjada", "anaranjados", "anaranjadas", "bermellon", "bermellón"],
     "terracota": ["terracota", "terracotta", "coral", "teja clara", "ocre rojo", "arcilla", "canyon"],
     "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow", "ocre", "mostaza", "limón", "limon", "canario", "miel"],
     "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes", "vison", "visón", "bisón", "bison", "taupe", "natural", "crudo", "ecru", "lino", "caqui claro"],
     "rosa_palo": ["rosa palo", "nude rosa", "piel", "skin", "durazno", "peach", "albaricoque", "apricot", "melocoton", "melocotón"],
     "turquesa": ["turquesa", "turquoise", "agua", "aqua", "aguamarina", "tiffany", "verde agua", "aqua marine"],
-    "bordeaux": ["bordeaux", "bordo", "burdeos", "vino tinto", "marsala", "granate oscuro"],
-    "multicolor": ["multicolor", "estampado", "colores", "tie dye", "tie-dye", "multicolores"],
+    "bordeaux": ["bordeaux", "bordo", "bordeau", "burdeos", "vino", "vino tinto", "vinotinto", "granate", "granate oscuro", "marsala"],
+    "multicolor": ["multicolor", "estampado", "colores", "tie dye", "tie-dye", "multicolores", "arcoiris", "arco iris", "rainbow", "camuflado", "camuflada", "camo"],
     "tornasol": ["tornasol", "tornasoles", "tornasolado", "tornasolada", "tornasolados", "tornasoladas", "iridiscente", "iridiscentes", "irisado", "irisada", "holografico", "holográfico"],
-
+    "tornasol_amarillo": ["tornasol amarillo", "tornasol dorado", "amarillo tornasol", "dorado tornasol"],
+    "tornasol_azul": ["tornasol azul", "azul tornasol"],
+    "tornasol_verde": ["tornasol verde", "verde tornasol"],
+    "tornasol_rosa": ["tornasol rosa", "tornasol rosado", "rosa tornasol"],
+    "tornasol_violeta": ["tornasol violeta", "tornasol morado", "violeta tornasol"],
 };
 const COLOR_CSS = {
     "negro": "#111", "negra": "#111", "negros": "#111", "negras": "#111",
@@ -1359,21 +1374,78 @@ const COLOR_CSS = {
 
     "multicolor": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
     "estampado": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
+    "arcoiris": "linear-gradient(135deg,#e53935,#fb8c00,#fdd835,#43a047,#1e88e5,#8e24aa)",
+    "arco iris": "linear-gradient(135deg,#e53935,#fb8c00,#fdd835,#43a047,#1e88e5,#8e24aa)",
+    "rainbow": "linear-gradient(135deg,#e53935,#fb8c00,#fdd835,#43a047,#1e88e5,#8e24aa)",
+    "camuflado": "linear-gradient(135deg,#4b5320,#6b6b2a,#3d3d2e,#7a7a52)",
+    "camuflada": "linear-gradient(135deg,#4b5320,#6b6b2a,#3d3d2e,#7a7a52)",
+    "camo": "linear-gradient(135deg,#4b5320,#6b6b2a,#3d3d2e,#7a7a52)",
+
     "tornasol": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
     "tornasolado": "linear-gradient(135deg,#7b2ff7,#00c6ff,#00e0a8,#f7d046)",
+    "tornasol amarillo": "linear-gradient(135deg,#f7d046,#ffef8a,#f9a825,#fff3c4)",
+    "tornasol dorado": "linear-gradient(135deg,#f7d046,#ffef8a,#c9a84c,#fff3c4)",
+    "tornasol azul": "linear-gradient(135deg,#1565c0,#64b5f6,#00c6ff,#3949ab)",
+    "tornasol verde": "linear-gradient(135deg,#00a86b,#80cbc4,#00e0a8,#2e7d32)",
+    "tornasol rosa": "linear-gradient(135deg,#e91e8c,#f4a7b9,#ff4081,#fc8eac)",
+    "tornasol rosado": "linear-gradient(135deg,#e91e8c,#f4a7b9,#ff4081,#fc8eac)",
+    "tornasol violeta": "linear-gradient(135deg,#7e57c2,#ba68c8,#9b59b6,#b39ddb)",
+    "tornasol morado": "linear-gradient(135deg,#7e57c2,#ba68c8,#9b59b6,#b39ddb)",
+
     "bermellon": "#e34234", "bermellón": "#e34234",
     "tie dye": "linear-gradient(135deg,#e91e63,#9c27b0,#3f51b5,#00bcd4,#4caf50)",
     "tie-dye": "linear-gradient(135deg,#e91e63,#9c27b0,#3f51b5,#00bcd4,#4caf50)",
+
+    "ambar": "#c1810f", "ámbar": "#c1810f", "amber": "#c1810f",
+    "ambarino": "#c1810f", "ambarina": "#c1810f", "miel oscura": "#a86b0a",
+    "topacio": "#d99a2b",
+
+    "oro rosa": "#e0a89a", "rose gold": "#e0a89a", "rosegold": "#e0a89a", "oro rosado": "#e0a89a",
+    "oro blanco": "#d9d9d9", "white gold": "#d9d9d9", "plata brillante": "#e0e0e0",
+
+    "rubi": "#9b111e", "rubí": "#9b111e",
+
+    "nacarado": "linear-gradient(135deg,#f5f5f5,#e8dff0,#d8ecf0,#fdf6e3)",
+    "nacarada": "linear-gradient(135deg,#f5f5f5,#e8dff0,#d8ecf0,#fdf6e3)",
+    "vainilla": "#f3e5ab",
+
+    "denim": "#3b5a80", "jean": "#3b5a80",
+    "vinotinto": "#5c1a26",
+
+    "canela": "#a0522d",
+    "uva": "#6a3b8c", "berenjena": "#4b1e40",
+
+    "gris topo": "#8a7f70",
 };
+
+const COLOR_CSS_KEYS_ORDENADAS = Object.keys(COLOR_CSS).sort((a, b) => b.length - a.length);
+
+function _normalizarColorTexto(texto) {
+    return texto.toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function _buscarEnColorCSS(norm) {
+    if (COLOR_CSS[norm]) return COLOR_CSS[norm];
+    for (const key of COLOR_CSS_KEYS_ORDENADAS) {
+        if (norm.includes(key)) return COLOR_CSS[key];
+    }
+    return null;
+}
+
 function colorACSS(nombreColor) {
     if (!nombreColor || nombreColor === "—") return "#ccc";
+
+
+    const normCompleto = _normalizarColorTexto(nombreColor.replace(/[\/,]+/g, " ").replace(/\s+/g, " "));
+    if (COLOR_CSS[normCompleto]) return COLOR_CSS[normCompleto];
+
+
     const primero = nombreColor.split(/[\/,]/).map(c => c.trim()).filter(Boolean)[0] || nombreColor;
-    const norm = primero.toLowerCase().trim()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (COLOR_CSS[norm]) return COLOR_CSS[norm];
-    for (const [key, val] of Object.entries(COLOR_CSS)) {
-        if (norm.includes(key)) return val;
-    }
+    const norm = _normalizarColorTexto(primero);
+    const matchPrimero = _buscarEnColorCSS(norm);
+    if (matchPrimero) return matchPrimero;
+
     if (typeof CSS !== "undefined" && CSS.supports && CSS.supports("color", norm)) return norm;
     return "#ccc";
 }
