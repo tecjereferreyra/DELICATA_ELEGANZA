@@ -35,14 +35,6 @@ const safeTextPreserve = (value, fallback = "—") =>
 
 const safeText = safeTextPreserve;
 
-
-function optimizarImagenCloudinary(url, ancho = 400) {
-    if (!url || typeof url !== "string") return url;
-    if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
-    if (url.includes("/upload/f_auto") || url.includes(",f_auto")) return url; // ya optimizada
-    return url.replace("/upload/", `/upload/f_auto,q_auto,w_${ancho},c_limit/`);
-}
-
 const toNumber = (v, fallback = 0) => {
     if (v === null || v === undefined) return fallback;
     const n = Number(v);
@@ -501,7 +493,7 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
         const slide = document.createElement("div");
         slide.className = "carrusel-slide active";
         const img = document.createElement("img");
-        img.src = optimizarImagenCloudinary(imagenes[0], 500);
+        img.src = imagenes[0];
         img.alt = altTexto + " 1";
         img.loading = "eager";
         img.width = 400; img.height = 400;
@@ -516,7 +508,7 @@ function renderCarrusel(imagenes, altTexto, esParcial = false) {
         const slide = document.createElement("div");
         slide.className = "carrusel-slide" + (idx === 0 ? " active" : "");
         const img = document.createElement("img");
-        img.src = optimizarImagenCloudinary(url, 500);
+        img.src = url;
         img.alt = altTexto + " " + (idx + 1);
         img.loading = idx === 0 ? "eager" : "lazy";
         img.width = 400; img.height = 400;
@@ -554,7 +546,7 @@ function completarCarrusel(imagenes, altTexto) {
     const primerImg = wrapper.querySelector(".carrusel-slide:first-child img");
     if (primerImg && imagenes[0]) {
         const urlNueva = new URL(imagenes[0], location.href).href;
-        if (primerImg.src !== urlNueva) primerImg.src = optimizarImagenCloudinary(imagenes[0], 500);
+        if (primerImg.src !== urlNueva) primerImg.src = imagenes[0];
     }
 
     wrapper.querySelectorAll(".carrusel-slide").forEach((slide, i) => {
@@ -760,7 +752,7 @@ function crearTarjetaDOM(prod, index = 0) {
     card.dataset.id = prod.IdProducto;
 
     const img = document.createElement("img");
-    img.src = optimizarImagenCloudinary(safeText(prod.ImagenUrl), 260);
+    img.src = safeText(prod.ImagenUrl);
     img.alt = safeText(prod.Nombre || prod.nombre);
     img.width = 254;
     img.height = 254;
