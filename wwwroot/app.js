@@ -1665,11 +1665,11 @@ function extraerFiltrosBusqueda(texto) {
 
     let m = texto.match(/(\d+(?:[.,]\d+)?)\s*cm\s*de\s*alto/);
     if (!m) m = texto.match(/alto\s*(\d+(?:[.,]\d+)?)/);
-    if (m) filtros.alto = m[1];
+    if (m) filtros.alto = m[1].replace(",", ".");
 
     m = texto.match(/(\d+(?:[.,]\d+)?)\s*cm\s*de\s*ancho/);
     if (!m) m = texto.match(/ancho\s*(\d+(?:[.,]\d+)?)/);
-    if (m) filtros.ancho = m[1];
+    if (m) filtros.ancho = m[1].replace(",", ".");
     return filtros;
 }
 function matchBusquedaFuzzy(camposNormalizados, textoBusqueda) {
@@ -1759,8 +1759,8 @@ const aplicarFiltros = (preservarPaginacion = false) => {
 
         base = base.filter(p => {
             const idx = p._indiceBusqueda;
-            if (filtros.alto && idx.alto !== filtros.alto) return false;
-            if (filtros.ancho && idx.ancho !== filtros.ancho) return false;
+            if (filtros.alto && parseFloat(idx.alto.replace(",", ".")) !== parseFloat(filtros.alto)) return false;
+            if (filtros.ancho && parseFloat(idx.ancho.replace(",", ".")) !== parseFloat(filtros.ancho)) return false;
             if (tipoExacto && idx.tipo !== tipoExacto.tipo) return false;
             if (textoParaFuzzy === "") return true;
             return matchBusquedaFuzzy(p._camposNormalizados, textoParaFuzzy);
@@ -2134,14 +2134,7 @@ function initZoomTouch() {
 
     const pointers = new Map();
 
-    // --- DEBUG TEMPORAL: sacar después ---
-    let dbg = document.getElementById('zoomDebug');
-    if (!dbg) {
-        dbg = document.createElement('div');
-        dbg.id = 'zoomDebug';
-        dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#000;color:#0f0;font-size:12px;padding:6px;font-family:monospace;pointer-events:none;white-space:pre-wrap;';
-        document.body.appendChild(dbg);
-    }
+   
     function getActiveImg() {
         return modalImgContainer.querySelector(".carrusel-slide.active img")
             || modalImgContainer.querySelector("img");
@@ -3518,6 +3511,7 @@ const TIPO_ALIAS_MAP = {
     "porta notebook": "Portanotebooks",
     "porta notebooks": "Portanotebooks",
     "aro": "Aros",
+    "aros": "Aros",
     "argolla": "Argollas",
     "argollas": "Argollas",
     "cadena": "Cadenas",
@@ -3565,9 +3559,10 @@ function extraerTipoExacto(textoNormalizado) {
     }
     const tokens = textoNormalizado.split(/\s+/).filter(Boolean);
     for (const tok of tokens) {
-        if (TIPO_ALIAS_MAP[tok]) {
+        const clave = TIPO_ALIAS_MAP[tok] ? tok : normalizarTermino(tok);
+        if (TIPO_ALIAS_MAP[clave]) {
             return {
-                tipo: normalizar(TIPO_ALIAS_MAP[tok]),
+                tipo: normalizar(TIPO_ALIAS_MAP[clave]),
                 textoRestante: textoNormalizado.replace(new RegExp(`\\b${tok}\\b`), " ").replace(/\s+/g, " ").trim()
             };
         }
