@@ -1234,6 +1234,11 @@
                 );
                 respuesta.productos.forEach(agregarTarjetaProducto);
                 if (respuesta.chips) aplicarChips(respuesta.chips);
+                if (_ultimoAnclaje) {
+                    scrollAlInicioDe(_ultimoAnclaje);
+                } else {
+                    scrollAbajo();
+                }
                 return;
             }
 
@@ -1254,6 +1259,8 @@
 
             if (_ultimoAnclaje) {
                 scrollAlInicioDe(_ultimoAnclaje);
+            } else {
+                scrollAbajo();
             }
         }, 450);
     }

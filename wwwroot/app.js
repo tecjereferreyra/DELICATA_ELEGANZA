@@ -1213,6 +1213,10 @@ categoriaLinks.forEach(link => {
         linkActivo.classList.add('active-cat');
         categoriaActivaActual = normalizar(target.dataset.cat || linkActivo.dataset.cat || "todos");
         subcategoriaActivaActual = normalizar(target.dataset.tipo || linkActivo.dataset.tipo || "");
+
+        modoNuevosActivo = false;
+        document.getElementById("toggleNuevos")?.classList.remove("active");
+
         aplicarFiltros();
         irAlContenedorProductos();
 
