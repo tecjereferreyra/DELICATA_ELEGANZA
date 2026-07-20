@@ -14,6 +14,15 @@ let subcategoriaActivaActual = "";
 let modoNuevosActivo = false;
 let filtroPrevioNuevos = null;
 const CANTIDAD_NUEVOS = 40;
+
+function desactivarModoNuevos() {
+    modoNuevosActivo = false;
+    document.getElementById("toggleNuevos")?.classList.remove("active");
+    const icono = document.getElementById("iconoNuevos");
+    if (icono) {
+        icono.innerHTML = '<path d="M12 5l1.8 5.2L19 12l-5.2 1.8L12 19l-1.8-5.2L5 12l5.2-1.8z"></path>';
+    }
+}
 const BLOQUE_CARGA = 12;
 window.addEventListener("pageshow", (e) => {
     if (e.persisted) cargarProductos(true);
@@ -1214,8 +1223,7 @@ categoriaLinks.forEach(link => {
         categoriaActivaActual = normalizar(target.dataset.cat || linkActivo.dataset.cat || "todos");
         subcategoriaActivaActual = normalizar(target.dataset.tipo || linkActivo.dataset.tipo || "");
 
-        modoNuevosActivo = false;
-        document.getElementById("toggleNuevos")?.classList.remove("active");
+        desactivarModoNuevos();
 
         aplicarFiltros();
         irAlContenedorProductos();
@@ -2421,8 +2429,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const busquedaDebounced = debounce(aplicarFiltros, 300);
     if (domCache.searchInput) {
         domCache.searchInput.addEventListener("input", () => {
-            modoNuevosActivo = false;
-            document.getElementById("toggleNuevos")?.classList.remove("active");
+            desactivarModoNuevos();
             busquedaDebounced();
         });
         domCache.searchInput.addEventListener("keydown", (e) => {
@@ -2518,6 +2525,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 categoriaLinks.forEach(l => l.classList.remove('active-cat'));
                 categoriaActivaActual = normalizar(cat);
                 subcategoriaActivaActual = "";
+                desactivarModoNuevos();
                 _menuCerradoRecien = true;
                 activarBloqueoClick(600);
                 unlockScroll();
@@ -2560,6 +2568,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (linkDesktop) linkDesktop.classList.add('active-cat');
             categoriaActivaActual = catNorm || "todos";
             subcategoriaActivaActual = tipoNorm;
+            desactivarModoNuevos();
             _menuCerradoRecien = true;
             activarBloqueoClick(600);
             unlockScroll();

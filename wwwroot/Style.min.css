@@ -597,6 +597,17 @@ header.navbar {
     backface-visibility: hidden;
 }
 
+.notch-cover {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top, 0px);
+    background: rgba(17,17,17,.97);
+    z-index: 1001;
+    pointer-events: none;
+}
+
 .hamburger, .product-card {
     cursor: pointer;
     flex-direction: column

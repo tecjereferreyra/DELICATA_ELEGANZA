@@ -40,8 +40,7 @@
             return window.productosData;
         }
         try {
-            // productosData es una variable global de script clásico (no un módulo),
-            // por eso también puede referenciarse directamente si existe en el scope global.
+
             if (typeof productosData !== "undefined" && Array.isArray(productosData)) return productosData;
         } catch (e) { /* no existe todavía */ }
         return [];
@@ -68,8 +67,7 @@
         return listaUnica("Categoria", ["Sin categoría", "—"]);
     }
 
-    // Tipos de producto (campo "Tipo") que existen dentro de una categoría puntual,
-    // ej: dentro de "Bijouteria" -> ["Aros", "Collares", "Pulseras", ...]
+
     function getTiposDeCategoria(categoria) {
         const norm = normalizarTexto(categoria);
         const excluidos = ["sin tipo", "—", "-", ""];
@@ -453,7 +451,6 @@
         };
     }
 
-    // Todos los tipos de producto que existen en el catálogo (cualquier categoría)
     function getTodosLosTipos() {
         const excluidos = ["sin tipo", "—", "-", ""];
         const set = new Set();
@@ -506,8 +503,6 @@
         return null;
     }
 
-    // Busca coincidencia por una palabra clave puntual de tipo de producto (ej: "aro", "cartera"),
-    // a diferencia de detectarCategoriaExacta que busca el nombre de una categoría completa del catálogo.
     function detectarGrupoCuidadoPorClave(texto) {
         for (let i = 0; i < CUIDADOS.length; i++) {
             const grupo = CUIDADOS[i];
@@ -556,8 +551,7 @@
         return { texto: "Todavía no tengo recomendaciones específicas para " + categoria + ", pero puedo ayudarte con otra consulta." };
     }
 
-    // Paso 1 del flujo de recomendaciones: preguntar la categoría y mostrar sus chips
-    // en el lugar de los chips originales (Horarios, Ubicación, etc.).
+
     function iniciarFlujoCategorias(reintentar) {
         const categorias = getCategorias();
         if (!categorias.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
@@ -622,24 +616,14 @@
         return normalizarTexto([p.Nombre, p.Marca, p.Categoria, p.Tipo, p.Color, p.Material, p.Modelo].join(" "));
     }
 
-    /* ---------- Conexión con el filtro de categorías/tipos del main (app.js) ----------
-     * app.js maneja el filtrado real mediante los links "<a data-cat="..." data-tipo="...">"
-     * dentro de ".categories" (desktop) y "<li data-cat data-tipo>" dentro de ".mobile-categories"
-     * (mobile): al hacer click ahí, setea categoriaActivaActual/subcategoriaActivaActual, llama a
-     * aplicarFiltros() y hace scroll con irAlContenedorProductos(). En vez de duplicar esa lógica
-     * acá, buscamos el link real (categoría, o categoría+tipo puntual) y lo "clickeamos" por código,
-     * así el resultado es exactamente el mismo que si el usuario lo hubiera tocado él mismo.
-     * Preferimos siempre los links de escritorio (aunque estén ocultos por CSS en mobile), porque
-     * no disparan el bloqueo de "click fantasma" que sí dispara el menú mobile al cerrarse.
-     */
     function irACategoriaEnMain(categoria, tipo) {
         const objetivoCat = normalizarTexto(categoria || "");
         const objetivoTipo = normalizarTexto(tipo || "");
         if (!objetivoCat && !objetivoTipo) return false;
 
-        const candidatos = Array.from(document.querySelectorAll(
-            '.categories a[data-cat], .mobile-categories li[data-cat]'
-        ));
+        const candidatosDesktop = Array.from(document.querySelectorAll('.categories a[data-cat]'));
+        const candidatosMobile = Array.from(document.querySelectorAll('.mobile-categories li[data-cat]'));
+        const candidatos = candidatosDesktop.concat(candidatosMobile);
         if (!candidatos.length) return false;
 
         function catCoincide(el) {
@@ -655,9 +639,7 @@
             elegido = candidatos.find(function (el) {
                 return catCoincide(el) && normalizarTexto(el.dataset.tipo || "") === objetivoTipo;
             });
-            // 2) Si no sabemos la categoría, buscamos el tipo en cualquier categoría
-            //    (algunos tipos existen en más de una, ej: "Aros" en Bijouterie y en Fiesta;
-            //    en ese caso se elige la primera coincidencia del menú).
+
             if (!elegido && !objetivoCat) {
                 elegido = candidatos.find(function (el) {
                     return normalizarTexto(el.dataset.tipo || "") === objetivoTipo;
@@ -946,8 +928,6 @@
         );
     }
 
-    // Aplica en la UI lo que haya pedido la respuesta del motor de reglas: volver a los
-    // chips originales, mostrar categorías, o mostrar los tipos de una categoría puntual.
     function aplicarChips(chips) {
         if (!chips) return;
         if (chips === "principal") {
@@ -959,11 +939,7 @@
         }
     }
 
-    /* ---------- Motor de respuestas (reglas por palabras clave) ---------- */
 
-    // Punto de entrada: si estamos en medio del flujo de recomendaciones (esperando
-    // categoría o tipo de producto), intenta resolverlo acá antes que nada. Si el
-    // mensaje no tiene nada que ver, abandona el flujo y sigue con las reglas normales.
     function generarRespuesta(textoOriginal) {
         const t = normalizarTexto(textoOriginal);
         const nPalabras = contarPalabras(t);
@@ -1020,9 +996,7 @@
                 }
             }
 
-            // No coincidió con nada del flujo de recomendaciones. Si el mensaje parece
-            // referirse a otra cosa (horarios, ubicación, etc.), abandonamos el flujo y
-            // dejamos que las reglas normales de abajo lo resuelvan.
+
             if (esOtraIntencionClara(t)) {
                 contextoPendiente = null;
                 categoriaEnCurso = null;
@@ -1104,9 +1078,7 @@
             return { texto: "Nuestras categorías de productos son:\n" + categorias.join(", ") + "." };
         }
 
-        // Mostrar todos los productos de una categoría o de un tipo puntual (esto cierra el
-        // chat y muestra las tarjetas en el main, usando el filtro real del sitio). No se activa
-        // si el mensaje es en realidad una consulta de cuidado ("quiero ver recomendaciones de aros").
+
         const esConsultaCuidado = contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"]);
         const pideVerCategoriaCompleta = !esConsultaCuidado && (
             /\bver\b/.test(t) ||
@@ -1327,9 +1299,6 @@
         setTimeout(function () { tip.classList.remove("mostrar"); }, duracion || 1800);
     }
 
-    // En desktop, el tooltip aparece solo con :hover (CSS). En táctil no hay hover,
-    // así que la primera vez que se carga la página lo mostramos solo un instante,
-    // como un toast, para enseñar qué es cada botón sin que el usuario tenga que tocarlo.
     function iniciarOnboardingTooltips() {
         if (!esTactil()) return;
 
@@ -1349,8 +1318,7 @@
         botonEl.classList.add("visible");
         try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) { /* almacenamiento no disponible */ }
 
-        // El botón del asistente recién existe visualmente acá, así que su tooltip
-        // de bienvenida se dispara en este momento (una sola vez), y no antes.
+
         if (esTactil()) {
             const TOOLTIP_ASISTENTE_KEY = "delicatitaTooltipAsistenteVisto";
             let visto = false;
@@ -1384,15 +1352,15 @@
             }
         });
 
-        // Si el usuario ya la había descubierto antes, mostrarla directamente
+  
         try {
             if (localStorage.getItem(STORAGE_KEY) === "1") revelarBoton();
         } catch (e) { /* almacenamiento no disponible */ }
 
-        // Se revela (si todavía no lo estaba) al tocar "Ver novedades"
+  
         document.getElementById("toggleNuevos").addEventListener("click", revelarBoton);
 
-        // Enseña brevemente qué es cada botón flotante en dispositivos táctiles
+
         iniciarOnboardingTooltips();
     });
 })();
