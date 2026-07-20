@@ -615,7 +615,18 @@
     function camposBusqueda(p) {
         return normalizarTexto([p.Nombre, p.Marca, p.Categoria, p.Tipo, p.Color, p.Material, p.Modelo].join(" "));
     }
-
+    function irAGridConBusqueda(texto) {
+        const input = document.getElementById("searchInput");
+        if (!input || typeof aplicarFiltros !== "function") return false;
+        if (typeof categoriaActivaActual !== "undefined") categoriaActivaActual = "todos";
+        if (typeof subcategoriaActivaActual !== "undefined") subcategoriaActivaActual = "";
+        document.querySelectorAll(".categories a.active-cat, .mobile-categories li.active-cat")
+            .forEach(function (el) { el.classList.remove("active-cat"); });
+        input.value = texto || "";
+        aplicarFiltros();
+        if (typeof irAlContenedorProductos === "function") irAlContenedorProductos();
+        return true;
+    }
     function irACategoriaEnMain(categoria, tipo) {
         const objetivoCat = normalizarTexto(categoria || "");
         const objetivoTipo = normalizarTexto(tipo || "");
@@ -1099,7 +1110,8 @@
             if (categoriaExacta) {
                 return { verEnMain: { categoria: categoriaExacta } };
             }
-            
+ 
+            return { verEnMain: {} };
         }
 
         // Recomendaciones / cuidados de uso
@@ -1148,18 +1160,10 @@
             if (categoriaSuelta) return preguntaCategoria(categoriaSuelta);
         }
 
-        // Búsqueda de producto puntual en el catálogo
-        const resultados = buscarProductos(textoOriginal);
-        if (resultados.length) {
-            return { productos: resultados };
-        }
+        
+        return { irABuscador: textoOriginal };
 
-        // Fallback
-        return {
-            texto: "No logré identificar tu consulta. Puedo ayudarte con horarios, ubicación, redes sociales, " +
-                "marcas, materiales, recomendaciones de cuidado o información de un producto puntual. " +
-                "¿Podrías reformular tu pregunta?"
-        };
+       
     }
 
     function procesarConsulta(texto) {
@@ -1182,35 +1186,14 @@
                 if (enganchado) {
                     return;
                 }
-                // Fallback por si no se encuentra el link en el main: mostramos las tarjetas acá mismo.
-                const etiquetaDestino = destino.tipo || destino.categoria;
-                const productos = destino.tipo
-                    ? productosPorTipo(destino.tipo, destino.categoria)
-                    : productosPorCategoria(destino.categoria);
-                if (!productos.length) {
-                    agregarMensajeTexto("Por el momento no tengo productos cargados en " + etiquetaDestino + ".", "bot");
-                    return;
-                }
-                agregarMensajeTexto("Estos son los productos que tenemos en " + etiquetaDestino + ":", "bot");
-                productos.slice(0, 6).forEach(agregarTarjetaProducto);
+             
+                irAGridConBusqueda(destino.tipo || destino.categoria || "");
                 return;
             }
 
-            if (respuesta.productos) {
-                agregarMensajeTexto(
-                    respuesta.textoProductos ||
-                    (respuesta.productos.length === 1
-                        ? "Encontré este producto en el catálogo:"
-                        : "Encontré estos productos en el catálogo:"),
-                    "bot"
-                );
-                respuesta.productos.forEach(agregarTarjetaProducto);
-                if (respuesta.chips) aplicarChips(respuesta.chips);
-                if (_ultimoAnclaje) {
-                    scrollAlInicioDe(_ultimoAnclaje);
-                } else {
-                    scrollAbajo();
-                }
+            if (respuesta.irABuscador) {
+                cerrarPanel();
+                irAGridConBusqueda(respuesta.irABuscador);
                 return;
             }
 

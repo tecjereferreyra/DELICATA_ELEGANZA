@@ -756,13 +756,18 @@ function crearTarjetaDOM(prod, index = 0) {
     img.alt = safeText(prod.Nombre || prod.nombre);
     img.width = 254;
     img.height = 254;
-    const esPrimera = index === 0;
+    const esPrimera = index < 4;
     img.loading = esPrimera ? "eager" : "lazy";
     img.decoding = "async";
     if (esPrimera) {
         img.fetchPriority = "high";
     }
     img.style.backgroundColor = "#f0f0f0";
+    if (img.complete) {
+        img.classList.add("img-cargada");
+    } else {
+        img.addEventListener("load", () => img.classList.add("img-cargada"), { once: true });
+    }
     card.appendChild(img);
 
     const body = document.createElement("div");
@@ -1451,7 +1456,7 @@ function recalcularCamposBusqueda(prod) {
         color: normalizar(prod.Color || ""),
         marca: normalizar(prod.Marca || ""),
         material: normalizar(prod.Material || ""),
-        tipo: normalizar(prod.Tipo || ""),
+        tipo: normalizar(normalizarTipo(prod.Tipo || "")),
         categoria: normalizar(prod.Categoria || ""),
         genero: normalizar(prod.Genero || ""),
         alto: prod.Alto ? String(prod.Alto) : "",
