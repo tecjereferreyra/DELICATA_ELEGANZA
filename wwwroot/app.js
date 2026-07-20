@@ -4005,19 +4005,26 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         }
 
 
-
-
-        if (match([
-            "aro", "piercing", "expansor", "espansor",
-            "helix", "clapton", "nostril", "earcuff", "cuff", "ear-cuff",
-            "argolla", "septum", "bull", "industrial", "flecha",
-            "earring", "pendiente", "arete", "earing", "dormilon", "dormilón", "tuerca", "stick", "clip oreja"
-        ])) {
+        if (match(["aro", "earring", "pendiente", "arete", "earing", "dormilon", "dormilón", "tuerca", "stick", "clip oreja"])) {
             setVisible(campos.genero, true);
             setVisible(campos.alto, true);
             setVisible(campos.ancho, true);
             setVisible(campos.peso, true);
             renameLabel(campoStock, "Stock por par");
+            renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");
+            return;
+        }
+
+        if (match([
+            "piercing", "expansor", "espansor",
+            "helix", "clapton", "nostril", "earcuff", "cuff", "ear-cuff",
+            "argolla", "septum", "bull", "industrial", "flecha"
+        ])) {
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.peso, true);
+            renameLabel(campoStock, "Stock por unidad");
             renameLabel(campos.peso, isView ? "Peso total" : "Peso total (g)");
             return;
         }
