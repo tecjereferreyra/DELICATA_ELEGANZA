@@ -1123,7 +1123,20 @@
             if (categoriaExacta) {
                 return { verEnMain: { categoria: categoriaExacta } };
             }
- 
+
+            const pideExplicitamenteTodos = contieneAlguna(t, [
+                "ver todos", "ver todo", "todos los productos", "mostrame todo", "muestrame todo",
+                "todo el catalogo", "quiero ver todos"
+            ]);
+            if (pideExplicitamenteTodos) {
+                return { verEnMain: {} };
+            }
+
+            const consultaSinVer = textoOriginal.replace(/\bver\b/gi, "").trim();
+            if (consultaSinVer) {
+                return { irABuscador: consultaSinVer };
+            }
+
             return { verEnMain: {} };
         }
 
