@@ -1327,14 +1327,9 @@ header.navbar .title {
         height: auto;
         border-radius: 22px 22px 0 0;
         margin-bottom: 0;
-        transition: transform .3s, opacity .35s ease;
-        display: block;
-        opacity: 0;
+        transition: transform .3s;
+        display: block
     }
-
-        .product-card img.img-cargada {
-            opacity: 1;
-        }
 
     .product-card:hover img {
         transform: scale(1.04)

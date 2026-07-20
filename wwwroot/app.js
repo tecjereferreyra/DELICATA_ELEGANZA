@@ -756,18 +756,13 @@ function crearTarjetaDOM(prod, index = 0) {
     img.alt = safeText(prod.Nombre || prod.nombre);
     img.width = 254;
     img.height = 254;
-    const esPrimera = index < 4;
+    const esPrimera = index === 0;
     img.loading = esPrimera ? "eager" : "lazy";
     img.decoding = "async";
     if (esPrimera) {
         img.fetchPriority = "high";
     }
     img.style.backgroundColor = "#f0f0f0";
-    if (img.complete) {
-        img.classList.add("img-cargada");
-    } else {
-        img.addEventListener("load", () => img.classList.add("img-cargada"), { once: true });
-    }
     card.appendChild(img);
 
     const body = document.createElement("div");
@@ -1173,6 +1168,8 @@ function renderizarProductosProgresivo(reiniciar = false) {
                 fragment.appendChild(crearTarjetaDOM(prod, i));
             }
         }
+
+        existentes.forEach(card => cardObserver.unobserve(card));
         contenedor.replaceChildren(fragment);
     } else {
         const fragment = document.createDocumentFragment();
@@ -1495,6 +1492,7 @@ function recalcularCamposBusqueda(prod) {
     ].filter(v => v && v !== "—" && v !== "null" && String(v).trim() !== "")
         .join(" ")
         .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/-/g, " ");
+    prod._tokensBusqueda = prod._camposNormalizados.split(/\s+/).filter(Boolean);
     return prod;
 }
 function renderSkeletons(cantidad = 8) {
@@ -1606,9 +1604,7 @@ function parsearGrupos(textoBusqueda) {
 function raizAdjetivo(p) {
     return normalizarTermino(p).replace(/[oa]$/, "");
 }
-function palabraMatchFuzzy(palabra, textoNormalizado) {
-    const tokens = textoNormalizado.split(/\s+/);
-
+function palabraMatchFuzzy(palabra, tokens) {
     if (/^\d+([.,]\d+)?$/.test(palabra)) {
         return tokens.includes(palabra);
     }
@@ -1677,14 +1673,14 @@ function extraerFiltrosBusqueda(texto) {
     if (m) filtros.ancho = m[1].replace(",", ".");
     return filtros;
 }
-function matchBusquedaFuzzy(camposNormalizados, textoBusqueda) {
+function matchBusquedaFuzzy(tokensProducto, textoBusqueda) {
     const grupos = parsearGrupos(textoBusqueda);
     if (grupos.length === 0) return true;
     return grupos.every(alternativas =>
         alternativas.some(palabra => {
             const normalizada = normalizarTermino(palabra);
-            return palabraMatchFuzzy(palabra, camposNormalizados) ||
-                palabraMatchFuzzy(normalizada, camposNormalizados);
+            return palabraMatchFuzzy(palabra, tokensProducto) ||
+                palabraMatchFuzzy(normalizada, tokensProducto);
         })
     );
 }
@@ -1768,13 +1764,14 @@ const aplicarFiltros = (preservarPaginacion = false) => {
             if (filtros.ancho && parseFloat(idx.ancho.replace(",", ".")) !== parseFloat(filtros.ancho)) return false;
             if (tipoExacto && idx.tipo !== tipoExacto.tipo) return false;
             if (textoParaFuzzy === "") return true;
-            return matchBusquedaFuzzy(p._camposNormalizados, textoParaFuzzy);
+            return matchBusquedaFuzzy(p._tokensBusqueda, textoParaFuzzy);
         });
     }
     productosFiltrados = base;
     productosRenderizados = 0;
     const contenedor = document.getElementById("contenedor-productos");
     if (productosFiltrados.length === 0) {
+        contenedor.querySelectorAll(".product-card").forEach(card => cardObserver.unobserve(card));
         contenedor.replaceChildren();
         contenedor.innerHTML = `
             <div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--color-marca-oro);">
