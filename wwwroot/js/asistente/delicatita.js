@@ -177,7 +177,7 @@
                 "No lo fuerces al abrir o cerrar con viento fuerte.\n" +
                 "Revisá de tanto en tanto el mecanismo y las varillas."
         }
-    ]; 
+    ];
     const COMPLEMENTOS_VIAJE_SUBTIPOS = [
         {
             claves: ["bomba de vacio electrica", "bomba electrica", "bomba de vacio elec"],
@@ -451,7 +451,7 @@
             return tipos.find(function (tp) { return normalizarTexto(tp) === normalizarTexto(alias); }) || null;
         }
 
-  
+
         if (typeof extraerTipoExacto === "function") {
             const viaAlias = extraerTipoExacto(texto);
             const encontrado = tipoDelCatalogo(viaAlias && viaAlias.tipo);
@@ -507,31 +507,40 @@
             return true;
         });
     }
-    function getColoresDeTipo(tipo) {
-        const excluidos = ["sin color", "—", "-", ""];
+    const ATRIBUTOS_CONFIG = {
+        color: { campo: "Color", multiple: true, excluido: "sin color", nombreListado: "todos los colores disponibles", nombrePregunta: "los colores disponibles", nombreSingular: "el color" },
+        marca: { campo: "Marca", multiple: false, excluido: "sin marca", nombreListado: "todas las marcas disponibles", nombrePregunta: "las marcas disponibles", nombreSingular: "la marca" },
+        material: { campo: "Material", multiple: false, excluido: "sin material", nombreListado: "todos los materiales disponibles", nombrePregunta: "los materiales disponibles", nombreSingular: "el material" }
+    };
+
+    function getValoresDeAtributo(atributo, productos) {
+        const cfg = ATRIBUTOS_CONFIG[atributo];
+        const excluidos = [cfg.excluido, "—", "-", ""];
         const set = new Set();
-        productosPorTipo(tipo).forEach(function (p) {
-            if (!p.Color) return;
-            String(p.Color).split(/[\/,]+/).forEach(function (parte) {
-                const limpio = parte.trim();
+        productos.forEach(function (p) {
+            const valor = p[cfg.campo];
+            if (!valor) return;
+            if (cfg.multiple) {
+                String(valor).split(/[\/,]+/).forEach(function (parte) {
+                    const limpio = parte.trim();
+                    if (limpio && excluidos.indexOf(normalizarTexto(limpio)) === -1) set.add(limpio);
+                });
+            } else {
+                const limpio = String(valor).trim();
                 if (limpio && excluidos.indexOf(normalizarTexto(limpio)) === -1) set.add(limpio);
-            });
+            }
         });
         return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
     }
 
-    function getColoresDeCategoria(categoria) {
-        const excluidos = ["sin color", "—", "-", ""];
-        const set = new Set();
-        productosPorCategoria(categoria).forEach(function (p) {
-            if (!p.Color) return;
-            String(p.Color).split(/[\/,]+/).forEach(function (parte) {
-                const limpio = parte.trim();
-                if (limpio && excluidos.indexOf(normalizarTexto(limpio)) === -1) set.add(limpio);
-            });
-        });
-        return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
+    function valoresDeAtributoPorTipo(atributo, tipo) {
+        return getValoresDeAtributo(atributo, productosPorTipo(tipo));
     }
+
+    function valoresDeAtributoPorCategoria(atributo, categoria) {
+        return getValoresDeAtributo(atributo, productosPorCategoria(categoria));
+    }
+
 
     function respuestaCuidadosCategoria(categoria) {
         const norm = normalizarTexto(categoria);
@@ -540,7 +549,7 @@
         const especifico = respuestaTipoEspecifico(norm) || respuestaComplementoSubtipo(norm);
         if (especifico) return { texto: especifico };
 
-       
+
         if (norm.indexOf("complemento") !== -1) {
             if (norm.indexOf("viaje") !== -1) return menuComplementosViaje();
             return menuComplementos();
@@ -591,6 +600,60 @@
             texto: (reintentar ? "No encontré ese tipo de producto dentro de " + categoria + ". " : "") +
                 "¿Sobre qué tipo de producto dentro de " + categoria + " te gustaría conocer las recomendaciones de cuidado?",
             chips: { modo: "tipos", categoria: categoria, opciones: opciones }
+        };
+    }
+
+    function respuestaAtributoParaCategoria(atributo, categoria) {
+        const cfg = ATRIBUTOS_CONFIG[atributo];
+        const valores = valoresDeAtributoPorCategoria(atributo, categoria);
+        if (!valores.length) {
+            return { texto: "Todavía no tengo " + cfg.nombrePregunta + " cargados para " + categoria + "." };
+        }
+        return {
+            texto: "Para " + categoria + ", estos son " + cfg.nombreListado + ":\n" +
+                valores.map(function (v) { return "• " + v; }).join("\n"),
+            chips: { modo: "atributoAccion", opciones: [{ etiqueta: "Ver productos", mensaje: "mostrame todos los productos de " + categoria }] }
+        };
+    }
+
+    function respuestaAtributoParaTipo(atributo, tipo) {
+        const cfg = ATRIBUTOS_CONFIG[atributo];
+        const valores = valoresDeAtributoPorTipo(atributo, tipo);
+        if (!valores.length) {
+            return { texto: "Todavía no tengo " + cfg.nombrePregunta + " cargados para " + tipo + "." };
+        }
+        return {
+            texto: "Para " + tipo + ", estos son " + cfg.nombreListado + ":\n" +
+                valores.map(function (v) { return "• " + v; }).join("\n"),
+            chips: { modo: "atributoAccion", opciones: [{ etiqueta: "Ver productos", mensaje: "mostrame todos los productos de " + tipo }] }
+        };
+    }
+
+    function iniciarFlujoAtributoCategorias(atributo, reintentar) {
+        const categorias = getCategorias();
+        if (!categorias.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
+        contextoPendienteAtributo = atributo + ":categoria";
+        categoriaEnCursoAtributo = null;
+        return {
+            texto: (reintentar ? "No encontré esa categoría. " : "") +
+                "¿De qué categoría te gustaría conocer " + ATRIBUTOS_CONFIG[atributo].nombrePregunta + "?",
+            chips: { modo: "atributoCategorias", atributo: atributo }
+        };
+    }
+
+    function iniciarFlujoAtributoTipo(atributo, categoria, reintentar) {
+        const opciones = getOpcionesDeCategoria(categoria);
+        if (!opciones || !opciones.length) {
+            const resultado = respuestaAtributoParaCategoria(atributo, categoria);
+            resultado.chips = resultado.chips || "principal";
+            return resultado;
+        }
+        contextoPendienteAtributo = atributo + ":tipo";
+        categoriaEnCursoAtributo = categoria;
+        return {
+            texto: (reintentar ? "No encontré ese tipo de producto dentro de " + categoria + ". " : "") +
+                "¿De qué tipo de producto dentro de " + categoria + " te gustaría conocer " + ATRIBUTOS_CONFIG[atributo].nombreSingular + "?",
+            chips: { modo: "atributoTipos", atributo: atributo, categoria: categoria, opciones: opciones }
         };
     }
 
@@ -679,8 +742,13 @@
         const catalogo = getCatalogo();
         if (!catalogo.length) return [];
 
-        const tokens = normalizarTexto(texto).split(/\s+/).filter(function (t) { return t.length > 2; });
+        // Palabras de más de 3 letras (evita que preposiciones/conectores generen falsos positivos)
+        const tokens = normalizarTexto(texto).split(/\s+/).filter(function (t) { return t.length > 3; });
         if (!tokens.length) return [];
+
+        // Se exige que coincida al menos la mitad de las palabras significativas,
+        // para no confundir una consulta ambigua o mal escrita con una búsqueda real de producto.
+        const minimoCoincidencias = Math.max(1, Math.ceil(tokens.length / 2));
 
         const conPuntaje = catalogo
             .map(function (p) {
@@ -688,7 +756,7 @@
                 const puntaje = tokens.reduce(function (acc, t) { return acc + (campo.indexOf(t) !== -1 ? 1 : 0); }, 0);
                 return { p: p, puntaje: puntaje };
             })
-            .filter(function (r) { return r.puntaje > 0; })
+            .filter(function (r) { return r.puntaje >= minimoCoincidencias; })
             .sort(function (a, b) { return b.puntaje - a.puntaje; });
 
 
@@ -713,9 +781,11 @@
     let chatIniciado = false;
     let _scrollAncladoAlInicio = false;
     let _ultimoAnclaje = null;
-  
+
     let contextoPendiente = null;
     let categoriaEnCurso = null;
+    let contextoPendienteAtributo = null; // "color:categoria" | "color:tipo" | "marca:categoria" | "marca:tipo" | "material:categoria" | "material:tipo"
+    let categoriaEnCursoAtributo = null;
 
     function crearElementos() {
         // Botón flotante
@@ -730,7 +800,7 @@
             '<span class="tooltip-boton">Asistente virtual</span>';
         document.body.appendChild(botonEl);
 
-       
+
         backdropEl = document.createElement("div");
         backdropEl.className = "delicatita-backdrop";
         backdropEl.addEventListener("click", function () { cerrarPanel(); });
@@ -952,6 +1022,40 @@
         );
     }
 
+    function renderChipsAtributoCategorias(atributo) {
+        const categorias = getCategorias();
+        const prefijo = atributo === "color" ? "colores de " : (atributo === "marca" ? "marcas de " : "materiales de ");
+        renderChipsConVolver(
+            categorias.map(function (c) { return { etiqueta: c, mensaje: prefijo + c }; }),
+            function () {
+                contextoPendienteAtributo = null;
+                categoriaEnCursoAtributo = null;
+                renderChipsPrincipales();
+            }
+        );
+    }
+
+    function renderChipsAtributoTipos(atributo, categoria, opciones) {
+        const lista = opciones || getOpcionesDeCategoria(categoria) || [];
+        const prefijo = atributo === "color" ? "colores de " : (atributo === "marca" ? "marcas de " : "materiales de ");
+        renderChipsConVolver(
+            lista.map(function (o) { return { etiqueta: o, mensaje: prefijo + o }; }),
+            function () {
+                contextoPendienteAtributo = atributo + ":categoria";
+                categoriaEnCursoAtributo = null;
+                renderChipsAtributoCategorias(atributo);
+            }
+        );
+    }
+
+    function renderChipsAtributoAccion(opciones) {
+        renderChipsConVolver(opciones, function () {
+            contextoPendienteAtributo = null;
+            categoriaEnCursoAtributo = null;
+            renderChipsPrincipales();
+        });
+    }
+
     function aplicarChips(chips) {
         if (!chips) return;
         if (chips === "principal") {
@@ -960,6 +1064,12 @@
             renderChipsCategoriasRecomendacion();
         } else if (chips.modo === "tipos") {
             renderChipsTiposDeCategoria(chips.categoria, chips.opciones);
+        } else if (chips.modo === "atributoCategorias") {
+            renderChipsAtributoCategorias(chips.atributo);
+        } else if (chips.modo === "atributoTipos") {
+            renderChipsAtributoTipos(chips.atributo, chips.categoria, chips.opciones);
+        } else if (chips.modo === "atributoAccion") {
+            renderChipsAtributoAccion(chips.opciones);
         }
     }
 
@@ -968,6 +1078,45 @@
         const t = normalizarTexto(textoOriginal);
         const nPalabras = contarPalabras(t);
         let forzarChipsPrincipales = false;
+
+        if (contextoPendienteAtributo) {
+            const partesAtributo = contextoPendienteAtributo.split(":");
+            const atributoPendiente = partesAtributo[0];
+            const etapaPreviaAtributo = partesAtributo[1];
+            const categoriaGuardadaAtributo = categoriaEnCursoAtributo;
+
+            if (etapaPreviaAtributo === "categoria") {
+                const categoriaExacta = detectarCategoriaExacta(t);
+                if (categoriaExacta) return iniciarFlujoAtributoTipo(atributoPendiente, categoriaExacta);
+
+                if (esOtraIntencionClara(t)) {
+                    contextoPendienteAtributo = null;
+                    categoriaEnCursoAtributo = null;
+                    forzarChipsPrincipales = true;
+                } else {
+                    return iniciarFlujoAtributoCategorias(atributoPendiente, true);
+                }
+            } else if (etapaPreviaAtributo === "tipo" && categoriaGuardadaAtributo) {
+                const opciones = getOpcionesDeCategoria(categoriaGuardadaAtributo) || [];
+                const encontrada = opciones.find(function (o) {
+                    const on = normalizarTexto(o);
+                    return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
+                });
+                if (encontrada) {
+                    contextoPendienteAtributo = null;
+                    categoriaEnCursoAtributo = null;
+                    return respuestaAtributoParaTipo(atributoPendiente, encontrada);
+                }
+
+                if (esOtraIntencionClara(t)) {
+                    contextoPendienteAtributo = null;
+                    categoriaEnCursoAtributo = null;
+                    forzarChipsPrincipales = true;
+                } else {
+                    return iniciarFlujoAtributoTipo(atributoPendiente, categoriaGuardadaAtributo, true);
+                }
+            }
+        }
 
         if (contextoPendiente === "categoria" || contextoPendiente === "tipo") {
             const etapaPrevia = contextoPendiente;
@@ -1034,6 +1183,35 @@
         return resultado;
     }
 
+    function respuestaNoEntendido() {
+        return {
+            texto: "No entendí tu pregunta, ¿podrías reformularla? Puedo ayudarte con:\n" +
+                "• Horarios y días de atención\n" +
+                "• Ubicación del local\n" +
+                "• Marcas y materiales que trabajamos\n" +
+                "• Recomendaciones de cuidado por categoría o tipo de producto\n" +
+                "• Mostrarte todos los productos de una categoría\n" +
+                "• Datos de un producto puntual del catálogo\n" +
+                "• Nuestras redes sociales\n\n" +
+                "También podés tocar una de las sugerencias de abajo.",
+            chips: "principal"
+        };
+    }
+
+    function manejarConsultaAtributo(atributo, t) {
+        const tipoExacto = detectarTipoExacto(t);
+        const categoriaExacta = detectarCategoriaExacta(t);
+
+        if (tipoExacto) {
+            return respuestaAtributoParaTipo(atributo, tipoExacto);
+        } else if (categoriaExacta) {
+            return respuestaAtributoParaCategoria(atributo, categoriaExacta);
+        }
+        // No se detectó categoría ni tipo puntual: arrancamos el flujo guiado
+        // (igual que en "recomendaciones de cuidado"): elegir categoría y luego tipo.
+        return iniciarFlujoAtributoCategorias(atributo);
+    }
+
     function generarRespuestaBase(t, nPalabras, textoOriginal) {
 
         if (nPalabras <= 4 && contieneAlguna(t, ["gracias", "chau", "adios", "hasta luego", "nos vemos"])) {
@@ -1077,41 +1255,17 @@
 
 
         if (contieneAlguna(t, ["marca", "marcas"])) {
-            const marcas = getMarcas();
-            if (!marcas.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
-            return { texto: "Trabajamos, entre otras, con estas marcas:\n" + marcas.map(function (m) { return "• " + m; }).join("\n") };
+            return manejarConsultaAtributo("marca", t);
         }
 
         if (contieneAlguna(t, ["material", "materiales"])) {
-            const materiales = getMateriales();
-            if (!materiales.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
-            return { texto: "Trabajamos con estos materiales:\n" + materiales.map(function (m) { return "• " + m; }).join("\n") };
+            return manejarConsultaAtributo("material", t);
         }
 
         if (contieneAlguna(t, ["color", "colores"])) {
-            const tipoExactoColor = detectarTipoExacto(t);
-            const categoriaExactaColor = detectarCategoriaExacta(t);
-
-            if (tipoExactoColor) {
-                const colores = getColoresDeTipo(tipoExactoColor);
-                if (colores.length) {
-                    return {
-                        texto: "Para " + tipoExactoColor + ", estos son todos los colores disponibles:\n" +
-                            colores.map(function (c) { return "• " + c; }).join("\n"),
-                        botones: [{ etiqueta: "Ver productos", mensaje: "mostrame todos los productos de " + tipoExactoColor }]
-                    };
-                }
-            } else if (categoriaExactaColor) {
-                const colores = getColoresDeCategoria(categoriaExactaColor);
-                if (colores.length) {
-                    return {
-                        texto: "Para " + categoriaExactaColor + ", estos son todos los colores disponibles:\n" +
-                            colores.map(function (c) { return "• " + c; }).join("\n"),
-                        botones: [{ etiqueta: "Ver productos", mensaje: "mostrame todos los productos de " + categoriaExactaColor }]
-                    };
-                }
-            }
+            return manejarConsultaAtributo("color", t);
         }
+
 
         if (contieneAlguna(t, ["que categorias", "categorias tienen", "categorias venden", "categoria", "categorias"])) {
             const categorias = getCategorias();
@@ -1157,7 +1311,14 @@
 
             const consultaSinVer = textoOriginal.replace(/\bver\b/gi, "").trim();
             if (consultaSinVer) {
-                return { irABuscador: consultaSinVer };
+                // Solo mandamos al buscador si lo que quedó es algo reconocible
+                // (una categoría, tipo, marca, material, o algo que matchee productos).
+                // Si no, evitamos llevar al usuario a una grilla vacía y mostramos "no entiendo".
+                const consultaSinVerNormalizada = normalizarTexto(consultaSinVer);
+                if (pareceConsultaDeProducto(consultaSinVerNormalizada)) {
+                    return { irABuscador: consultaSinVer };
+                }
+                return respuestaNoEntendido();
             }
 
             return { verEnMain: {} };
@@ -1169,7 +1330,7 @@
             const subtipo = respuestaComplementoSubtipo(t);
             if (subtipo) return { texto: subtipo, chips: "principal" };
 
-            
+
             const especifico = respuestaTipoEspecifico(t);
             if (especifico) return { texto: especifico, chips: "principal" };
 
@@ -1213,18 +1374,7 @@
             return { irABuscador: textoOriginal };
         }
 
-        return {
-            texto: "No entendí tu pregunta, ¿podrías reformularla? Puedo ayudarte con:\n" +
-                "• Horarios y días de atención\n" +
-                "• Ubicación del local\n" +
-                "• Marcas y materiales que trabajamos\n" +
-                "• Recomendaciones de cuidado por categoría o tipo de producto\n" +
-                "• Mostrarte todos los productos de una categoría\n" +
-                "• Datos de un producto puntual del catálogo\n" +
-                "• Nuestras redes sociales\n\n" +
-                "También podés tocar una de las sugerencias de abajo.",
-            chips: "principal"
-        };
+        return respuestaNoEntendido();
     }
 
     function procesarConsulta(texto) {
@@ -1247,7 +1397,7 @@
                 if (enganchado) {
                     return;
                 }
-             
+
                 irAGridConBusqueda(destino.tipo || destino.categoria || "");
                 return;
             }
@@ -1394,12 +1544,12 @@
             }
         });
 
-  
+
         try {
             if (localStorage.getItem(STORAGE_KEY) === "1") revelarBoton();
         } catch (e) { /* almacenamiento no disponible */ }
 
-  
+
         document.getElementById("toggleNuevos").addEventListener("click", revelarBoton);
 
 
