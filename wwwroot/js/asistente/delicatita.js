@@ -470,14 +470,15 @@
             }
         }
 
-        for (let i = 0; i < tipos.length; i++) {
-            if (texto.indexOf(normalizarTexto(tipos[i])) !== -1) return tipos[i];
+        const tiposOrdenados = tipos.slice().sort(function (a, b) { return b.length - a.length; });
+        for (let i = 0; i < tiposOrdenados.length; i++) {
+            if (texto.indexOf(normalizarTexto(tiposOrdenados[i])) !== -1) return tiposOrdenados[i];
         }
         return null;
     }
 
     function detectarCategoriaExacta(texto) {
-        const categorias = getCategorias();
+        const categorias = getCategorias().slice().sort(function (a, b) { return b.length - a.length; });
         for (let i = 0; i < categorias.length; i++) {
             if (texto.indexOf(normalizarTexto(categorias[i])) !== -1) return categorias[i];
         }
@@ -642,6 +643,15 @@
     }
 
     function iniciarFlujoAtributoTipo(atributo, categoria, reintentar) {
+        const normCategoria = normalizarTexto(categoria);
+        if (normCategoria === "piercing" || normCategoria === "piercings") {
+            contextoPendienteAtributo = null;
+            categoriaEnCursoAtributo = null;
+            const resultado = respuestaAtributoParaCategoria(atributo, categoria);
+            resultado.chips = resultado.chips || "principal";
+            return resultado;
+        }
+
         const opciones = getOpcionesDeCategoria(categoria);
         if (!opciones || !opciones.length) {
             const resultado = respuestaAtributoParaCategoria(atributo, categoria);
@@ -1200,15 +1210,19 @@
 
     function manejarConsultaAtributo(atributo, t) {
         const tipoExacto = detectarTipoExacto(t);
-        const categoriaExacta = detectarCategoriaExacta(t);
-
         if (tipoExacto) {
             return respuestaAtributoParaTipo(atributo, tipoExacto);
-        } else if (categoriaExacta) {
-            return respuestaAtributoParaCategoria(atributo, categoriaExacta);
         }
-        // No se detectó categoría ni tipo puntual: arrancamos el flujo guiado
-        // (igual que en "recomendaciones de cuidado"): elegir categoría y luego tipo.
+
+        if (esFraseComplementosDeViaje(t)) {
+            return iniciarFlujoAtributoTipo(atributo, "Complementos de viaje");
+        }
+
+        const categoriaExacta = detectarCategoriaExacta(t);
+        if (categoriaExacta) {
+            return iniciarFlujoAtributoTipo(atributo, categoriaExacta);
+        }
+
         return iniciarFlujoAtributoCategorias(atributo);
     }
 
@@ -1311,9 +1325,7 @@
 
             const consultaSinVer = textoOriginal.replace(/\bver\b/gi, "").trim();
             if (consultaSinVer) {
-                // Solo mandamos al buscador si lo que quedó es algo reconocible
-                // (una categoría, tipo, marca, material, o algo que matchee productos).
-                // Si no, evitamos llevar al usuario a una grilla vacía y mostramos "no entiendo".
+
                 const consultaSinVerNormalizada = normalizarTexto(consultaSinVer);
                 if (pareceConsultaDeProducto(consultaSinVerNormalizada)) {
                     return { irABuscador: consultaSinVer };
@@ -1321,7 +1333,7 @@
                 return respuestaNoEntendido();
             }
 
-            return { verEnMain: {} };
+            return respuestaNoEntendido();
         }
 
 
