@@ -1740,14 +1740,38 @@ function palabraMatchFuzzy(palabra, tokens) {
 }
 
 const PALABRAS_IGNORAR = new Set([
-    "con", "de", "para", "del", "en", "a", "el", "la", "los", "las", "un", "una",
+    "con", "de", "para", "del", "en", "a", "el", "la", "los", "las", "un", "una", "unos", "unas",
     "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",
     "lrg", "alt", "capacidad", "compartimentos",
-    "tipo", "cierre", "simple", "doble",
-    "por", "x", "cm", "mm", "de", "y",
+    "cierre", "simple", "doble",
+    "por", "x", "cm", "mm", "y", "o", "u",
     "milimetros", "profundidad", "peso", "g", "diametro",
     "stock", "genero", "cantidad", "ruedas", "triple",
-    "imantado", "a presion"
+    "imantado", "a presion",
+    "quiero", "queres", "quiere", "queremos", "quieren",
+    "quisiera", "quisieras", "quisieramos", "quisiese",
+    "queria", "querias", "queriamos",
+    "querria", "querrias",
+    "necesito", "necesitas", "necesita", "necesitamos", "necesitan",
+    "preciso", "precisas", "precisa", "precisamos",
+    "busco", "buscas", "busca", "buscamos", "buscan", "buscando", "buscar",
+    "encontrar", "encuentro", "encuentras",
+    "gustaria", "gustarian", "gustan", "gusta",
+    "dame", "denme",
+    "mostrame", "muestrame", "mostrar", "mostrarme", "mostranos",
+    "ensename", "pasame", "traeme", "trae",
+    "recomendame", "recomendar", "recomendas", "recomienda",
+    "ayudame", "ayuda",
+    "tenes", "tiene", "tienen", "tienes", "tenemos", "hay", "habia",
+    "ver", "vean", "veo", "mira", "mirar", "mirando", "fijate", "fijense",
+    "hola", "buenas", "buenos", "buen",
+    "porfa", "porfavor", "favor", "disculpa", "disculpe", "perdon",
+    "che", "onda", "bueno", "eh", "este", "osea",
+    "algo", "alguna", "algun", "algunos", "algunas", "cualquier", "cualquiera",
+    "varios", "varias",
+    "podrias", "podes", "puedo", "puedes", "puede", "pueden",
+    "sabes", "sabria", "me", "te", "se", "nos", "porque",
+    "producto", "productos", "articulo", "articulos", "item", "items"
 ]);
 const BUSQUEDA_ALIAS = {
     "dama": "mujer",
@@ -1868,7 +1892,15 @@ const aplicarFiltros = (preservarPaginacion = false) => {
             const idx = p._indiceBusqueda;
             if (filtros.alto && parseFloat(idx.alto.replace(",", ".")) !== parseFloat(filtros.alto)) return false;
             if (filtros.ancho && parseFloat(idx.ancho.replace(",", ".")) !== parseFloat(filtros.ancho)) return false;
-            if (tipoExacto && idx.tipo !== tipoExacto.tipo) return false;
+
+            if (tipoExacto) {
+                if (idx.tipo === tipoExacto.tipo) {
+                    return textoParaFuzzy === "" || matchBusquedaFuzzy(p._tokensBusqueda, textoParaFuzzy);
+                }
+               
+                return matchBusquedaFuzzy(p._tokensBusqueda, textoBusqueda);
+            }
+
             if (textoParaFuzzy === "") return true;
             return matchBusquedaFuzzy(p._tokensBusqueda, textoParaFuzzy);
         });
