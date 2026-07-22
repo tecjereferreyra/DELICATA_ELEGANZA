@@ -29,20 +29,26 @@
     <link rel="preload" href="/fonts/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- CSS principal (crítico — bloquea render intencionalmente) -->
-    <link rel="preload" href="/Style.min.css" as="style">
-    <link href="/Style.min.css" rel="stylesheet">
+    <link rel="preload" href="/css/Style.min.css" as="style">
+    <link href="/css/Style.min.css" rel="stylesheet">
 
-    <!-- FontAwesome (no bloqueante) -->
+
     <link rel="preload" href="/fonts/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/fonts/css/all.min.css"></noscript>
 
-    <!-- CSS del carrito -->
-    <link href="/carrito.css" rel="stylesheet">
-    <link href="/delicatita.css" rel="stylesheet">
+
+    <link href="/css/carrito.css" rel="stylesheet">
+    <link href="/css/delicatita.css" rel="stylesheet">
     <!-- JavaScript -->
-    <script src="/carrito.js" defer></script>
-    <script src="/app.js" defer></script>
-    <script src="/delicatita.js" defer></script>
+    <script src="/js/carrito.js" defer></script>
+    <script src="/js/core-estado-utilidades.js" defer></script>
+    <script src="/js/modal-producto-carrusel.js" defer></script>
+    <script src="/js/catalogo-grid.js" defer></script>
+    <script src="/js/busqueda-normalizacion.js" defer></script>
+    <script src="/js/auth-usuario.js" defer></script>
+    <script src="/js/modal-zoom-touch.js" defer></script>
+    <script src="/js/admin-crud.js" defer></script>
+    <script src="/js/delicatita.js" defer></script>
     <!-- Evitar FOUC -->
     <style>
         body {

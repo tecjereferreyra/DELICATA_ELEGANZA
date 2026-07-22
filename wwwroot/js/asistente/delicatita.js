@@ -1,7 +1,5 @@
 ﻿(function () {
     "use strict";
-
-    /* ---------- Datos fijos del negocio ---------- */
     const MAPS_URL = "https://maps.app.goo.gl/qqT2RS29RPJqmkZA7";
     const DIRECCION = "25 de Mayo & Jose Mateo Luque — Villa del Rosario, Argentina";
     const WPP_NUMERO = "5493573692940";
@@ -16,7 +14,6 @@
 
     const STORAGE_KEY = "delicatitaDescubierta";
 
-    /* ---------- Utilidades de texto ---------- */
     function normalizarTexto(t) {
         return (t || "")
             .toString()
@@ -34,7 +31,6 @@
         return texto.split(/\s+/).filter(Boolean).length;
     }
 
-    /* ---------- Acceso al catálogo cargado por app.js ---------- */
     function getCatalogo() {
         if (typeof window.productosData !== "undefined" && Array.isArray(window.productosData)) {
             return window.productosData;
@@ -66,8 +62,6 @@
     function getCategorias() {
         return listaUnica("Categoria", ["Sin categoría", "—"]);
     }
-
-
     function getTiposDeCategoria(categoria) {
         const norm = normalizarTexto(categoria);
         const excluidos = ["sin tipo", "—", "-", ""];
@@ -80,8 +74,6 @@
         });
         return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
     }
-
-  
     function getOpcionesDeCategoria(categoria) {
         const norm = normalizarTexto(categoria);
         if (norm.indexOf("complemento") !== -1) {
@@ -93,7 +85,6 @@
         return getTiposDeCategoria(categoria);
     }
 
-    /* ---------- Recomendaciones de cuidado (genéricas por categoría) ---------- */
     const CUIDADOS = [
         {
             claves: ["marroquineria", "cuero", "cartera", "carteras", "billetera", "mochila", "bolso"],
@@ -153,7 +144,6 @@
         }
     ];
 
-    /* ---------- Recomendaciones específicas para subtipos de Complementos ---------- */
     const COMPLEMENTOS_SUBTIPOS = [
         {
             claves: ["caja bijou", "cajas bijou", "caja de bijou", "cajas de bijou", "joyero", "joyeros"],
@@ -187,9 +177,7 @@
                 "No lo fuerces al abrir o cerrar con viento fuerte.\n" +
                 "Revisá de tanto en tanto el mecanismo y las varillas."
         }
-    ];
-
-   
+    ]; 
     const COMPLEMENTOS_VIAJE_SUBTIPOS = [
         {
             claves: ["bomba de vacio electrica", "bomba electrica", "bomba de vacio elec"],
@@ -248,7 +236,6 @@
                 "Ajustá bien los tornillos o el sistema de fijación luego de instalarlas."
         }
     ];
-
     function respuestaComplementoSubtipo(texto) {
         const todos = COMPLEMENTOS_SUBTIPOS.concat(COMPLEMENTOS_VIAJE_SUBTIPOS);
         for (let i = 0; i < todos.length; i++) {
@@ -258,15 +245,11 @@
         }
         return null;
     }
-
-
     function esFraseComplementosDeViaje(texto) {
         return texto.indexOf("complementos de viaje") !== -1 || texto.indexOf("complemento de viaje") !== -1;
     }
-
-   
     const TIPOS_ESPECIFICOS = [
-        // --- Bijouterie / Fiesta ---
+
         {
             claves: ["aro", "aros"],
             etiqueta: "Aros",
@@ -323,7 +306,7 @@
                 "Evitá sobrecargarlo; suelen tener menos refuerzo que una cartera grande.\n" +
                 "Limpiá el exterior con un paño suave, según el material."
         },
-        // --- Marroquinería ---
+
         {
             claves: ["bandolera", "bandoleras"],
             etiqueta: "Bandoleras",
@@ -396,7 +379,7 @@
                 "Evitá sobrecargarla más allá de lo que soporta cómodamente.\n" +
                 "Limpiala con un paño húmedo y dejala secar antes de guardarla."
         },
-        // --- Artículos de viaje ---
+
         {
             claves: ["valija", "valijas"],
             etiqueta: "Valijas",
@@ -405,7 +388,7 @@
                 "No superes el peso máximo indicado, para no forzar costuras ni ruedas.\n" +
                 "Guardala en un lugar ventilado, no dentro de bolsas cerradas herméticamente."
         },
-        // --- Pañolería (chalinas: invierno o verano) ---
+
         {
             claves: ["invierno"],
             etiqueta: "Chalinas de invierno",
@@ -423,7 +406,6 @@
                 "Guardala doblada en un lugar seco, lejos de la luz solar directa."
         }
     ];
-
     function respuestaTipoEspecifico(texto) {
         for (let i = 0; i < TIPOS_ESPECIFICOS.length; i++) {
             const s = TIPOS_ESPECIFICOS[i];
@@ -494,7 +476,6 @@
         return null;
     }
 
-    /* ---------- Detección de categorías del catálogo dentro de un texto ---------- */
     function detectarCategoriaExacta(texto) {
         const categorias = getCategorias();
         for (let i = 0; i < categorias.length; i++) {
@@ -526,6 +507,31 @@
             return true;
         });
     }
+    function getColoresDeTipo(tipo) {
+        const excluidos = ["sin color", "—", "-", ""];
+        const set = new Set();
+        productosPorTipo(tipo).forEach(function (p) {
+            if (!p.Color) return;
+            String(p.Color).split(/[\/,]+/).forEach(function (parte) {
+                const limpio = parte.trim();
+                if (limpio && excluidos.indexOf(normalizarTexto(limpio)) === -1) set.add(limpio);
+            });
+        });
+        return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
+    }
+
+    function getColoresDeCategoria(categoria) {
+        const excluidos = ["sin color", "—", "-", ""];
+        const set = new Set();
+        productosPorCategoria(categoria).forEach(function (p) {
+            if (!p.Color) return;
+            String(p.Color).split(/[\/,]+/).forEach(function (parte) {
+                const limpio = parte.trim();
+                if (limpio && excluidos.indexOf(normalizarTexto(limpio)) === -1) set.add(limpio);
+            });
+        });
+        return Array.from(set).sort(function (a, b) { return a.localeCompare(b, "es"); });
+    }
 
     function respuestaCuidadosCategoria(categoria) {
         const norm = normalizarTexto(categoria);
@@ -551,7 +557,6 @@
         return { texto: "Todavía no tengo recomendaciones específicas para " + categoria + ", pero puedo ayudarte con otra consulta." };
     }
 
-
     function iniciarFlujoCategorias(reintentar) {
         const categorias = getCategorias();
         if (!categorias.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
@@ -563,7 +568,6 @@
             chips: "categorias"
         };
     }
-
 
     function iniciarFlujoTipo(categoria, reintentar) {
         const normCategoria = normalizarTexto(categoria);
@@ -611,7 +615,6 @@
         };
     }
 
-    /* ---------- Búsqueda de productos en el catálogo ---------- */
     function camposBusqueda(p) {
         return normalizarTexto([p.Nombre, p.Marca, p.Categoria, p.Tipo, p.Color, p.Material, p.Modelo].join(" "));
     }
@@ -647,7 +650,7 @@
         let elegido = null;
 
         if (objetivoTipo) {
-            // 1) Categoría + tipo exactos (ej: Marroquinería > Carteras)
+
             elegido = candidatos.find(function (el) {
                 return catCoincide(el) && normalizarTexto(el.dataset.tipo || "") === objetivoTipo;
             });
@@ -660,7 +663,7 @@
         }
 
         if (!elegido && objetivoCat) {
-            // Categoría sola, sin tipo puntual
+
             elegido = candidatos.find(function (el) { return catCoincide(el) && !el.dataset.tipo; });
             if (!elegido) elegido = candidatos.find(catCoincide);
         }
@@ -691,7 +694,7 @@
 
         return conPuntaje.slice(0, 3).map(function (r) { return r.p; });
     }
-    /* ---------- ¿El texto realmente parece una consulta sobre productos? ---------- */
+
     function pareceConsultaDeProducto(texto) {
         if (detectarCategoriaExacta(texto)) return true;
         if (detectarTipoExacto(texto)) return true;
@@ -702,10 +705,10 @@
         const materiales = getMateriales().map(normalizarTexto);
         if (materiales.some(function (m) { return texto.indexOf(m) !== -1; })) return true;
 
-    // Último chequeo: ¿el texto matchea algún producto real del catálogo?
+
         return buscarProductos(texto).length > 0;
     }
-    /* ---------- Construcción de la UI ---------- */
+
     let panelEl, mensajesEl, inputEl, botonEl, chipsEl, backdropEl;
     let chatIniciado = false;
     let _scrollAncladoAlInicio = false;
@@ -767,7 +770,6 @@
     function scrollAbajo() {
         mensajesEl.scrollTop = mensajesEl.scrollHeight;
     }
-
 
     function scrollAlInicioDe(el) {
         const offset = el.getBoundingClientRect().top - mensajesEl.getBoundingClientRect().top + mensajesEl.scrollTop;
@@ -845,7 +847,7 @@
 
         mensajesEl.appendChild(div);
 
-        // Botón para abrir la ficha completa si la función ya existe en app.js
+
         if (typeof window.abrirModal === "function") {
             const btn = document.createElement("button");
             btn.type = "button";
@@ -876,7 +878,6 @@
         el && el.remove();
     }
 
-    /* ---------- Chips de sugerencias rápidas ---------- */
     const SUGERENCIAS = [
         "Horarios", "Ubicación", "Marcas", "Materiales", "Redes sociales", "Recomendaciones de cuidado"
     ];
@@ -927,7 +928,6 @@
         renderChipsGenerico(SUGERENCIAS.map(function (texto) { return { etiqueta: texto, mensaje: texto }; }));
     }
 
-    // Reemplaza los chips originales por las categorías del catálogo (paso 1 de recomendaciones)
     function renderChipsCategoriasRecomendacion() {
         const categorias = getCategorias();
         renderChipsConVolver(
@@ -940,7 +940,6 @@
         );
     }
 
-    // Reemplaza los chips por los tipos de producto de la categoría elegida (paso 2)
     function renderChipsTiposDeCategoria(categoria, opciones) {
         const lista = opciones || getOpcionesDeCategoria(categoria) || [];
         renderChipsConVolver(
@@ -974,7 +973,6 @@
             const etapaPrevia = contextoPendiente;
             const categoriaGuardada = categoriaEnCurso;
 
-            // ¿Es un subtipo puntual de Complementos? (cajas bijou, abanicos, bomba de vacío, etc.)
             const subtipo = respuestaComplementoSubtipo(t);
             if (subtipo) {
                 contextoPendiente = null;
@@ -982,7 +980,6 @@
                 return { texto: subtipo, chips: "principal" };
             }
 
-            // ¿Es un tipo de producto con recomendación específica? (aros, carteras, valijas, etc.)
             const especifico = respuestaTipoEspecifico(t);
             if (especifico) {
                 contextoPendiente = null;
@@ -1005,7 +1002,6 @@
                 return { texto: grupo.titulo + ":\n" + grupo.texto, chips: "principal" };
             }
 
-            // Si estábamos esperando un tipo, probamos contra la lista concreta de esa categoría
             if (etapaPrevia === "tipo" && categoriaGuardada) {
                 const opciones = getOpcionesDeCategoria(categoriaGuardada) || [];
                 const encontrada = opciones.find(function (o) {
@@ -1039,12 +1035,12 @@
     }
 
     function generarRespuestaBase(t, nPalabras, textoOriginal) {
-        // Despedida
+
         if (nPalabras <= 4 && contieneAlguna(t, ["gracias", "chau", "adios", "hasta luego", "nos vemos"])) {
             return { texto: "Gracias por escribirnos. Que tengas un excelente día." };
         }
 
-        // Saludo (solo si el mensaje es corto, para no tapar preguntas más largas)
+
         if (nPalabras <= 5 && contieneAlguna(t, [
             "hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches",
             "como estas", "como andas", "como te va", "que tal", "todo bien"
@@ -1056,12 +1052,10 @@
             };
         }
 
-        // Horarios
         if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren"])) {
             return { texto: HORARIOS_TEXTO };
         }
 
-        // Ubicación
         if (contieneAlguna(t, ["donde", "ubicacion", "direccion", "local", "como llegar", "mapa"])) {
             return {
                 texto: "Nos encontramos en " + DIRECCION + ".",
@@ -1069,7 +1063,6 @@
             };
         }
 
-        // Redes sociales / contacto
         if (contieneAlguna(t, ["instagram", "facebook", "redes", "whatsapp", "contacto", "mail", "correo"])) {
             return {
                 texto: "Podés encontrarnos también en:",
@@ -1082,27 +1075,55 @@
             };
         }
 
-        // Marcas
+
         if (contieneAlguna(t, ["marca", "marcas"])) {
             const marcas = getMarcas();
             if (!marcas.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
             return { texto: "Trabajamos, entre otras, con estas marcas:\n" + marcas.map(function (m) { return "• " + m; }).join("\n") };
         }
 
-        // Materiales
         if (contieneAlguna(t, ["material", "materiales"])) {
             const materiales = getMateriales();
             if (!materiales.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
             return { texto: "Trabajamos con estos materiales:\n" + materiales.map(function (m) { return "• " + m; }).join("\n") };
         }
 
-        // Qué productos / categorías se venden
-        if (contieneAlguna(t, ["que venden", "que productos", "catalogo", "categoria", "categorias", "que tienen", "que hay"])) {
+        if (contieneAlguna(t, ["color", "colores"])) {
+            const tipoExactoColor = detectarTipoExacto(t);
+            const categoriaExactaColor = detectarCategoriaExacta(t);
+
+            if (tipoExactoColor) {
+                const colores = getColoresDeTipo(tipoExactoColor);
+                if (colores.length) {
+                    return {
+                        texto: "Para " + tipoExactoColor + ", estos son todos los colores disponibles:\n" +
+                            colores.map(function (c) { return "• " + c; }).join("\n"),
+                        botones: [{ etiqueta: "Ver productos", mensaje: "mostrame todos los productos de " + tipoExactoColor }]
+                    };
+                }
+            } else if (categoriaExactaColor) {
+                const colores = getColoresDeCategoria(categoriaExactaColor);
+                if (colores.length) {
+                    return {
+                        texto: "Para " + categoriaExactaColor + ", estos son todos los colores disponibles:\n" +
+                            colores.map(function (c) { return "• " + c; }).join("\n"),
+                        botones: [{ etiqueta: "Ver productos", mensaje: "mostrame todos los productos de " + categoriaExactaColor }]
+                    };
+                }
+            }
+        }
+
+        if (contieneAlguna(t, ["que categorias", "categorias tienen", "categorias venden", "categoria", "categorias"])) {
             const categorias = getCategorias();
             if (!categorias.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
             return { texto: "Nuestras categorías de productos son:\n" + categorias.join(", ") + "." };
         }
 
+        if (contieneAlguna(t, ["que venden", "que productos", "catalogo", "que tienen", "que hay"])) {
+            const tipos = getTodosLosTipos();
+            if (!tipos.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
+            return { texto: "Estos son los productos que trabajamos:\n" + tipos.map(function (tp) { return "• " + tp; }).join("\n") };
+        }
 
         const esConsultaCuidado = contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"]);
         const pideVerCategoriaCompleta = !esConsultaCuidado && (
@@ -1125,6 +1146,7 @@
                 return { verEnMain: { categoria: categoriaExacta } };
             }
 
+
             const pideExplicitamenteTodos = contieneAlguna(t, [
                 "ver todos", "ver todo", "todos los productos", "mostrame todo", "muestrame todo",
                 "todo el catalogo", "quiero ver todos"
@@ -1141,9 +1163,9 @@
             return { verEnMain: {} };
         }
 
-        // Recomendaciones / cuidados de uso
+
         if (contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"])) {
-            // 1) ¿Es un subtipo puntual de Complementos? (cajas bijou, abanicos, bomba de vacío, etc.)
+
             const subtipo = respuestaComplementoSubtipo(t);
             if (subtipo) return { texto: subtipo, chips: "principal" };
 
@@ -1158,11 +1180,11 @@
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) return iniciarFlujoTipo(categoriaExacta);
 
-            // 4) ¿Nombró un tipo puntual sin recomendación específica propia? -> texto genérico de su categoría
+
             const grupo = detectarGrupoCuidadoPorClave(t);
             if (grupo) return { texto: grupo.titulo + ":\n" + grupo.texto, chips: "principal" };
 
-            // 5) Genérico: preguntamos la categoría y mostramos los chips de categorías
+
             return iniciarFlujoCategorias();
         }
 
@@ -1284,7 +1306,6 @@
         window.scrollTo(0, _delicatitaScrollY);
     }
 
-    /* ---------- Apertura / cierre del panel ---------- */
     function abrirPanel() {
         panelEl.classList.add("abierto");
         backdropEl.classList.add("activo");
@@ -1308,7 +1329,6 @@
         desbloquearScrollFondo();
     }
 
-    /* ---------- Tooltips de los botones flotantes ---------- */
     function esTactil() {
         try { return window.matchMedia("(hover: none)").matches; } catch (e) { return false; }
     }
@@ -1335,7 +1355,7 @@
         try { localStorage.setItem(TOOLTIP_KEY, "1"); } catch (e) { /* no disponible */ }
     }
 
-    /* ---------- Revelar el botón al usar "Ver novedades" ---------- */
+
     function revelarBoton() {
         botonEl.classList.add("visible");
         try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) { /* almacenamiento no disponible */ }
