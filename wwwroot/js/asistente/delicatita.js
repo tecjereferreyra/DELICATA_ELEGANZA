@@ -1107,6 +1107,12 @@
                     return iniciarFlujoAtributoCategorias(atributoPendiente, true);
                 }
             } else if (etapaPreviaAtributo === "tipo" && categoriaGuardadaAtributo) {
+                if (esFraseComplementosDeViaje(t)) {
+                    contextoPendienteAtributo = null;
+                    categoriaEnCursoAtributo = null;
+                    return iniciarFlujoAtributoTipo(atributoPendiente, "Complementos de viaje");
+                }
+
                 const opciones = getOpcionesDeCategoria(categoriaGuardadaAtributo) || [];
                 const encontrada = opciones.find(function (o) {
                     const on = normalizarTexto(o);
