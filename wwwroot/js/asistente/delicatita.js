@@ -76,6 +76,16 @@
     }
     function getOpcionesDeCategoria(categoria) {
         const norm = normalizarTexto(categoria);
+        if (norm === normalizarTexto("Complementos de viaje")) {
+            const sub = getSubitemsPorNombre(COMPLEMENTOS_VIAJE_SUBTIPOS, productosPorTipo("Complementos de viaje"))
+                .map(function (s) { return s.etiqueta; });
+            return sub.length ? sub : COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) { return s.etiqueta; });
+        }
+        if (norm === "invierno" || norm === "verano") {
+            const sub = getSubitemsPorNombre(PANOLERIA_SUBTIPOS, productosPorTipo(categoria))
+                .map(function (s) { return s.etiqueta; });
+            if (sub.length) return sub;
+        }
         if (norm.indexOf("complemento") !== -1) {
             if (norm.indexOf("viaje") !== -1) {
                 return COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) { return s.etiqueta; });
@@ -236,6 +246,43 @@
                 "Ajustá bien los tornillos o el sistema de fijación luego de instalarlas."
         }
     ];
+
+    const PANOLERIA_SUBTIPOS = [
+        { claves: ["pashmina", "pashminas"], etiqueta: "Pashminas" },
+        { claves: ["bufanda", "bufandas"], etiqueta: "Bufandas" },
+        { claves: ["chalina", "chalinas"], etiqueta: "Chalinas" },
+        { claves: ["ruana", "ruanas"], etiqueta: "Ruanas" },
+        { claves: ["gorro", "gorros"], etiqueta: "Gorros" }
+    ];
+
+    function getSubitemsPorNombre(listaSubtipos, productosBase) {
+        const nombres = productosBase.map(function (p) { return normalizarTexto(p.Nombre || ""); });
+        return listaSubtipos.filter(function (s) {
+            return s.claves.some(function (c) {
+                const cn = normalizarTexto(c);
+                return nombres.some(function (n) { return n.indexOf(cn) !== -1; });
+            });
+        });
+    }
+
+    function buscarSubtipoPorEtiqueta(etiqueta) {
+        const viaje = COMPLEMENTOS_VIAJE_SUBTIPOS.find(function (s) { return s.etiqueta === etiqueta; });
+        if (viaje) return Object.assign({}, viaje, { tipoBase: "Complementos de viaje" });
+        const pan = PANOLERIA_SUBTIPOS.find(function (s) { return s.etiqueta === etiqueta; });
+        if (pan) return Object.assign({}, pan, { categoriaBase: "Pañolería" });
+        return null;
+    }
+
+    function productosPorNombreClave(claves, filtro) {
+        let base = getCatalogo();
+        if (filtro && filtro.tipo) base = productosPorTipo(filtro.tipo);
+        if (filtro && filtro.categoria) base = productosPorCategoria(filtro.categoria);
+        return base.filter(function (p) {
+            const n = normalizarTexto(p.Nombre || "");
+            return claves.some(function (c) { return n.indexOf(normalizarTexto(c)) !== -1; });
+        });
+    }
+
     function respuestaComplementoSubtipo(texto) {
         const todos = COMPLEMENTOS_SUBTIPOS.concat(COMPLEMENTOS_VIAJE_SUBTIPOS);
         for (let i = 0; i < todos.length; i++) {
@@ -535,6 +582,14 @@
     }
 
     function valoresDeAtributoPorTipo(atributo, tipo) {
+        const subitem = buscarSubtipoPorEtiqueta(tipo);
+        if (subitem) {
+            const productos = productosPorNombreClave(
+                subitem.claves,
+                subitem.tipoBase ? { tipo: subitem.tipoBase } : { categoria: subitem.categoriaBase }
+            );
+            return getValoresDeAtributo(atributo, productos);
+        }
         return getValoresDeAtributo(atributo, productosPorTipo(tipo));
     }
 
@@ -578,7 +633,16 @@
             chips: "categorias"
         };
     }
-
+    function iniciarFlujoVerProductos() {
+        const categorias = getCategorias();
+        if (!categorias.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
+        contextoPendiente = "verProductosCategoria";
+        categoriaEnCurso = null;
+        return {
+            texto: "Elegí una categoría para ver los productos:",
+            chips: { modo: "tipos", categoria: "", opciones: categorias }
+        };
+    }
     function iniciarFlujoTipo(categoria, reintentar) {
         const normCategoria = normalizarTexto(categoria);
         if (normCategoria === "piercing" || normCategoria === "piercings") {
@@ -688,8 +752,18 @@
         };
     }
 
-    function camposBusqueda(p) {
-        return normalizarTexto([p.Nombre, p.Marca, p.Categoria, p.Tipo, p.Color, p.Material, p.Modelo].join(" "));
+    function camposBusquedaTokens(p) {
+        return normalizarTexto([p.Nombre, p.Marca, p.Categoria, p.Tipo, p.Color, p.Material, p.Modelo].join(" "))
+            .split(/\s+/).filter(Boolean);
+    }
+    function tokenCoincide(tokenBusqueda, tokensProducto) {
+        if (tokensProducto.indexOf(tokenBusqueda) !== -1) return true;
+        if (typeof normalizarTermino === "function") {
+            const singular = normalizarTermino(tokenBusqueda);
+            if (tokensProducto.indexOf(singular) !== -1) return true;
+            if (tokensProducto.some(function (tp) { return normalizarTermino(tp) === singular; })) return true;
+        }
+        return false;
     }
     function irAGridConBusqueda(texto) {
         const input = document.getElementById("searchInput");
@@ -752,23 +826,19 @@
         const catalogo = getCatalogo();
         if (!catalogo.length) return [];
 
-        // Palabras de más de 3 letras (evita que preposiciones/conectores generen falsos positivos)
         const tokens = normalizarTexto(texto).split(/\s+/).filter(function (t) { return t.length > 3; });
         if (!tokens.length) return [];
 
-        // Se exige que coincida al menos la mitad de las palabras significativas,
-        // para no confundir una consulta ambigua o mal escrita con una búsqueda real de producto.
         const minimoCoincidencias = Math.max(1, Math.ceil(tokens.length / 2));
 
         const conPuntaje = catalogo
             .map(function (p) {
-                const campo = camposBusqueda(p);
-                const puntaje = tokens.reduce(function (acc, t) { return acc + (campo.indexOf(t) !== -1 ? 1 : 0); }, 0);
+                const tokensProducto = camposBusquedaTokens(p);
+                const puntaje = tokens.reduce(function (acc, t) { return acc + (tokenCoincide(t, tokensProducto) ? 1 : 0); }, 0);
                 return { p: p, puntaje: puntaje };
             })
             .filter(function (r) { return r.puntaje >= minimoCoincidencias; })
             .sort(function (a, b) { return b.puntaje - a.puntaje; });
-
 
         return conPuntaje.slice(0, 3).map(function (r) { return r.p; });
     }
@@ -1107,12 +1177,6 @@
                     return iniciarFlujoAtributoCategorias(atributoPendiente, true);
                 }
             } else if (etapaPreviaAtributo === "tipo" && categoriaGuardadaAtributo) {
-                if (esFraseComplementosDeViaje(t)) {
-                    contextoPendienteAtributo = null;
-                    categoriaEnCursoAtributo = null;
-                    return iniciarFlujoAtributoTipo(atributoPendiente, "Complementos de viaje");
-                }
-
                 const opciones = getOpcionesDeCategoria(categoriaGuardadaAtributo) || [];
                 const encontrada = opciones.find(function (o) {
                     const on = normalizarTexto(o);
@@ -1122,6 +1186,12 @@
                     contextoPendienteAtributo = null;
                     categoriaEnCursoAtributo = null;
                     return respuestaAtributoParaTipo(atributoPendiente, encontrada);
+                }
+
+                if (esFraseComplementosDeViaje(t)) {
+                    contextoPendienteAtributo = null;
+                    categoriaEnCursoAtributo = null;
+                    return iniciarFlujoAtributoTipo(atributoPendiente, "Complementos de viaje");
                 }
 
                 if (esOtraIntencionClara(t)) {
@@ -1134,9 +1204,37 @@
             }
         }
 
+        if (contextoPendiente === "verProductosCategoria") {
+            const categoriaExacta = detectarCategoriaExacta(t);
+            if (categoriaExacta) {
+                contextoPendiente = null;
+                return { verEnMain: { categoria: categoriaExacta } };
+            }
+            if (esOtraIntencionClara(t)) {
+                contextoPendiente = null;
+            } else {
+                return { texto: "No encontré esa categoría, elegí una de los botones.", chips: { modo: "tipos", categoria: "", opciones: getCategorias() } };
+            }
+        }
+
         if (contextoPendiente === "categoria" || contextoPendiente === "tipo") {
             const etapaPrevia = contextoPendiente;
             const categoriaGuardada = categoriaEnCurso;
+
+            if (etapaPrevia === "tipo" && categoriaGuardada) {
+                const opciones = getOpcionesDeCategoria(categoriaGuardada) || [];
+                const encontrada = opciones.find(function (o) {
+                    const on = normalizarTexto(o);
+                    return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
+                });
+                if (encontrada) {
+                    contextoPendiente = null;
+                    categoriaEnCurso = null;
+                    const resultado = respuestaCuidadosCategoria(encontrada);
+                    resultado.chips = "principal";
+                    return resultado;
+                }
+            }
 
             const subtipo = respuestaComplementoSubtipo(t);
             if (subtipo) {
@@ -1165,21 +1263,6 @@
                 contextoPendiente = null;
                 categoriaEnCurso = null;
                 return { texto: grupo.titulo + ":\n" + grupo.texto, chips: "principal" };
-            }
-
-            if (etapaPrevia === "tipo" && categoriaGuardada) {
-                const opciones = getOpcionesDeCategoria(categoriaGuardada) || [];
-                const encontrada = opciones.find(function (o) {
-                    const on = normalizarTexto(o);
-                    return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
-                });
-                if (encontrada) {
-                    contextoPendiente = null;
-                    categoriaEnCurso = null;
-                    const resultado = respuestaCuidadosCategoria(encontrada);
-                    resultado.chips = "principal";
-                    return resultado;
-                }
             }
 
 
@@ -1294,9 +1377,16 @@
         }
 
         if (contieneAlguna(t, ["que venden", "que productos", "catalogo", "que tienen", "que hay"])) {
-            const tipos = getTodosLosTipos();
-            if (!tipos.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
-            return { texto: "Estos son los productos que trabajamos:\n" + tipos.map(function (tp) { return "• " + tp; }).join("\n") };
+            const tipos = getTodosLosTipos().filter(function (tp) {
+                const n = normalizarTexto(tp);
+                return n !== "complementos de viaje" && n !== "invierno" && n !== "verano";
+            });
+            const viajeSub = getSubitemsPorNombre(COMPLEMENTOS_VIAJE_SUBTIPOS, productosPorTipo("Complementos de viaje")).map(function (s) { return s.etiqueta; });
+            const invSub = getSubitemsPorNombre(PANOLERIA_SUBTIPOS, productosPorTipo("Invierno")).map(function (s) { return s.etiqueta; });
+            const veranoSub = getSubitemsPorNombre(PANOLERIA_SUBTIPOS, productosPorTipo("Verano")).map(function (s) { return s.etiqueta; });
+            const todosItems = tipos.concat(viajeSub, invSub, veranoSub);
+            if (!todosItems.length) return { texto: "Estoy terminando de cargar el catálogo. Probá de nuevo en unos segundos." };
+            return { texto: "Estos son los productos que trabajamos:\n" + todosItems.map(function (tp) { return "• " + tp; }).join("\n") };
         }
 
         const esConsultaCuidado = contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"]);
@@ -1336,10 +1426,10 @@
                 if (pareceConsultaDeProducto(consultaSinVerNormalizada)) {
                     return { irABuscador: consultaSinVer };
                 }
-                return respuestaNoEntendido();
+                return iniciarFlujoVerProductos();
             }
 
-            return respuestaNoEntendido();
+            return iniciarFlujoVerProductos();
         }
 
 

@@ -588,7 +588,13 @@ function matchBusquedaFuzzy(tokensProducto, textoBusqueda) {
         })
     );
 }
-
+function filtroAceroMaterial(textoBusqueda, prod) {
+    const m = textoBusqueda.match(/\bacero\s+(blanco|dorado|quirurgico|quirúrgico)\b/);
+    if (!m) return null;
+    const variante = m[1].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const materialNorm = prod._indiceBusqueda.material;
+    return materialNorm.indexOf("acero " + variante) !== -1;
+}
 const CATEGORIAS_MAP = {
     "marroquineria": "marroquineria",
     "bijouterie": "bijouterie",
@@ -664,6 +670,8 @@ const aplicarFiltros = (preservarPaginacion = false) => {
 
         base = base.filter(p => {
             const idx = p._indiceBusqueda;
+            const filtroAcero = filtroAceroMaterial(textoBusqueda, p);
+            if (filtroAcero !== null) return filtroAcero;
             if (filtros.alto && parseFloat(idx.alto.replace(",", ".")) !== parseFloat(filtros.alto)) return false;
             if (filtros.ancho && parseFloat(idx.ancho.replace(",", ".")) !== parseFloat(filtros.ancho)) return false;
 
