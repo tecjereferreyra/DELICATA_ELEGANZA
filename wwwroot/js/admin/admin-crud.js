@@ -905,6 +905,17 @@ async function guardarEdicionProducto() {
                     localStorage.setItem("delicata_productos_v1", JSON.stringify(productosData));
                 } catch (e) { }
 
+                const cardVieja = document.querySelector(`.product-card[data-id="${actualizado.IdProducto}"]`);
+                if (cardVieja && typeof crearTarjetaDOM === "function") {
+                    const indiceEnGrid = Array.from(cardVieja.parentNode?.children || []).indexOf(cardVieja);
+                    const cardNueva = crearTarjetaDOM(actualizado, Math.max(indiceEnGrid, 0));
+                    cardVieja.replaceWith(cardNueva);
+                    if (typeof cardObserver !== "undefined") {
+                        cardNueva.classList.add("is-visible");
+                        cardObserver.observe(cardNueva);
+                    }
+                }
+
                 if (productoSeleccionado?.IdProducto === actualizado.IdProducto) {
                     productoSeleccionado = actualizado;
                     const modal = domCache.modal;

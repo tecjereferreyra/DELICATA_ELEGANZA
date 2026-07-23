@@ -463,20 +463,28 @@
     }
 
     function menuComplementos() {
+        contextoPendiente = "tipo";
+        categoriaEnCurso = "Complementos";
         return {
             texto: "Dentro de Complementos tenemos varios tipos de productos. ¿Sobre cuál te gustaría conocer las recomendaciones de cuidado?",
-            botones: COMPLEMENTOS_SUBTIPOS.map(function (s) {
-                return { etiqueta: s.etiqueta, mensaje: "recomendaciones de " + s.etiqueta };
-            })
+            chips: {
+                modo: "tipos",
+                categoria: "Complementos",
+                opciones: COMPLEMENTOS_SUBTIPOS.map(function (s) { return s.etiqueta; })
+            }
         };
     }
 
     function menuComplementosViaje() {
+        contextoPendiente = "tipo";
+        categoriaEnCurso = "Complementos de viaje";
         return {
             texto: "Dentro de Complementos de viaje tenemos varios accesorios. ¿Sobre cuál te gustaría conocer las recomendaciones de cuidado?",
-            botones: COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) {
-                return { etiqueta: s.etiqueta, mensaje: "recomendaciones de " + s.etiqueta };
-            })
+            chips: {
+                modo: "tipos",
+                categoria: "Complementos de viaje",
+                opciones: COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) { return s.etiqueta; })
+            }
         };
     }
 
@@ -640,7 +648,28 @@
         categoriaEnCurso = null;
         return {
             texto: "Elegí una categoría para ver los productos:",
-            chips: { modo: "tipos", categoria: "", opciones: categorias }
+            chips: { modo: "verCategorias", opciones: categorias }
+        };
+    }
+
+    function esCategoriaSintetica(categoria) {
+        const norm = normalizarTexto(categoria);
+        return norm.indexOf("complemento") !== -1 || norm === "invierno" || norm === "verano";
+    }
+
+    function iniciarFlujoVerTipo(categoria, reintentar) {
+        const opciones = getOpcionesDeCategoria(categoria);
+        if (!opciones || !opciones.length) {
+            contextoPendiente = null;
+            categoriaEnCurso = null;
+            return { verEnMain: { categoria: categoria } };
+        }
+        contextoPendiente = "verProductosTipo";
+        categoriaEnCurso = categoria;
+        return {
+            texto: (reintentar ? "No encontré ese tipo de producto dentro de " + categoria + ". " : "") +
+                "¿Qué tipo de producto dentro de " + categoria + " te gustaría ver?",
+            chips: { modo: "verTipos", categoria: categoria, opciones: opciones }
         };
     }
     function iniciarFlujoTipo(categoria, reintentar) {
@@ -1127,13 +1156,36 @@
             }
         );
     }
-
     function renderChipsAtributoAccion(opciones) {
         renderChipsConVolver(opciones, function () {
             contextoPendienteAtributo = null;
             categoriaEnCursoAtributo = null;
             renderChipsPrincipales();
         });
+    }
+
+    function renderChipsVerCategorias(opciones) {
+        const lista = opciones || getCategorias();
+        renderChipsConVolver(
+            lista.map(function (c) { return { etiqueta: c, mensaje: "ver productos de " + c }; }),
+            function () {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+                renderChipsPrincipales();
+            }
+        );
+    }
+
+    function renderChipsVerTipos(categoria, opciones) {
+        const lista = opciones || getOpcionesDeCategoria(categoria) || [];
+        renderChipsConVolver(
+            lista.map(function (o) { return { etiqueta: o, mensaje: "ver productos de " + o }; }),
+            function () {
+                contextoPendiente = "verProductosCategoria";
+                categoriaEnCurso = null;
+                renderChipsVerCategorias(getCategorias());
+            }
+        );
     }
 
     function aplicarChips(chips) {
@@ -1144,6 +1196,10 @@
             renderChipsCategoriasRecomendacion();
         } else if (chips.modo === "tipos") {
             renderChipsTiposDeCategoria(chips.categoria, chips.opciones);
+        } else if (chips.modo === "verCategorias") {
+            renderChipsVerCategorias(chips.opciones);
+        } else if (chips.modo === "verTipos") {
+            renderChipsVerTipos(chips.categoria, chips.opciones);
         } else if (chips.modo === "atributoCategorias") {
             renderChipsAtributoCategorias(chips.atributo);
         } else if (chips.modo === "atributoTipos") {
@@ -1207,13 +1263,38 @@
         if (contextoPendiente === "verProductosCategoria") {
             const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) {
-                contextoPendiente = null;
-                return { verEnMain: { categoria: categoriaExacta } };
+                return iniciarFlujoVerTipo(categoriaExacta);
             }
             if (esOtraIntencionClara(t)) {
                 contextoPendiente = null;
             } else {
-                return { texto: "No encontré esa categoría, elegí una de los botones.", chips: { modo: "tipos", categoria: "", opciones: getCategorias() } };
+                return { texto: "No encontré esa categoría, elegí una de los botones.", chips: { modo: "verCategorias", opciones: getCategorias() } };
+            }
+        }
+
+        if (contextoPendiente === "verProductosTipo") {
+            const categoriaGuardadaVer = categoriaEnCurso;
+            const opcionesVer = getOpcionesDeCategoria(categoriaGuardadaVer) || [];
+            const encontradaVer = opcionesVer.find(function (o) {
+                const on = normalizarTexto(o);
+                return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
+            });
+            if (encontradaVer) {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+                if (esCategoriaSintetica(categoriaGuardadaVer)) {
+                    return { irABuscador: encontradaVer };
+                }
+                return { verEnMain: { categoria: categoriaGuardadaVer, tipo: encontradaVer } };
+            }
+
+            if (esFraseComplementosDeViaje(t)) return iniciarFlujoVerTipo("Complementos de viaje");
+
+            if (esOtraIntencionClara(t)) {
+                contextoPendiente = null;
+                categoriaEnCurso = null;
+            } else {
+                return iniciarFlujoVerTipo(categoriaGuardadaVer, true);
             }
         }
 
@@ -1585,6 +1666,15 @@
         panelEl.classList.remove("abierto");
         backdropEl.classList.remove("activo");
         desbloquearScrollFondo();
+
+        const habiaFlujoPendiente = !!(contextoPendiente || contextoPendienteAtributo);
+        contextoPendiente = null;
+        categoriaEnCurso = null;
+        contextoPendienteAtributo = null;
+        categoriaEnCursoAtributo = null;
+        if (habiaFlujoPendiente && chatIniciado) {
+            renderChipsPrincipales();
+        }
     }
 
     function esTactil() {
