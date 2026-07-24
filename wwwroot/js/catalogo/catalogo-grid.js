@@ -439,10 +439,12 @@ function renderizarProductosProgresivo(reiniciar = false) {
 function irAlContenedorProductos() {
     const contenedor = document.getElementById("contenedor-productos");
     if (!contenedor) return;
-    const navbar = document.querySelector("header.navbar");
-    const navbarH = navbar ? navbar.getBoundingClientRect().height : 80;
-    const y = contenedor.getBoundingClientRect().top + window.pageYOffset - navbarH - 24;
-    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+    requestAnimationFrame(() => {
+        const navbar = document.querySelector("header.navbar");
+        const navbarH = navbar ? navbar.getBoundingClientRect().height : 80;
+        const y = contenedor.getBoundingClientRect().top + window.pageYOffset - navbarH - 24;
+        window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+    });
 }
 const categoriaLinks = document.querySelectorAll('.categories a');
 const normalizar = texto =>

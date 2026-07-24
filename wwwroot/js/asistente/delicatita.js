@@ -1300,7 +1300,7 @@
                 return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
             });
             if (encontradaVer) {
-                if (normalizarTexto(encontradaVer) === normalizarTexto("Complementos de viaje")) {
+                if (esCategoriaSintetica(encontradaVer)) {
                     return iniciarFlujoVerTipo("Complementos de viaje");
                 }
                 contextoPendiente = null;
@@ -1606,12 +1606,7 @@
                 const destino = respuesta.verEnMain;
                 cerrarPanel();
                 const enganchado = irACategoriaEnMain(destino.categoria, destino.tipo);
-                if (enganchado) {
-                    setTimeout(function () {
-                        if (typeof irAlContenedorProductos === "function") irAlContenedorProductos();
-                    }, 80);
-                    return;
-                }
+                if (enganchado) return;
 
                 irAGridConBusqueda(destino.tipo || destino.categoria || "");
                 return;
@@ -1687,8 +1682,10 @@
         } else if (_mensajeFlujoInterrumpido) {
             agregarMensajeTexto(_mensajeFlujoInterrumpido, "bot");
             _mensajeFlujoInterrumpido = null;
+            renderChipsPrincipales();
         }
         requestAnimationFrame(function () { scrollAbajo(); });
+        setTimeout(function () { scrollAbajo(); }, 300);
         setTimeout(function () { inputEl.focus(); }, 250);
     }
 
@@ -1705,9 +1702,7 @@
         categoriaEnCurso = null;
         contextoPendienteAtributo = null;
         categoriaEnCursoAtributo = null;
-        if (habiaFlujoPendiente && chatIniciado) {
-            renderChipsPrincipales();
-        }
+        
     }
 
     function esTactil() {

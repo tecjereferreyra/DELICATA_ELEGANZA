@@ -674,20 +674,26 @@ const aplicarFiltros = (preservarPaginacion = false) => {
         base = base.filter(p => {
             const idx = p._indiceBusqueda;
             const filtroAcero = filtroAceroMaterial(textoBusqueda, p);
-            if (filtroAcero !== null) return filtroAcero;
+            if (filtroAcero === false) return false;
+
             if (filtros.alto && parseFloat(idx.alto.replace(",", ".")) !== parseFloat(filtros.alto)) return false;
             if (filtros.ancho && parseFloat(idx.ancho.replace(",", ".")) !== parseFloat(filtros.ancho)) return false;
 
+           
+            const textoFuzzyFinal = filtroAcero !== null
+                ? textoParaFuzzy.replace(/\bacero\s+(blanco|dorado|quirurgico|quirúrgico|americano)\b/, "acero").trim()
+                : textoParaFuzzy;
+
             if (tipoExacto) {
                 if (idx.tipo === tipoExacto.tipo) {
-                    return textoParaFuzzy === "" || matchBusquedaFuzzy(p._tokensBusqueda, textoParaFuzzy);
+                    return textoFuzzyFinal === "" || matchBusquedaFuzzy(p._tokensBusqueda, textoFuzzyFinal);
                 }
 
                 return matchBusquedaFuzzy(p._tokensBusqueda, textoBusqueda);
             }
 
-            if (textoParaFuzzy === "") return true;
-            return matchBusquedaFuzzy(p._tokensBusqueda, textoParaFuzzy);
+            if (textoFuzzyFinal === "") return true;
+            return matchBusquedaFuzzy(p._tokensBusqueda, textoFuzzyFinal);
         });
     }
     productosFiltrados = base;
