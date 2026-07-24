@@ -589,11 +589,14 @@ function matchBusquedaFuzzy(tokensProducto, textoBusqueda) {
     );
 }
 function filtroAceroMaterial(textoBusqueda, prod) {
-    const m = textoBusqueda.match(/\bacero\s+(blanco|dorado|quirurgico|quirúrgico)\b/);
+    const m = textoBusqueda.match(/\bacero\s+(blanco|dorado|quirurgico|quirúrgico|americano)\b/);
     if (!m) return null;
     const variante = m[1].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const variantesEquivalentes = (variante === "quirurgico" || variante === "americano")
+        ? ["quirurgico", "americano"]
+        : [variante];
     const materialNorm = prod._indiceBusqueda.material;
-    return materialNorm.indexOf("acero " + variante) !== -1;
+    return variantesEquivalentes.some(v => materialNorm.indexOf("acero " + v) !== -1);
 }
 const CATEGORIAS_MAP = {
     "marroquineria": "marroquineria",

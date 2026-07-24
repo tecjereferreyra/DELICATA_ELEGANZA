@@ -90,7 +90,7 @@
             if (norm.indexOf("viaje") !== -1) {
                 return COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) { return s.etiqueta; });
             }
-            return COMPLEMENTOS_SUBTIPOS.map(function (s) { return s.etiqueta; });
+            return COMPLEMENTOS_SUBTIPOS.map(function (s) { return s.etiqueta; }).concat(["Complementos de viaje"]);
         }
         return getTiposDeCategoria(categoria);
     }
@@ -895,6 +895,26 @@
     let categoriaEnCurso = null;
     let contextoPendienteAtributo = null; // "color:categoria" | "color:tipo" | "marca:categoria" | "marca:tipo" | "material:categoria" | "material:tipo"
     let categoriaEnCursoAtributo = null;
+    let _mensajeFlujoInterrumpido = null;
+
+    function construirMensajeFlujoInterrumpido() {
+        if (contextoPendiente === "categoria") {
+            return "Nos quedamos en la selección de la categoría. Cuando quieras, elegí una opción de abajo para continuar.";
+        }
+        if (contextoPendiente === "tipo" && categoriaEnCurso) {
+            return "Nos quedamos seleccionando el tipo de producto dentro de " + categoriaEnCurso + ". Cuando quieras, elegí una opción de abajo para continuar.";
+        }
+        if (contextoPendiente === "verProductosCategoria") {
+            return "Nos quedamos en la selección de la categoría para ver los productos. Cuando quieras, elegí una opción de abajo para continuar.";
+        }
+        if (contextoPendiente === "verProductosTipo" && categoriaEnCurso) {
+            return "Nos quedamos seleccionando el tipo de producto dentro de " + categoriaEnCurso + " para ver los productos. Cuando quieras, elegí una opción de abajo para continuar.";
+        }
+        if (contextoPendienteAtributo) {
+            return "Nos quedamos a mitad de una consulta. Cuando quieras, elegí una opción de abajo para continuar.";
+        }
+        return null;
+    }
 
     function crearElementos() {
         // Botón flotante
@@ -1280,6 +1300,9 @@
                 return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
             });
             if (encontradaVer) {
+                if (normalizarTexto(encontradaVer) === normalizarTexto("Complementos de viaje")) {
+                    return iniciarFlujoVerTipo("Complementos de viaje");
+                }
                 contextoPendiente = null;
                 categoriaEnCurso = null;
                 if (esCategoriaSintetica(categoriaGuardadaVer)) {
@@ -1312,7 +1335,7 @@
                     contextoPendiente = null;
                     categoriaEnCurso = null;
                     const resultado = respuestaCuidadosCategoria(encontrada);
-                    resultado.chips = "principal";
+                    if (!resultado.chips) resultado.chips = "principal";
                     return resultado;
                 }
             }
@@ -1584,6 +1607,9 @@
                 cerrarPanel();
                 const enganchado = irACategoriaEnMain(destino.categoria, destino.tipo);
                 if (enganchado) {
+                    setTimeout(function () {
+                        if (typeof irAlContenedorProductos === "function") irAlContenedorProductos();
+                    }, 80);
                     return;
                 }
 
@@ -1658,7 +1684,11 @@
                 "y productos del catálogo. ¿En qué puedo ayudarte?",
                 "bot"
             );
+        } else if (_mensajeFlujoInterrumpido) {
+            agregarMensajeTexto(_mensajeFlujoInterrumpido, "bot");
+            _mensajeFlujoInterrumpido = null;
         }
+        requestAnimationFrame(function () { scrollAbajo(); });
         setTimeout(function () { inputEl.focus(); }, 250);
     }
 
@@ -1668,6 +1698,9 @@
         desbloquearScrollFondo();
 
         const habiaFlujoPendiente = !!(contextoPendiente || contextoPendienteAtributo);
+        if (habiaFlujoPendiente) {
+            _mensajeFlujoInterrumpido = construirMensajeFlujoInterrumpido();
+        }
         contextoPendiente = null;
         categoriaEnCurso = null;
         contextoPendienteAtributo = null;
