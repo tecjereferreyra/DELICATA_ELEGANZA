@@ -90,7 +90,7 @@
             if (norm.indexOf("viaje") !== -1) {
                 return COMPLEMENTOS_VIAJE_SUBTIPOS.map(function (s) { return s.etiqueta; });
             }
-            return COMPLEMENTOS_SUBTIPOS.map(function (s) { return s.etiqueta; }).concat(["Complementos de viaje"]);
+            return COMPLEMENTOS_SUBTIPOS.map(function (s) { return s.etiqueta; });
         }
         return getTiposDeCategoria(categoria);
     }
@@ -658,6 +658,13 @@
     }
 
     function iniciarFlujoVerTipo(categoria, reintentar) {
+        const normCategoria = normalizarTexto(categoria);
+        if (normCategoria === "piercing" || normCategoria === "piercings") {
+            contextoPendiente = null;
+            categoriaEnCurso = null;
+            return { verEnMain: { categoria: categoria } };
+        }
+
         const opciones = getOpcionesDeCategoria(categoria);
         if (!opciones || !opciones.length) {
             contextoPendiente = null;
@@ -1301,7 +1308,11 @@
             });
             if (encontradaVer) {
                 if (esCategoriaSintetica(encontradaVer)) {
-                    return iniciarFlujoVerTipo("Complementos de viaje");
+                    const normEncontrada = normalizarTexto(encontradaVer);
+                    const destinoSintetico = normEncontrada.indexOf("complemento") !== -1
+                        ? "Complementos de viaje"
+                        : encontradaVer; 
+                    return iniciarFlujoVerTipo(destinoSintetico);
                 }
                 contextoPendiente = null;
                 categoriaEnCurso = null;
@@ -1682,7 +1693,7 @@
         } else if (_mensajeFlujoInterrumpido) {
             agregarMensajeTexto(_mensajeFlujoInterrumpido, "bot");
             _mensajeFlujoInterrumpido = null;
-            renderChipsPrincipales();
+            restaurarChipsSegunEstado();
         }
         requestAnimationFrame(function () { scrollAbajo(); });
         setTimeout(function () { scrollAbajo(); }, 300);
@@ -1698,11 +1709,38 @@
         if (habiaFlujoPendiente) {
             _mensajeFlujoInterrumpido = construirMensajeFlujoInterrumpido();
         }
-        contextoPendiente = null;
-        categoriaEnCurso = null;
-        contextoPendienteAtributo = null;
-        categoriaEnCursoAtributo = null;
-        
+  
+    }
+
+    function restaurarChipsSegunEstado() {
+        if (contextoPendienteAtributo) {
+            const partes = contextoPendienteAtributo.split(":");
+            const atributo = partes[0];
+            const etapa = partes[1];
+            if (etapa === "tipo" && categoriaEnCursoAtributo) {
+                renderChipsAtributoTipos(atributo, categoriaEnCursoAtributo);
+            } else {
+                renderChipsAtributoCategorias(atributo);
+            }
+            return;
+        }
+        if (contextoPendiente === "categoria") {
+            renderChipsCategoriasRecomendacion();
+            return;
+        }
+        if (contextoPendiente === "tipo" && categoriaEnCurso) {
+            renderChipsTiposDeCategoria(categoriaEnCurso);
+            return;
+        }
+        if (contextoPendiente === "verProductosCategoria") {
+            renderChipsVerCategorias(getCategorias());
+            return;
+        }
+        if (contextoPendiente === "verProductosTipo" && categoriaEnCurso) {
+            renderChipsVerTipos(categoriaEnCurso);
+            return;
+        }
+        renderChipsPrincipales();
     }
 
     function esTactil() {
