@@ -8,6 +8,7 @@
     const EMAIL = "reflej8@hotmail.com";
 
     const HORARIOS_TEXTO =
+        "Atiende Edgar Albert.\n" +
         "Atendemos de lunes a sábado.\n" +
         "Mañana: de 09:30 a 12:30 hs.\n" +
         "Tarde: de 16:30 a 20:30 hs.";
@@ -20,8 +21,12 @@
             .toLowerCase()
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[¿?¡!.,;:()"“”'`]/g, " ")
+            .replace(/\s+/g, " ")
             .trim();
     }
+
+    const REGEX_VERBO_MOSTRAR = /\b(ver|mostr\w*|muestr\w*|ensen\w*|trae\w*|traig\w*|llev\w*|pasa\w*|dame|denme)\b/;
 
     function contieneAlguna(texto, palabras) {
         return palabras.some(function (p) { return texto.indexOf(p) !== -1; });
@@ -1437,18 +1442,12 @@
         }
 
 
-        if (nPalabras <= 5 && contieneAlguna(t, [
-            "hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches",
-            "como estas", "como andas", "como te va", "que tal", "todo bien"
+        if (contieneAlguna(t, [
+            "horario", "hora", "abren", "cierran", "atienden", "atiende", "atencion",
+            "dias de atencion", "cuando abren", "quien atiende", "quien te atiende",
+            "quien nos atiende", "quien esta a cargo", "encargado", "dueno",
+            "propietario", "responsable"
         ])) {
-            return {
-                texto: "¡Hola! Todo bien por acá, gracias. Soy Delicatita, el asistente virtual de Delicata Eleganza. " +
-                    "Puedo ayudarte con horarios, ubicación, marcas, materiales, recomendaciones de cuidado " +
-                    "y datos sobre nuestros productos. ¿En qué puedo ayudarte?"
-            };
-        }
-
-        if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren"])) {
             return { texto: HORARIOS_TEXTO };
         }
 
@@ -1504,9 +1503,20 @@
             return { texto: "Estos son los productos que trabajamos:\n" + todosItems.map(function (tp) { return "• " + tp; }).join("\n") };
         }
 
+        if (nPalabras <= 5 && contieneAlguna(t, [
+            "hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches",
+            "como estas", "como andas", "como te va", "que tal", "todo bien"
+        ])) {
+            return {
+                texto: "¡Hola! Todo bien por acá, gracias. Soy Delicatita, el asistente virtual de Delicata Eleganza. " +
+                    "Puedo ayudarte con horarios, ubicación, marcas, materiales, recomendaciones de cuidado " +
+                    "y datos sobre nuestros productos. ¿En qué puedo ayudarte?"
+            };
+        }
+
         const esConsultaCuidado = contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"]);
         const pideVerCategoriaCompleta = !esConsultaCuidado && (
-            /\bver\b/.test(t) ||
+            REGEX_VERBO_MOSTRAR.test(t) ||
             contieneAlguna(t, [
                 "todos los productos", "mostrame todo", "muestrame todo",
                 "todo el catalogo de", "mostrame los productos de", "muestrame los productos de",
@@ -1534,7 +1544,9 @@
                 return { verEnMain: {} };
             }
 
-            const consultaSinVer = textoOriginal.replace(/\bver\b/gi, "").trim();
+            const consultaSinVer = textoOriginal
+                .replace(/\b(ver|mostr\w*|muestr\w*|ensen\w*|trae\w*|traig\w*|llev\w*|pasa\w*|dame|denme)\b/gi, "")
+                .trim();
             if (consultaSinVer) {
 
                 const consultaSinVerNormalizada = normalizarTexto(consultaSinVer);
@@ -1615,7 +1627,7 @@
 
             if (respuesta.verEnMain) {
                 const destino = respuesta.verEnMain;
-                cerrarPanel();
+                cerrarPanel(true);
                 const enganchado = irACategoriaEnMain(destino.categoria, destino.tipo);
                 if (enganchado) return;
 
@@ -1624,7 +1636,7 @@
             }
 
             if (respuesta.irABuscador) {
-                cerrarPanel();
+                cerrarPanel(true);
                 irAGridConBusqueda(respuesta.irABuscador);
                 return;
             }
@@ -1666,7 +1678,7 @@
         document.body.style.width = "100%";
     }
 
-    function desbloquearScrollFondo() {
+    function desbloquearScrollFondo(saltarRestauracion) {
         if (!document.documentElement.classList.contains("delicatita-scroll-lock")) return;
         document.documentElement.classList.remove("delicatita-scroll-lock");
         document.body.style.position = "";
@@ -1674,7 +1686,7 @@
         document.body.style.left = "";
         document.body.style.right = "";
         document.body.style.width = "";
-        window.scrollTo(0, _delicatitaScrollY);
+        if (!saltarRestauracion) window.scrollTo(0, _delicatitaScrollY);
     }
 
     function abrirPanel() {
@@ -1700,10 +1712,10 @@
         setTimeout(function () { inputEl.focus(); }, 250);
     }
 
-    function cerrarPanel() {
+    function cerrarPanel(saltarRestauracionScroll) {
         panelEl.classList.remove("abierto");
         backdropEl.classList.remove("activo");
-        desbloquearScrollFondo();
+        desbloquearScrollFondo(saltarRestauracionScroll);
 
         const habiaFlujoPendiente = !!(contextoPendiente || contextoPendienteAtributo);
         if (habiaFlujoPendiente) {
