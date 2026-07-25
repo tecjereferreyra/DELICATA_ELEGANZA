@@ -20,6 +20,8 @@
             .toLowerCase()
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[¿?¡!.,;:]/g, " ")
+            .replace(/\s+/g, " ")
             .trim();
     }
 
@@ -434,24 +436,8 @@
                 "Revisá ruedas, manijas y cierres antes de cada viaje.\n" +
                 "No superes el peso máximo indicado, para no forzar costuras ni ruedas.\n" +
                 "Guardala en un lugar ventilado, no dentro de bolsas cerradas herméticamente."
-        },
-
-        {
-            claves: ["invierno"],
-            etiqueta: "Chalinas de invierno",
-            texto:
-                "Preferí el lavado a mano con agua fría, sobre todo si es lana o tejido grueso.\n" +
-                "No retuerzas la prenda al escurrir; presioná suavemente entre toallas.\n" +
-                "Guardala doblada, no colgada, para que no se estire ni pierda la forma."
-        },
-        {
-            claves: ["verano"],
-            etiqueta: "Chalinas de verano",
-            texto:
-                "Al ser telas livianas, evitá el planchado directo; usá temperatura baja o un paño intermedio.\n" +
-                "Lavala a mano y dejala secar a la sombra, para que no pierda el color.\n" +
-                "Guardala doblada en un lugar seco, lejos de la luz solar directa."
         }
+    
     ];
     function respuestaTipoEspecifico(texto) {
         for (let i = 0; i < TIPOS_ESPECIFICOS.length; i++) {
@@ -507,23 +493,7 @@
         }
 
 
-        if (typeof extraerTipoExacto === "function") {
-            const viaAlias = extraerTipoExacto(texto);
-            const encontrado = tipoDelCatalogo(viaAlias && viaAlias.tipo);
-            if (encontrado) return encontrado;
-        }
-
-
-        if (typeof TIPO_ALIAS_MAP !== "undefined" && typeof normalizarTermino === "function") {
-            const tokens = texto.split(/\s+/).filter(Boolean);
-            for (let i = 0; i < tokens.length; i++) {
-                const singular = normalizarTermino(tokens[i]);
-                if (TIPO_ALIAS_MAP[singular]) {
-                    const encontrado = tipoDelCatalogo(TIPO_ALIAS_MAP[singular]);
-                    if (encontrado) return encontrado;
-                }
-            }
-        }
+        
 
         const tiposOrdenados = tipos.slice().sort(function (a, b) { return b.length - a.length; });
         for (let i = 0; i < tiposOrdenados.length; i++) {
@@ -862,7 +832,9 @@
         const catalogo = getCatalogo();
         if (!catalogo.length) return [];
 
-        const tokens = normalizarTexto(texto).split(/\s+/).filter(function (t) { return t.length > 3; });
+        const tokens = normalizarTexto(texto).split(/\s+/).filter(function (t) {
+            return t.length > 3 && !(typeof PALABRAS_IGNORAR !== "undefined" && PALABRAS_IGNORAR.has(t));
+        });
         if (!tokens.length) return [];
 
         const minimoCoincidencias = Math.max(1, Math.ceil(tokens.length / 2));
@@ -1266,6 +1238,11 @@
                     return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
                 });
                 if (encontrada) {
+                    if (esCategoriaSintetica(encontrada)) {
+                        const normEncontrada = normalizarTexto(encontrada);
+                        const destinoSintetico = normEncontrada.indexOf("complemento") !== -1 ? "Complementos de viaje" : encontrada;
+                        return iniciarFlujoAtributoTipo(atributoPendiente, destinoSintetico);
+                    }
                     contextoPendienteAtributo = null;
                     categoriaEnCursoAtributo = null;
                     return respuestaAtributoParaTipo(atributoPendiente, encontrada);
@@ -1343,6 +1320,11 @@
                     return on === t || t.indexOf(on) !== -1 || on.indexOf(t) !== -1;
                 });
                 if (encontrada) {
+                    if (esCategoriaSintetica(encontrada)) {
+                        const normEncontrada = normalizarTexto(encontrada);
+                        const destinoSintetico = normEncontrada.indexOf("complemento") !== -1 ? "Complementos de viaje" : encontrada;
+                        return iniciarFlujoTipo(destinoSintetico);
+                    }
                     contextoPendiente = null;
                     categoriaEnCurso = null;
                     const resultado = respuestaCuidadosCategoria(encontrada);
@@ -1438,6 +1420,13 @@
 
         if (contieneAlguna(t, ["quien atiende", "quienes atienden", "quien nos atiende", "quien te atiende", "quien esta a cargo", "quien es el vendedor"])) {
             return { texto: "¡Hola! Soy Delicatita. Atiende Edgar Albert." };
+        }
+
+        if (contieneAlguna(t, ["precio", "precios", "cuanto cuesta", "cuanto sale", "cuanto vale", "costo", "cuesta", "envio", "envios", "hacen envios", "mandan a domicilio", "flete"])) {
+            return {
+                texto: "Los precios y el envío se consultan directo por WhatsApp con Edgar Albert, para confirmarte valor y stock actualizado 😊",
+                accion: { etiqueta: "Consultar por WhatsApp", icono: "fa-brands fa-whatsapp", url: "https://wa.me/" + WPP_NUMERO }
+            };
         }
 
         if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "dias de atencion", "cuando abren", "que horario"])) {
