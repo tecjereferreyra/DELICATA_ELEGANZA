@@ -26,7 +26,7 @@
     function contieneAlguna(texto, palabras) {
         return palabras.some(function (p) { return texto.indexOf(p) !== -1; });
     }
-
+    const REGEX_INTENCION_VER = /\b(ver|vean|mostr\w*|muestr\w*|traeme|traigan|trae|traer|llevame|llevar|ensename|pasame|pasar)\b/;
     function contarPalabras(texto) {
         return texto.split(/\s+/).filter(Boolean).length;
     }
@@ -768,7 +768,7 @@
     }
 
     function esOtraIntencionClara(texto) {
-        return contieneAlguna(texto, [
+        return REGEX_INTENCION_VER.test(texto) || contieneAlguna(texto, [
             "horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren",
             "donde", "ubicacion", "direccion", "local", "como llegar", "mapa",
             "instagram", "facebook", "redes", "whatsapp", "contacto", "mail", "correo",
@@ -1436,6 +1436,13 @@
             return { texto: "Gracias por escribirnos. Que tengas un excelente día." };
         }
 
+        if (contieneAlguna(t, ["quien atiende", "quienes atienden", "quien nos atiende", "quien te atiende", "quien esta a cargo", "quien es el vendedor"])) {
+            return { texto: "¡Hola! Soy Delicatita. Atiende Edgar Albert." };
+        }
+
+        if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "dias de atencion", "cuando abren", "que horario"])) {
+            return { texto: HORARIOS_TEXTO };
+        }
 
         if (nPalabras <= 5 && contieneAlguna(t, [
             "hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches",
@@ -1446,10 +1453,6 @@
                     "Puedo ayudarte con horarios, ubicación, marcas, materiales, recomendaciones de cuidado " +
                     "y datos sobre nuestros productos. ¿En qué puedo ayudarte?"
             };
-        }
-
-        if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren"])) {
-            return { texto: HORARIOS_TEXTO };
         }
 
         if (contieneAlguna(t, ["donde", "ubicacion", "direccion", "local", "como llegar", "mapa"])) {
@@ -1506,7 +1509,7 @@
 
         const esConsultaCuidado = contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"]);
         const pideVerCategoriaCompleta = !esConsultaCuidado && (
-            /\bver\b/.test(t) ||
+            REGEX_INTENCION_VER.test(t) ||
             contieneAlguna(t, [
                 "todos los productos", "mostrame todo", "muestrame todo",
                 "todo el catalogo de", "mostrame los productos de", "muestrame los productos de",

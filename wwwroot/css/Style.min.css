@@ -901,6 +901,46 @@ header.navbar .title {
     margin: 0;
     font-size: 16px
 }
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+}
+
+    .search-wrapper .search-input {
+        padding-right: 2.6rem;
+    }
+
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.search-clear {
+    position: absolute;
+    right: .9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,.08);
+    color: var(--color-texto-marron,#3b2f22);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .search-clear:hover {
+        background: rgba(0,0,0,.15);
+    }
 
 #btnAgregarCarritoModal, #btnWhatsapp, #modalAdminButtons button, .categories a, .search-btn, .ver-mas-btn {
     background: var(--color-navbar-fondo)

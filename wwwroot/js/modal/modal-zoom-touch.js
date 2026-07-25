@@ -402,9 +402,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     const busquedaDebounced = debounce(aplicarFiltros, 300);
+    const btnLimpiarBusqueda = document.getElementById("btnLimpiarBusqueda");
+    function actualizarVisibilidadLimpiar() {
+        if (!btnLimpiarBusqueda || !domCache.searchInput) return;
+        btnLimpiarBusqueda.style.display = domCache.searchInput.value.length ? "flex" : "none";
+    }
     if (domCache.searchInput) {
         domCache.searchInput.addEventListener("input", () => {
             desactivarModoNuevos();
+            actualizarVisibilidadLimpiar();
             busquedaDebounced();
         });
         domCache.searchInput.addEventListener("keydown", (e) => {
@@ -415,6 +421,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+    btnLimpiarBusqueda?.addEventListener("click", () => {
+        if (!domCache.searchInput) return;
+        domCache.searchInput.value = "";
+        actualizarVisibilidadLimpiar();
+        aplicarFiltros();
+        domCache.searchInput.focus();
+    });
+    actualizarVisibilidadLimpiar();
     if (domCache.btnBuscar) domCache.btnBuscar.addEventListener("click", aplicarFiltrosYScroll);
     document.getElementById("toggleNuevos")?.addEventListener("click", function () {
         modoNuevosActivo = !modoNuevosActivo;

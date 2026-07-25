@@ -480,6 +480,8 @@ categoriaLinks.forEach(link => {
         categoriaActivaActual = normalizar(target.dataset.cat || linkActivo.dataset.cat || "todos");
         subcategoriaActivaActual = normalizar(target.dataset.tipo || linkActivo.dataset.tipo || "");
 
+        if (domCache.searchInput) domCache.searchInput.value = "";
+
         desactivarModoNuevos();
 
         aplicarFiltros();

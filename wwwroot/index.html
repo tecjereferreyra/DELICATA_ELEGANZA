@@ -211,13 +211,16 @@
 
     <!-- ══════════════ BUSCADOR ══════════════ -->
     <section class="search-section">
-        <input type="search"
-               id="searchInput"
-               placeholder="Buscar productos..."
-               class="search-input"
-               aria-label="Buscar productos en la tienda"
-               autocomplete="off"
-               inputmode="search">
+        <div class="search-wrapper">
+            <input type="search"
+                   id="searchInput"
+                   placeholder="Buscar productos..."
+                   class="search-input"
+                   aria-label="Buscar productos en la tienda"
+                   autocomplete="off"
+                   inputmode="search">
+            <button type="button" id="btnLimpiarBusqueda" class="search-clear" aria-label="Vaciar búsqueda" style="display:none;">&times;</button>
+        </div>
         <button id="btnBuscar" class="search-btn">Buscar</button>
     </section>
 

@@ -532,8 +532,9 @@ const PALABRAS_IGNORAR = new Set([
     "encontrar", "encuentro", "encuentras",
     "gustaria", "gustarian", "gustan", "gusta",
     "dame", "denme",
-    "mostrame", "muestrame", "mostrar", "mostrarme", "mostranos",
-    "ensename", "pasame", "traeme", "trae",
+    "mostrame", "muestrame", "mostrar", "mostrarme", "mostranos", "mostras", "muestran", "muestras",
+    "ensename", "pasame", "traeme", "trae", "traigan", "traer",
+    "llevame", "llevar", "llevas",
     "recomendame", "recomendar", "recomendas", "recomienda",
     "ayudame", "ayuda",
     "tenes", "tiene", "tienen", "tienes", "tenemos", "hay", "habia",
@@ -655,7 +656,7 @@ const aplicarFiltros = (preservarPaginacion = false) => {
         if (btnVerMas) btnVerMas.style.display = "none";
         return;
     }
-
+    const valorBusquedaOriginal = domCache.searchInput?.value || "";
     const textoBusqueda = normalizarBusqueda(
         normalizar(domCache.searchInput?.value || "")
             .replace(/[\/,]+/g, " ")
@@ -704,7 +705,7 @@ const aplicarFiltros = (preservarPaginacion = false) => {
         contenedor.replaceChildren();
         contenedor.innerHTML = `
             <div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--color-marca-oro);">
-                <p>No se encontraron productos para "${document.getElementById("searchInput")?.value}"</p>
+                <p>No se encontraron productos para "${valorBusquedaOriginal}"</p>
             </div>`;
         const btnVerMas = document.getElementById("btnVerMas");
         if (btnVerMas) btnVerMas.style.display = "none";
