@@ -1,5 +1,4 @@
-﻿
-const COLOR_SINONIMOS = {
+﻿const COLOR_SINONIMOS = {
     "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche"],
     "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "nieve", "ivory", "blanquito", "nacarado", "nacarada", "vainilla"],
     "rojo": ["rojo", "roja", "rojos", "rojas", "red", "carmesi", "carmesí", "escarlata", "cereza", "sangre", "rubi", "rubí"],
@@ -468,7 +467,7 @@ function parsearGrupos(textoBusqueda) {
     const grupos = [];
     for (let i = 0; i < raw.length; i++) {
         const tok = raw[i];
-        if (PALABRAS_IGNORAR.has(tok)) continue;
+        if (esRuidoPedido(tok)) continue;
 
         if (tok === "y" || tok === "o") continue;
         const prevRaw = i > 0 ? raw[i - 1] : null;
@@ -513,6 +512,57 @@ function palabraMatchFuzzy(palabra, tokens) {
     return false;
 }
 
+
+const TERMINACIONES_VERBALES = [
+    "ar", "er", "ir",
+    "ando", "iendo",
+    "ado", "ada", "ados", "adas", "ido", "ida", "idos", "idas",
+    "o", "as", "es", "a", "e", "amos", "emos", "imos", "an", "en",
+    "aste", "iste", "aron", "ieron",
+    "aba", "abas", "abamos", "aban",
+    "ia", "ias", "iamos", "ian",
+    "are", "aras", "aremos", "aran",
+    "ere", "eras", "eremos", "eran",
+    "ire", "iras", "iremos", "iran",
+    "aria", "arias", "ariamos", "arian",
+    "eria", "erias", "eriamos", "erian",
+    "iria", "irias", "iriamos", "irian",
+    "iera", "ieras", "ieramos", "ieran",
+    "ame", "eme", "anos", "enos"
+];
+
+const RAICES_VERBOS_PEDIDO = [
+    "mostr", "muestr",
+    "tra", "traig", "traj",
+    "llev",
+    "ensen",
+    "quier", "quer", "quis", "querr",
+    "necesit",
+    "busc",
+    "encuentr", "encontr",
+    "gust",
+    "recomend", "recomiend",
+    "ayud"
+];
+function esFormaVerboPedido(token) {
+    if (!token) return false;
+    return RAICES_VERBOS_PEDIDO.some(function (raiz) {
+        if (token === raiz) return true;
+        if (token.length <= raiz.length || !token.startsWith(raiz)) return false;
+        const resto = token.slice(raiz.length);
+        return TERMINACIONES_VERBALES.indexOf(resto) !== -1;
+    });
+}
+
+const FORMAS_VERBO_LITERAL = new Set([
+    "ver", "vean", "veo", "mira", "mirar", "mirando", "fijate", "fijense",
+    "dame", "denme",
+    "tenes", "tiene", "tienen", "tienes", "tenemos", "hay", "habia",
+    "podrias", "podes", "puedo", "puedes", "puede", "pueden",
+    "sabes", "sabria",
+    "pasame", "pasar"
+]);
+
 const PALABRAS_IGNORAR = new Set([
     "con", "de", "para", "del", "en", "a", "el", "la", "los", "las", "un", "una", "unos", "unas",
     "modelo", "color", "medidas", "marca", "material", "tipo", "categoria",
@@ -522,34 +572,32 @@ const PALABRAS_IGNORAR = new Set([
     "milimetros", "profundidad", "peso", "g", "diametro",
     "stock", "genero", "cantidad", "ruedas", "triple",
     "imantado", "a presion",
-    "quiero", "queres", "quiere", "queremos", "quieren",
-    "quisiera", "quisieras", "quisieramos", "quisiese",
-    "queria", "querias", "queriamos",
-    "querria", "querrias",
-    "necesito", "necesitas", "necesita", "necesitamos", "necesitan",
-    "preciso", "precisas", "precisa", "precisamos",
-    "busco", "buscas", "busca", "buscamos", "buscan", "buscando", "buscar",
-    "encontrar", "encuentro", "encuentras",
-    "gustaria", "gustarian", "gustan", "gusta",
-    "dame", "denme",
-    "mostrame", "muestrame", "mostrar", "mostrarme", "mostranos", "mostras", "muestran", "muestras",
-    "mostraria", "mostrarias", "mostrarian", "mostrariamos",
     "todo", "todos", "toda", "todas",
-    "ensename", "pasame", "traeme", "trae", "traigan", "traer",
-    "llevame", "llevar", "llevas",
-    "recomendame", "recomendar", "recomendas", "recomienda",
-    "ayudame", "ayuda",
-    "tenes", "tiene", "tienen", "tienes", "tenemos", "hay", "habia",
-    "ver", "vean", "veo", "mira", "mirar", "mirando", "fijate", "fijense",
     "hola", "buenas", "buenos", "buen",
     "porfa", "porfavor", "favor", "disculpa", "disculpe", "perdon",
     "che", "onda", "bueno", "eh", "este", "osea",
     "algo", "alguna", "algun", "algunos", "algunas", "cualquier", "cualquiera",
     "varios", "varias",
-    "podrias", "podes", "puedo", "puedes", "puede", "pueden",
-    "sabes", "sabria", "me", "te", "se", "nos", "porque",
+    "me", "te", "se", "nos", "porque",
     "producto", "productos", "articulo", "articulos", "item", "items"
 ]);
+function esRuidoPedido(tok) {
+    return PALABRAS_IGNORAR.has(tok) || FORMAS_VERBO_LITERAL.has(tok) || esFormaVerboPedido(tok);
+}
+
+const RAICES_VERBOS_VER = ["mostr", "muestr", "tra", "traig", "traj", "llev", "ensen"];
+function esFormaVerboVer(token) {
+    if (!token) return false;
+    if (token === "ver" || token === "vean" || token === "pasame" || token === "pasar") return true;
+    return RAICES_VERBOS_VER.some(function (raiz) {
+        if (token.length <= raiz.length || !token.startsWith(raiz)) return false;
+        const resto = token.slice(raiz.length);
+        return TERMINACIONES_VERBALES.indexOf(resto) !== -1;
+    });
+}
+function contieneIntencionVer(texto) {
+    return (texto || "").split(/\s+/).some(esFormaVerboVer);
+}
 const BUSQUEDA_ALIAS = {
     "dama": "mujer",
     "femenino": "mujer",
@@ -682,7 +730,7 @@ const aplicarFiltros = (preservarPaginacion = false) => {
             if (filtros.alto && parseFloat(idx.alto.replace(",", ".")) !== parseFloat(filtros.alto)) return false;
             if (filtros.ancho && parseFloat(idx.ancho.replace(",", ".")) !== parseFloat(filtros.ancho)) return false;
 
-           
+
             const textoFuzzyFinal = filtroAcero !== null
                 ? textoParaFuzzy.replace(/\bacero\s+(blanco|dorado|quirurgico|quirúrgico|americano)\b/, "acero").trim()
                 : textoParaFuzzy;

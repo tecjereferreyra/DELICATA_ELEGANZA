@@ -28,7 +28,9 @@
     function contieneAlguna(texto, palabras) {
         return palabras.some(function (p) { return texto.indexOf(p) !== -1; });
     }
-    const REGEX_INTENCION_VER = /\b(ver|vean|mostr\w*|muestr\w*|traeme|traigan|trae|traer|llevame|llevar|ensename|pasame|pasar)\b/;
+    // El motor de raíces verbales (esFormaVerboPedido, esRuidoPedido,
+    // contieneIntencionVer, etc.) vive en busqueda-normalizacion.js, que
+    // se carga antes que este script — ver ese archivo para el detalle.
     function contarPalabras(texto) {
         return texto.split(/\s+/).filter(Boolean).length;
     }
@@ -536,6 +538,18 @@
         return null;
     }
 
+    function detectarColorEspecifico(texto) {
+        if (typeof COLOR_SINONIMOS === "undefined") return null;
+        for (const clave in COLOR_SINONIMOS) {
+            const sinonimos = COLOR_SINONIMOS[clave];
+            for (let i = 0; i < sinonimos.length; i++) {
+                const s = normalizarTexto(sinonimos[i]);
+                if (s && texto.indexOf(s) !== -1) return s;
+            }
+        }
+        return null;
+    }
+
     function detectarGrupoCuidadoPorClave(texto) {
         for (let i = 0; i < CUIDADOS.length; i++) {
             const grupo = CUIDADOS[i];
@@ -776,15 +790,23 @@
     }
 
     function palabrasExtraLista(texto, nombresAQuitar) {
-        let limpio = " " + texto + " ";
+        const nombresTokens = new Set();
         (nombresAQuitar || []).forEach(function (n) {
             if (!n) return;
-            limpio = limpio.split(" " + normalizarTexto(n) + " ").join(" ");
+            normalizarTexto(n).split(/\s+/).forEach(function (tok) {
+                if (!tok) return;
+                nombresTokens.add(tok);
+                nombresTokens.add(tok + "s");
+                nombresTokens.add(tok + "es");
+                if (typeof normalizarTermino === "function") nombresTokens.add(normalizarTermino(tok));
+            });
         });
-        return limpio.trim().split(/\s+/).filter(function (tok) {
+
+        return texto.trim().split(/\s+/).filter(function (tok) {
             if (!tok || tok.length <= 2) return false;
-            if (typeof PALABRAS_IGNORAR !== "undefined" && PALABRAS_IGNORAR.has(tok)) return false;
-            if (REGEX_INTENCION_VER.test(tok)) return false;
+            if (typeof esRuidoPedido === "function" && esRuidoPedido(tok)) return false;
+            const tokSingular = (typeof normalizarTermino === "function") ? normalizarTermino(tok) : tok;
+            if (nombresTokens.has(tok) || nombresTokens.has(tokSingular)) return false;
             return true;
         });
     }
@@ -962,7 +984,7 @@
         if (!catalogo.length) return [];
 
         const tokens = normalizarTexto(texto).split(/\s+/).filter(function (t) {
-            return t.length > 3 && !(typeof PALABRAS_IGNORAR !== "undefined" && PALABRAS_IGNORAR.has(t));
+            return t.length > 3 && !(typeof esRuidoPedido === "function" && esRuidoPedido(t));
         });
         if (!tokens.length) return [];
 
@@ -1604,7 +1626,17 @@
         }
 
         if (contieneAlguna(t, ["color", "colores"])) {
-            return manejarConsultaAtributo("color", t);
+            const colorEspecifico = detectarColorEspecifico(t);
+            const pideProductoDeEseColor = colorEspecifico &&
+                (detectarCategoriaExacta(t) || detectarTipoExacto(t) || detectarTipoEspecificoEtiqueta(t) || detectarSubtipoGenericoEtiqueta(t));
+            // Si preguntan "qué colores hay" en general, respondemos con el listado.
+            // Pero si además nombran un color puntual junto con una categoría/tipo
+            // (ej. "piercings de color rosa"), es un pedido de producto filtrado,
+            // no una pregunta por el listado de colores: dejamos que siga el flujo
+            // normal más abajo, que arma la grilla ya filtrada por ese color.
+            if (!pideProductoDeEseColor) {
+                return manejarConsultaAtributo("color", t);
+            }
         }
 
         if (contieneAlguna(t, ["donde", "ubicacion", "direccion", "como llegar", "mapa"])) {
@@ -1648,7 +1680,7 @@
 
         const esConsultaCuidado = contieneAlguna(t, ["cuidado", "cuidar", "mantenimiento", "limpiar", "conservar", "recomendacion", "como cuido"]);
         const pideVerCategoriaCompleta = !esConsultaCuidado && (
-            REGEX_INTENCION_VER.test(t) ||
+            (typeof contieneIntencionVer === "function" && contieneIntencionVer(t)) ||
             contieneAlguna(t, [
                 "todos los productos", "mostrame todo", "muestrame todo",
                 "todo el catalogo de", "mostrame los productos de", "muestrame los productos de",
@@ -1676,6 +1708,15 @@
                 const consultaSinVerNormalizada = normalizarTexto(consultaSinVer);
                 if (pareceConsultaDeProducto(consultaSinVerNormalizada)) {
                     return { irABuscador: consultaSinVer };
+                }
+
+                // Queda texto además del verbo de intención, pero no matchea nada
+                // reconocible (categoría, tipo, marca, material, producto). Si son
+                // palabras con contenido real (no muletillas/errores sueltos),
+                // preferimos avisar que no entendimos antes que asumir un flujo.
+                const palabrasSignificativas = palabrasExtraLista(consultaSinVerNormalizada, []);
+                if (palabrasSignificativas.length) {
+                    return respuestaNoEntendido();
                 }
                 return iniciarFlujoVerProductos();
             }
