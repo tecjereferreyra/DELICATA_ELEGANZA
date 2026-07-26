@@ -471,24 +471,8 @@
     }
 
     // Determina si, además del tipo/categoría/subtipo ya detectado, quedan en el texto
-    // palabras "con peso" (posibles descriptores: material, color, marca, etc.) que ameriten
-    // mandar la consulta al buscador (con sus filtros compuestos) en vez de navegar directo.
-    function hayPalabrasExtra(texto, nombreDetectado, clavesAlternativas) {
-        let limpio = " " + texto + " ";
-        if (nombreDetectado) {
-            limpio = limpio.split(" " + normalizarTexto(nombreDetectado) + " ").join(" ");
-        }
-        (clavesAlternativas || []).forEach(function (c) {
-            limpio = limpio.split(" " + normalizarTexto(c) + " ").join(" ");
-        });
-        const tokens = limpio.trim().split(/\s+/).filter(function (tok) {
-            if (!tok || tok.length <= 2) return false;
-            if (typeof PALABRAS_IGNORAR !== "undefined" && PALABRAS_IGNORAR.has(tok)) return false;
-            if (REGEX_INTENCION_VER.test(tok)) return false;
-            return true;
-        });
-        return tokens.length > 0;
-    }
+    // palabras "con peso" (posibles descriptores: material, color, marca, etc.). La
+    // implementación vive más abajo, junto a palabrasExtraLista/obtenerProductosParaConsulta.
 
     function menuComplementos() {
         contextoPendiente = "tipo";
@@ -779,7 +763,7 @@
         };
     }
 
-   
+
 
     function preguntaCategoria(categoria) {
         return {
@@ -789,6 +773,118 @@
                 { etiqueta: "Ver todos los productos", mensaje: "mostrame todos los productos de " + categoria }
             ]
         };
+    }
+
+    function palabrasExtraLista(texto, nombresAQuitar) {
+        let limpio = " " + texto + " ";
+        (nombresAQuitar || []).forEach(function (n) {
+            if (!n) return;
+            limpio = limpio.split(" " + normalizarTexto(n) + " ").join(" ");
+        });
+        return limpio.trim().split(/\s+/).filter(function (tok) {
+            if (!tok || tok.length <= 2) return false;
+            if (typeof PALABRAS_IGNORAR !== "undefined" && PALABRAS_IGNORAR.has(tok)) return false;
+            if (REGEX_INTENCION_VER.test(tok)) return false;
+            return true;
+        });
+    }
+
+    function hayPalabrasExtra(texto, nombreDetectado, clavesAlternativas) {
+        const nombres = [nombreDetectado].concat(clavesAlternativas || []);
+        return palabrasExtraLista(texto, nombres).length > 0;
+    }
+
+    // Arma la lista de productos para una consulta usando SIEMPRE los mismos filtros
+    // "de datos" que ya usa el resto del asistente (productosPorTipo/Categoria/NombreClave),
+    // en vez de mandar la frase entera al buscador de texto de la grilla (que compara
+    // palabra por palabra y falla con etiquetas de varias palabras, ej: "Porta valores"
+    // contra un producto cuyo Nombre está escrito como "Portavalores").
+    // Si además quedan palabras extra (color, material, marca), se usan para refinar
+    // la lista ya encontrada, reutilizando el mismo comparador difuso del buscador del sitio.
+    function obtenerProductosParaConsulta(t) {
+        const tipoExacto = detectarTipoExacto(t);
+        const categoriaExacta = detectarCategoriaExacta(t);
+        const subtipoDetectado = !tipoExacto
+            ? (detectarTipoEspecificoEtiqueta(t) || detectarSubtipoGenericoEtiqueta(t))
+            : null;
+
+        let base = null;
+        let etiqueta = "";
+        let nombresAQuitar = [];
+
+        if (tipoExacto) {
+            base = productosPorTipo(tipoExacto, categoriaExacta || undefined);
+            if (!base.length && categoriaExacta) base = productosPorTipo(tipoExacto);
+            etiqueta = tipoExacto;
+            nombresAQuitar = [tipoExacto].concat(categoriaExacta ? [categoriaExacta] : []);
+        } else if (subtipoDetectado) {
+            const subitemCompleto = buscarSubtipoPorEtiqueta(subtipoDetectado.etiqueta);
+            if (subitemCompleto) {
+                base = productosPorNombreClave(
+                    subitemCompleto.claves,
+                    subitemCompleto.tipoBase ? { tipo: subitemCompleto.tipoBase } : { categoria: subitemCompleto.categoriaBase }
+                );
+                if (!base.length) base = productosPorNombreClave(subitemCompleto.claves, null);
+            } else {
+                base = productosPorNombreClave(subtipoDetectado.claves, categoriaExacta ? { categoria: categoriaExacta } : null);
+                if (!base.length && categoriaExacta) base = productosPorNombreClave(subtipoDetectado.claves, null);
+            }
+            etiqueta = subtipoDetectado.etiqueta;
+            nombresAQuitar = subtipoDetectado.claves.concat(categoriaExacta ? [categoriaExacta] : []);
+        } else if (categoriaExacta) {
+            base = productosPorCategoria(categoriaExacta);
+            etiqueta = categoriaExacta;
+            nombresAQuitar = [categoriaExacta];
+        } else {
+            return null;
+        }
+
+        const palabrasExtra = palabrasExtraLista(t, nombresAQuitar);
+
+        if (palabrasExtra.length && base.length && typeof palabraMatchFuzzy === "function") {
+            const filtradoExtra = base.filter(function (p) {
+                const tokens = p._tokensBusqueda || camposBusquedaTokens(p);
+                return palabrasExtra.every(function (palabra) { return palabraMatchFuzzy(palabra, tokens); });
+            });
+            if (filtradoExtra.length) base = filtradoExtra;
+        }
+
+        return { productos: base, etiqueta: etiqueta, huboExtra: palabrasExtra.length > 0 };
+    }
+
+    // Inyecta una lista de productos ya calculada directamente en la grilla,
+    // sin pasar por el parser de texto de la barra de búsqueda.
+    function mostrarProductosEnGrid(productos, etiquetaBusqueda) {
+        if (typeof renderizarProductosProgresivo !== "function") return false;
+        if (typeof desactivarModoNuevos === "function") desactivarModoNuevos();
+        if (typeof categoriaActivaActual !== "undefined") categoriaActivaActual = "todos";
+        if (typeof subcategoriaActivaActual !== "undefined") subcategoriaActivaActual = "";
+        document.querySelectorAll(".categories a.active-cat, .mobile-categories li.active-cat")
+            .forEach(function (el) { el.classList.remove("active-cat"); });
+
+        const input = document.getElementById("searchInput");
+        if (input) input.value = etiquetaBusqueda || "";
+
+        productosFiltrados = productos || [];
+        productosRenderizados = 0;
+        const contenedor = document.getElementById("contenedor-productos");
+        if (contenedor) {
+            if (!productosFiltrados.length) {
+                if (typeof cardObserver !== "undefined") {
+                    contenedor.querySelectorAll(".product-card").forEach(function (card) { cardObserver.unobserve(card); });
+                }
+                contenedor.replaceChildren();
+                contenedor.innerHTML =
+                    '<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--color-marca-oro);">' +
+                    '<p>No se encontraron productos para "' + (etiquetaBusqueda || "") + '"</p></div>';
+                const btnVerMas = document.getElementById("btnVerMas");
+                if (btnVerMas) btnVerMas.style.display = "none";
+            } else {
+                renderizarProductosProgresivo(true);
+            }
+        }
+        if (typeof irAlContenedorProductos === "function") irAlContenedorProductos();
+        return true;
     }
 
     function camposBusquedaTokens(p) {
@@ -1334,6 +1430,15 @@
                 contextoPendiente = null;
                 categoriaEnCurso = null;
                 if (esCategoriaSintetica(categoriaGuardadaVer)) {
+                    const subitemElegido = buscarSubtipoPorEtiqueta(encontradaVer);
+                    if (subitemElegido) {
+                        let productosSubitem = productosPorNombreClave(
+                            subitemElegido.claves,
+                            subitemElegido.tipoBase ? { tipo: subitemElegido.tipoBase } : { categoria: subitemElegido.categoriaBase }
+                        );
+                        if (!productosSubitem.length) productosSubitem = productosPorNombreClave(subitemElegido.claves, null);
+                        return { mostrarProductos: { productos: productosSubitem, etiqueta: encontradaVer, huboExtra: false } };
+                    }
                     return { irABuscador: encontradaVer };
                 }
                 return { verEnMain: { categoria: categoriaGuardadaVer, tipo: encontradaVer } };
@@ -1490,7 +1595,19 @@
             };
         }
 
-        if (contieneAlguna(t, ["donde", "ubicacion", "direccion", "local", "como llegar", "mapa"])) {
+        if (contieneAlguna(t, ["marca", "marcas"])) {
+            return manejarConsultaAtributo("marca", t);
+        }
+
+        if (contieneAlguna(t, ["material", "materiales"])) {
+            return manejarConsultaAtributo("material", t);
+        }
+
+        if (contieneAlguna(t, ["color", "colores"])) {
+            return manejarConsultaAtributo("color", t);
+        }
+
+        if (contieneAlguna(t, ["donde", "ubicacion", "direccion", "como llegar", "mapa"])) {
             return {
                 texto: "Nos encontramos en " + DIRECCION + ".",
                 accion: { etiqueta: "Cómo llegar en Google Maps", icono: "fa-solid fa-location-dot", url: MAPS_URL }
@@ -1507,19 +1624,6 @@
                     { etiqueta: "Enviar un correo", icono: "fa-solid fa-envelope", url: "mailto:" + EMAIL }
                 ]
             };
-        }
-
-
-        if (contieneAlguna(t, ["marca", "marcas"])) {
-            return manejarConsultaAtributo("marca", t);
-        }
-
-        if (contieneAlguna(t, ["material", "materiales"])) {
-            return manejarConsultaAtributo("material", t);
-        }
-
-        if (contieneAlguna(t, ["color", "colores"])) {
-            return manejarConsultaAtributo("color", t);
         }
 
 
@@ -1553,34 +1657,9 @@
         );
 
         if (pideVerCategoriaCompleta) {
-            const tipoExacto = detectarTipoExacto(t);
-            const categoriaExacta = detectarCategoriaExacta(t);
-            const subtipoDetectado = (!tipoExacto && !categoriaExacta)
-                ? (detectarTipoEspecificoEtiqueta(t) || detectarSubtipoGenericoEtiqueta(t))
-                : null;
-
-            const nombreDetectado = tipoExacto || categoriaExacta || (subtipoDetectado && subtipoDetectado.etiqueta) || "";
-            const clavesDetectado = subtipoDetectado ? subtipoDetectado.claves : [];
-
-            if (nombreDetectado && hayPalabrasExtra(t, nombreDetectado, clavesDetectado)) {
-                // Hay algo más además del tipo/categoría (ej: "aros de acero dorado"):
-                // lo mandamos al buscador para que se apliquen los filtros combinados,
-                // igual que si se hubiera escrito en la barra de búsqueda.
-                const consultaCompuesta = textoOriginal.replace(/\bver\b/gi, "").trim();
-                return { irABuscador: consultaCompuesta || textoOriginal };
-            }
-
-            if (tipoExacto) {
-                return { verEnMain: { tipo: tipoExacto, categoria: categoriaExacta } };
-            }
-            if (categoriaExacta) {
-                return { verEnMain: { categoria: categoriaExacta } };
-            }
-            if (subtipoDetectado) {
-                // Subtipo sintético (no es un Tipo real de la BD): usar el buscador con
-                // su palabra clave principal para que aplique el mismo filtrado que la
-                // barra de búsqueda (incluyendo singular/plural).
-                return { irABuscador: subtipoDetectado.claves[0] };
+            const resultadoProductos = obtenerProductosParaConsulta(t);
+            if (resultadoProductos) {
+                return { mostrarProductos: resultadoProductos };
             }
 
             const pideExplicitamenteTodos = contieneAlguna(t, [
@@ -1651,6 +1730,10 @@
         }
 
         if (pareceConsultaDeProducto(t)) {
+            const resultadoDirecto = obtenerProductosParaConsulta(t);
+            if (resultadoDirecto && resultadoDirecto.productos.length) {
+                return { mostrarProductos: resultadoDirecto };
+            }
             return { irABuscador: textoOriginal };
         }
 
@@ -1669,6 +1752,19 @@
         setTimeout(function () {
             ocultarEscribiendo(escribiendoEl);
             const respuesta = generarRespuesta(limpio);
+
+            if (respuesta.mostrarProductos) {
+                const datos = respuesta.mostrarProductos;
+                cerrarPanel();
+                if (datos.productos && datos.productos.length) {
+                    mostrarProductosEnGrid(datos.productos, datos.etiqueta || "");
+                } else {
+                    // No debería pasar casi nunca, pero por las dudas no dejamos al
+                    // usuario sin respuesta: probamos con el buscador de texto.
+                    irAGridConBusqueda(datos.etiqueta || "");
+                }
+                return;
+            }
 
             if (respuesta.verEnMain) {
                 const destino = respuesta.verEnMain;
