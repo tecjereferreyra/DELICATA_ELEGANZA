@@ -533,6 +533,8 @@ const PALABRAS_IGNORAR = new Set([
     "gustaria", "gustarian", "gustan", "gusta",
     "dame", "denme",
     "mostrame", "muestrame", "mostrar", "mostrarme", "mostranos", "mostras", "muestran", "muestras",
+    "mostraria", "mostrarias", "mostrarian", "mostrariamos",
+    "todo", "todos", "toda", "todas",
     "ensename", "pasame", "traeme", "trae", "traigan", "traer",
     "llevame", "llevar", "llevas",
     "recomendame", "recomendar", "recomendas", "recomienda",

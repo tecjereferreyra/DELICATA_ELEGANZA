@@ -437,7 +437,7 @@
                 "No superes el peso máximo indicado, para no forzar costuras ni ruedas.\n" +
                 "Guardala en un lugar ventilado, no dentro de bolsas cerradas herméticamente."
         }
-    
+
     ];
     function respuestaTipoEspecifico(texto) {
         for (let i = 0; i < TIPOS_ESPECIFICOS.length; i++) {
@@ -446,6 +446,48 @@
             if (coincide) return s.etiqueta + ":\n" + s.texto;
         }
         return null;
+    }
+
+    // Detecta un "tipo específico" (TIPOS_ESPECIFICOS) por sus claves, devolviendo el objeto
+    // completo (etiqueta + claves) en vez del texto de cuidados. Útil para saber si el texto
+    // se refiere a un tipo aunque ese tipo no exista literalmente como campo Tipo en la BD.
+    function detectarTipoEspecificoEtiqueta(texto) {
+        for (let i = 0; i < TIPOS_ESPECIFICOS.length; i++) {
+            const s = TIPOS_ESPECIFICOS[i];
+            if (s.claves.some(function (c) { return texto.indexOf(normalizarTexto(c)) !== -1; })) return s;
+        }
+        return null;
+    }
+
+    // Igual que arriba pero para los subtipos sintéticos (Complementos, Complementos de viaje,
+    // Pañolería) que tampoco existen como campo Tipo real, sino que se arman filtrando por Nombre.
+    function detectarSubtipoGenericoEtiqueta(texto) {
+        const todos = COMPLEMENTOS_SUBTIPOS.concat(COMPLEMENTOS_VIAJE_SUBTIPOS, PANOLERIA_SUBTIPOS);
+        for (let i = 0; i < todos.length; i++) {
+            const s = todos[i];
+            if (s.claves.some(function (c) { return texto.indexOf(normalizarTexto(c)) !== -1; })) return s;
+        }
+        return null;
+    }
+
+    // Determina si, además del tipo/categoría/subtipo ya detectado, quedan en el texto
+    // palabras "con peso" (posibles descriptores: material, color, marca, etc.) que ameriten
+    // mandar la consulta al buscador (con sus filtros compuestos) en vez de navegar directo.
+    function hayPalabrasExtra(texto, nombreDetectado, clavesAlternativas) {
+        let limpio = " " + texto + " ";
+        if (nombreDetectado) {
+            limpio = limpio.split(" " + normalizarTexto(nombreDetectado) + " ").join(" ");
+        }
+        (clavesAlternativas || []).forEach(function (c) {
+            limpio = limpio.split(" " + normalizarTexto(c) + " ").join(" ");
+        });
+        const tokens = limpio.trim().split(/\s+/).filter(function (tok) {
+            if (!tok || tok.length <= 2) return false;
+            if (typeof PALABRAS_IGNORAR !== "undefined" && PALABRAS_IGNORAR.has(tok)) return false;
+            if (REGEX_INTENCION_VER.test(tok)) return false;
+            return true;
+        });
+        return tokens.length > 0;
     }
 
     function menuComplementos() {
@@ -493,7 +535,7 @@
         }
 
 
-        
+
 
         const tiposOrdenados = tipos.slice().sort(function (a, b) { return b.length - a.length; });
         for (let i = 0; i < tiposOrdenados.length; i++) {
@@ -737,16 +779,7 @@
         };
     }
 
-    function esOtraIntencionClara(texto) {
-        return REGEX_INTENCION_VER.test(texto) || contieneAlguna(texto, [
-            "horario", "hora", "abren", "cierran", "atienden", "dias de atencion", "cuando abren",
-            "donde", "ubicacion", "direccion", "local", "como llegar", "mapa",
-            "instagram", "facebook", "redes", "whatsapp", "contacto", "mail", "correo",
-            "marca", "marcas", "material", "materiales",
-            "gracias", "chau", "adios", "hasta luego", "nos vemos",
-            "hola", "buenas", "ayuda", "que podes hacer", "que sabes hacer", "menu"
-        ]);
-    }
+   
 
     function preguntaCategoria(categoria) {
         return {
@@ -1224,10 +1257,12 @@
                 const categoriaExacta = detectarCategoriaExacta(t);
                 if (categoriaExacta) return iniciarFlujoAtributoTipo(atributoPendiente, categoriaExacta);
 
-                if (esOtraIntencionClara(t)) {
+                const otraRespuesta1 = generarRespuestaBase(t, nPalabras, textoOriginal);
+                if (!otraRespuesta1.noEntendido) {
                     contextoPendienteAtributo = null;
                     categoriaEnCursoAtributo = null;
-                    forzarChipsPrincipales = true;
+                    if (!otraRespuesta1.chips) otraRespuesta1.chips = "principal";
+                    return otraRespuesta1;
                 } else {
                     return iniciarFlujoAtributoCategorias(atributoPendiente, true);
                 }
@@ -1254,10 +1289,12 @@
                     return iniciarFlujoAtributoTipo(atributoPendiente, "Complementos de viaje");
                 }
 
-                if (esOtraIntencionClara(t)) {
+                const otraRespuesta2 = generarRespuestaBase(t, nPalabras, textoOriginal);
+                if (!otraRespuesta2.noEntendido) {
                     contextoPendienteAtributo = null;
                     categoriaEnCursoAtributo = null;
-                    forzarChipsPrincipales = true;
+                    if (!otraRespuesta2.chips) otraRespuesta2.chips = "principal";
+                    return otraRespuesta2;
                 } else {
                     return iniciarFlujoAtributoTipo(atributoPendiente, categoriaGuardadaAtributo, true);
                 }
@@ -1269,8 +1306,11 @@
             if (categoriaExacta) {
                 return iniciarFlujoVerTipo(categoriaExacta);
             }
-            if (esOtraIntencionClara(t)) {
+            const otraRespuesta3 = generarRespuestaBase(t, nPalabras, textoOriginal);
+            if (!otraRespuesta3.noEntendido) {
                 contextoPendiente = null;
+                if (!otraRespuesta3.chips) otraRespuesta3.chips = "principal";
+                return otraRespuesta3;
             } else {
                 return { texto: "No encontré esa categoría, elegí una de los botones.", chips: { modo: "verCategorias", opciones: getCategorias() } };
             }
@@ -1288,7 +1328,7 @@
                     const normEncontrada = normalizarTexto(encontradaVer);
                     const destinoSintetico = normEncontrada.indexOf("complemento") !== -1
                         ? "Complementos de viaje"
-                        : encontradaVer; 
+                        : encontradaVer;
                     return iniciarFlujoVerTipo(destinoSintetico);
                 }
                 contextoPendiente = null;
@@ -1301,9 +1341,12 @@
 
             if (esFraseComplementosDeViaje(t)) return iniciarFlujoVerTipo("Complementos de viaje");
 
-            if (esOtraIntencionClara(t)) {
+            const otraRespuesta4 = generarRespuestaBase(t, nPalabras, textoOriginal);
+            if (!otraRespuesta4.noEntendido) {
                 contextoPendiente = null;
                 categoriaEnCurso = null;
+                if (!otraRespuesta4.chips) otraRespuesta4.chips = "principal";
+                return otraRespuesta4;
             } else {
                 return iniciarFlujoVerTipo(categoriaGuardadaVer, true);
             }
@@ -1363,10 +1406,12 @@
             }
 
 
-            if (esOtraIntencionClara(t)) {
+            const otraRespuesta5 = generarRespuestaBase(t, nPalabras, textoOriginal);
+            if (!otraRespuesta5.noEntendido) {
                 contextoPendiente = null;
                 categoriaEnCurso = null;
-                forzarChipsPrincipales = true;
+                if (!otraRespuesta5.chips) otraRespuesta5.chips = "principal";
+                return otraRespuesta5;
             } else {
                 return (etapaPrevia === "tipo" && categoriaGuardada)
                     ? iniciarFlujoTipo(categoriaGuardada, true)
@@ -1381,6 +1426,7 @@
 
     function respuestaNoEntendido() {
         return {
+            noEntendido: true,
             texto: "No entendí tu pregunta, ¿podrías reformularla? Puedo ayudarte con:\n" +
                 "• Horarios y días de atención\n" +
                 "• Ubicación del local\n" +
@@ -1508,15 +1554,34 @@
 
         if (pideVerCategoriaCompleta) {
             const tipoExacto = detectarTipoExacto(t);
+            const categoriaExacta = detectarCategoriaExacta(t);
+            const subtipoDetectado = (!tipoExacto && !categoriaExacta)
+                ? (detectarTipoEspecificoEtiqueta(t) || detectarSubtipoGenericoEtiqueta(t))
+                : null;
+
+            const nombreDetectado = tipoExacto || categoriaExacta || (subtipoDetectado && subtipoDetectado.etiqueta) || "";
+            const clavesDetectado = subtipoDetectado ? subtipoDetectado.claves : [];
+
+            if (nombreDetectado && hayPalabrasExtra(t, nombreDetectado, clavesDetectado)) {
+                // Hay algo más además del tipo/categoría (ej: "aros de acero dorado"):
+                // lo mandamos al buscador para que se apliquen los filtros combinados,
+                // igual que si se hubiera escrito en la barra de búsqueda.
+                const consultaCompuesta = textoOriginal.replace(/\bver\b/gi, "").trim();
+                return { irABuscador: consultaCompuesta || textoOriginal };
+            }
+
             if (tipoExacto) {
-                const categoriaExacta = detectarCategoriaExacta(t);
                 return { verEnMain: { tipo: tipoExacto, categoria: categoriaExacta } };
             }
-            const categoriaExacta = detectarCategoriaExacta(t);
             if (categoriaExacta) {
                 return { verEnMain: { categoria: categoriaExacta } };
             }
-
+            if (subtipoDetectado) {
+                // Subtipo sintético (no es un Tipo real de la BD): usar el buscador con
+                // su palabra clave principal para que aplique el mismo filtrado que la
+                // barra de búsqueda (incluyendo singular/plural).
+                return { irABuscador: subtipoDetectado.claves[0] };
+            }
 
             const pideExplicitamenteTodos = contieneAlguna(t, [
                 "ver todos", "ver todo", "todos los productos", "mostrame todo", "muestrame todo",
@@ -1701,7 +1766,7 @@
         if (habiaFlujoPendiente) {
             _mensajeFlujoInterrumpido = construirMensajeFlujoInterrumpido();
         }
-  
+
     }
 
     function restaurarChipsSegunEstado() {
