@@ -725,6 +725,36 @@ function extraerTipoExacto(textoNormalizado) {
     }
     return null;
 }
+function extraerTiposMultiples(textoNormalizado) {
+    let restante = textoNormalizado;
+    const tiposEncontrados = new Set();
+
+    // alias compuestos (2+ palabras) primero, de más largo a más corto
+    Object.keys(TIPO_ALIAS_MAP)
+        .filter(k => k.includes(" "))
+        .sort((a, b) => b.length - a.length)
+        .forEach(clave => {
+            const patron = new RegExp(`\\b${clave.replace(/\s+/g, "\\s+")}\\b`, "g");
+            if (patron.test(restante)) {
+                tiposEncontrados.add(normalizar(TIPO_ALIAS_MAP[clave]));
+                restante = restante.replace(patron, " ");
+            }
+        });
+
+    // tokens sueltos
+    restante.split(/\s+/).filter(Boolean).forEach(tok => {
+        const clave = TIPO_ALIAS_MAP[tok] ? tok : normalizarTermino(tok);
+        if (TIPO_ALIAS_MAP[clave]) {
+            tiposEncontrados.add(normalizar(TIPO_ALIAS_MAP[clave]));
+            restante = restante.replace(new RegExp(`\\b${tok}\\b`, "g"), " ");
+        }
+    });
+
+    return {
+        tipos: Array.from(tiposEncontrados),
+        textoRestante: restante.replace(/\s+/g, " ").trim()
+    };
+}
 function normalizarTipo(valor) {
     if (!valor || !valor.trim()) return valor;
     const key = valor.trim().toLowerCase()

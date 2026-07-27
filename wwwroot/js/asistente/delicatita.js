@@ -816,14 +816,26 @@
         return palabrasExtraLista(texto, nombres).length > 0;
     }
 
-    // Arma la lista de productos para una consulta usando SIEMPRE los mismos filtros
-    // "de datos" que ya usa el resto del asistente (productosPorTipo/Categoria/NombreClave),
-    // en vez de mandar la frase entera al buscador de texto de la grilla (que compara
-    // palabra por palabra y falla con etiquetas de varias palabras, ej: "Porta valores"
-    // contra un producto cuyo Nombre está escrito como "Portavalores").
-    // Si además quedan palabras extra (color, material, marca), se usan para refinar
-    // la lista ya encontrada, reutilizando el mismo comparador difuso del buscador del sitio.
     function obtenerProductosParaConsulta(t) {
+        const multi = (typeof extraerTiposMultiples === "function")
+            ? extraerTiposMultiples(normalizarTexto(t))
+            : { tipos: [], textoRestante: normalizarTexto(t) };
+
+        if (multi.tipos.length > 1) {
+            let baseMulti = multi.tipos.reduce(function (acc, tp) {
+                return acc.concat(productosPorTipo(tp));
+            }, []);
+            const extraMulti = palabrasExtraLista(multi.textoRestante, multi.tipos);
+            if (extraMulti.length && baseMulti.length && typeof palabraMatchFuzzy === "function") {
+                const filtrado = baseMulti.filter(function (p) {
+                    const tokens = p._tokensBusqueda || camposBusquedaTokens(p);
+                    return extraMulti.every(function (palabra) { return palabraMatchFuzzy(palabra, tokens); });
+                });
+                if (filtrado.length) baseMulti = filtrado;
+            }
+            return { productos: baseMulti, etiqueta: multi.tipos.join(" y "), huboExtra: extraMulti.length > 0 };
+        }
+
         const tipoExacto = detectarTipoExacto(t);
         const categoriaExacta = detectarCategoriaExacta(t);
         const subtipoDetectado = !tipoExacto
@@ -1567,6 +1579,24 @@
         };
     }
 
+    function esConsultaGeneralAtributo(t) {
+        return contieneAlguna(t, [
+            "en general", "en total",
+            "todas las marcas", "todos los materiales",
+            "que marcas manejan", "que marcas tienen", "que marcas hay", "que marcas venden",
+            "que materiales manejan", "que materiales tienen", "que materiales hay", "que materiales usan"
+        ]);
+    }
+
+    function respuestaAtributoGeneral(atributo) {
+        const cfg = ATRIBUTOS_CONFIG[atributo];
+        const valores = getValoresDeAtributo(atributo, getCatalogo());
+        if (!valores.length) {
+            return { texto: "Todavía no tengo " + cfg.nombrePregunta + " cargados." };
+        }
+        return { texto: "Estas son " + cfg.nombreListado + ":\n" + valores.join(", ") + "." };
+    }
+
     function manejarConsultaAtributo(atributo, t) {
         const tipoExacto = detectarTipoExacto(t);
         if (tipoExacto) {
@@ -1582,6 +1612,10 @@
             return iniciarFlujoAtributoTipo(atributo, categoriaExacta);
         }
 
+        if (esConsultaGeneralAtributo(t)) {
+            return respuestaAtributoGeneral(atributo);
+        }
+
         return iniciarFlujoAtributoCategorias(atributo);
     }
 
@@ -1589,6 +1623,36 @@
 
         if (nPalabras <= 4 && contieneAlguna(t, ["gracias", "chau", "adios", "hasta luego", "nos vemos"])) {
             return { texto: "Gracias por escribirnos. Que tengas un excelente día." };
+        }
+
+        function respuestasSimplesDetectadas() {
+            const partes = [];
+
+            if (nPalabras <= 8 && contieneAlguna(t, [
+                "hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches",
+                "como estas", "como andas", "como te va", "que tal", "todo bien"
+            ])) {
+                partes.push("¡Hola! Soy Delicatita, el asistente virtual de Delicata Eleganza.");
+            }
+
+            if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "dias de atencion", "cuando abren", "que horario"])) {
+                partes.push(HORARIOS_TEXTO);
+            }
+
+            if (contieneAlguna(t, ["quien atiende", "quienes atienden", "quien nos atiende", "quien te atiende", "quien esta a cargo", "quien es el vendedor"])) {
+                partes.push("Atiende Edgar Albert.");
+            }
+
+            if (contieneAlguna(t, ["donde", "ubicacion", "direccion", "como llegar", "mapa"])) {
+                partes.push("Nos encontramos en " + DIRECCION + ".");
+            }
+
+            return partes;
+        }
+
+        const simples = respuestasSimplesDetectadas();
+        if (simples.length > 1) {
+            return { texto: simples.join("\n\n") };
         }
 
         if (contieneAlguna(t, ["quien atiende", "quienes atienden", "quien nos atiende", "quien te atiende", "quien esta a cargo", "quien es el vendedor"])) {

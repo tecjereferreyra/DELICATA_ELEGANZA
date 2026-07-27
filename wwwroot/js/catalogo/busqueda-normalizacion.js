@@ -719,7 +719,8 @@ const aplicarFiltros = (preservarPaginacion = false) => {
     );
     if (textoBusqueda !== "") {
         const filtros = extraerFiltrosBusqueda(textoBusqueda);
-        const tipoExacto = extraerTipoExacto(textoBusqueda);
+        const { tipos: tiposMultiples, textoRestante: restanteMulti } = extraerTiposMultiples(textoBusqueda);
+        const tipoExacto = tiposMultiples.length <= 1 ? extraerTipoExacto(textoBusqueda) : null;
         const textoParaFuzzy = tipoExacto ? tipoExacto.textoRestante : textoBusqueda;
 
         base = base.filter(p => {
@@ -730,6 +731,10 @@ const aplicarFiltros = (preservarPaginacion = false) => {
             if (filtros.alto && parseFloat(idx.alto.replace(",", ".")) !== parseFloat(filtros.alto)) return false;
             if (filtros.ancho && parseFloat(idx.ancho.replace(",", ".")) !== parseFloat(filtros.ancho)) return false;
 
+            if (tiposMultiples.length > 1) {
+                if (!tiposMultiples.includes(idx.tipo)) return false;
+                return restanteMulti === "" || matchBusquedaFuzzy(p._tokensBusqueda, restanteMulti);
+            }
 
             const textoFuzzyFinal = filtroAcero !== null
                 ? textoParaFuzzy.replace(/\bacero\s+(blanco|dorado|quirurgico|quirúrgico|americano)\b/, "acero").trim()
@@ -740,7 +745,7 @@ const aplicarFiltros = (preservarPaginacion = false) => {
                     return textoFuzzyFinal === "" || matchBusquedaFuzzy(p._tokensBusqueda, textoFuzzyFinal);
                 }
 
-                return matchBusquedaFuzzy(p._tokensBusqueda, textoBusqueda);
+                return false;
             }
 
             if (textoFuzzyFinal === "") return true;
