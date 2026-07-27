@@ -450,9 +450,7 @@
         return null;
     }
 
-    // Detecta un "tipo específico" (TIPOS_ESPECIFICOS) por sus claves, devolviendo el objeto
-    // completo (etiqueta + claves) en vez del texto de cuidados. Útil para saber si el texto
-    // se refiere a un tipo aunque ese tipo no exista literalmente como campo Tipo en la BD.
+
     function detectarTipoEspecificoEtiqueta(texto) {
         for (let i = 0; i < TIPOS_ESPECIFICOS.length; i++) {
             const s = TIPOS_ESPECIFICOS[i];
@@ -461,8 +459,7 @@
         return null;
     }
 
-    // Igual que arriba pero para los subtipos sintéticos (Complementos, Complementos de viaje,
-    // Pañolería) que tampoco existen como campo Tipo real, sino que se arman filtrando por Nombre.
+
     function detectarSubtipoGenericoEtiqueta(texto) {
         const todos = COMPLEMENTOS_SUBTIPOS.concat(COMPLEMENTOS_VIAJE_SUBTIPOS, PANOLERIA_SUBTIPOS);
         for (let i = 0; i < todos.length; i++) {
@@ -471,10 +468,33 @@
         }
         return null;
     }
+    function detectarSubtiposMultiples(texto) {
+        const todos = COMPLEMENTOS_SUBTIPOS.concat(COMPLEMENTOS_VIAJE_SUBTIPOS, PANOLERIA_SUBTIPOS);
+        const clavesOrdenadas = [];
+        todos.forEach(function (s) {
+            s.claves.forEach(function (c) { clavesOrdenadas.push({ clave: c, etiqueta: s.etiqueta }); });
+        });
+        clavesOrdenadas.sort(function (a, b) { return b.clave.length - a.clave.length; });
 
-    // Determina si, además del tipo/categoría/subtipo ya detectado, quedan en el texto
-    // palabras "con peso" (posibles descriptores: material, color, marca, etc.). La
-    // implementación vive más abajo, junto a palabrasExtraLista/obtenerProductosParaConsulta.
+        let restante = texto;
+        const etiquetasVistas = new Set();
+
+        clavesOrdenadas.forEach(function (entry) {
+            if (etiquetasVistas.has(entry.etiqueta)) return;
+            const cn = normalizarTexto(entry.clave);
+            const patron = new RegExp("\\b" + cn.replace(/\s+/g, "\\s+") + "\\b");
+            if (patron.test(restante)) {
+                etiquetasVistas.add(entry.etiqueta);
+                restante = restante.replace(patron, " ");
+            }
+        });
+
+        const subitems = Array.from(etiquetasVistas)
+            .map(function (etq) { return buscarSubtipoPorEtiqueta(etq); })
+            .filter(Boolean);
+
+        return { subitems: subitems, textoRestante: restante.replace(/\s+/g, " ").trim() };
+    }
 
     function menuComplementos() {
         contextoPendiente = "tipo";
@@ -821,19 +841,46 @@
             ? extraerTiposMultiples(normalizarTexto(t))
             : { tipos: [], textoRestante: normalizarTexto(t) };
 
-        if (multi.tipos.length > 1) {
-            let baseMulti = multi.tipos.reduce(function (acc, tp) {
+        const multiSub = detectarSubtiposMultiples(multi.textoRestante);
+
+        const totalGrupos = multi.tipos.length + multiSub.subitems.length;
+
+        if (totalGrupos > 1) {
+            let baseCombinada = multi.tipos.reduce(function (acc, tp) {
                 return acc.concat(productosPorTipo(tp));
             }, []);
-            const extraMulti = palabrasExtraLista(multi.textoRestante, multi.tipos);
-            if (extraMulti.length && baseMulti.length && typeof palabraMatchFuzzy === "function") {
-                const filtrado = baseMulti.filter(function (p) {
+
+            baseCombinada = multiSub.subitems.reduce(function (acc, s) {
+                const filtro = s.tipoBase ? { tipo: s.tipoBase } : (s.categoriaBase ? { categoria: s.categoriaBase } : null);
+                let productos = productosPorNombreClave(s.claves, filtro);
+                if (!productos.length) productos = productosPorNombreClave(s.claves, null);
+                return acc.concat(productos);
+            }, baseCombinada);
+
+            const vistos = new Set();
+            baseCombinada = baseCombinada.filter(function (p) {
+                if (vistos.has(p.IdProducto)) return false;
+                vistos.add(p.IdProducto);
+                return true;
+            });
+
+            const nombresAQuitarCombinado = multi.tipos.concat(
+                multiSub.subitems.reduce(function (acc, s) { return acc.concat(s.claves); }, [])
+            );
+            const extraCombinado = palabrasExtraLista(multiSub.textoRestante, nombresAQuitarCombinado);
+            if (extraCombinado.length && baseCombinada.length && typeof palabraMatchFuzzy === "function") {
+                const filtrado = baseCombinada.filter(function (p) {
                     const tokens = p._tokensBusqueda || camposBusquedaTokens(p);
-                    return extraMulti.every(function (palabra) { return palabraMatchFuzzy(palabra, tokens); });
+                    return extraCombinado.every(function (palabra) { return palabraMatchFuzzy(palabra, tokens); });
                 });
-                if (filtrado.length) baseMulti = filtrado;
+                if (filtrado.length) baseCombinada = filtrado;
             }
-            return { productos: baseMulti, etiqueta: multi.tipos.join(" y "), huboExtra: extraMulti.length > 0 };
+
+            const etiquetaCombinada = multi.tipos.concat(
+                multiSub.subitems.map(function (s) { return s.etiqueta; })
+            ).join(" y ");
+
+            return { productos: baseCombinada, etiqueta: etiquetaCombinada, huboExtra: extraCombinado.length > 0 };
         }
 
         const tipoExacto = detectarTipoExacto(t);

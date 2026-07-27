@@ -670,6 +670,8 @@ const TIPO_ALIAS_MAP = {
     "aros": "Aros",
     "argolla": "Argollas",
     "argollas": "Argollas",
+    "piercing": "Piercing",
+    "piercings": "Piercing",
     "cadena": "Cadenas",
     "cadenas": "Cadenas",
     "pulsera": "Pulseras",
