@@ -695,12 +695,7 @@ const TIPO_ALIAS_MAP = {
     "cenidor": "Cintos",
     "cenidores": "Cintos",
     "valija": "Valijas",
-    "bufanda": "Bufandas",
-    "chalina": "Chalinas",
-    "cuello": "Cuellos",
-    "pashmina": "Pashminas",
     "dije": "Dijes",
-    "dijes": "Dijes",
 };
 function extraerTipoExacto(textoNormalizado) {
     const clavesCompuestas = Object.keys(TIPO_ALIAS_MAP)

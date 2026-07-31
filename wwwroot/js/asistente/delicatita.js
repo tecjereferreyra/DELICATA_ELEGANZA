@@ -1675,18 +1675,23 @@
         function respuestasSimplesDetectadas() {
             const partes = [];
 
-            if (nPalabras <= 8 && contieneAlguna(t, [
+            if (contieneAlguna(t, [
                 "hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches",
                 "como estas", "como andas", "como te va", "que tal", "todo bien"
             ])) {
                 partes.push("¡Hola! Soy Delicatita, el asistente virtual de Delicata Eleganza.");
             }
 
-            if (contieneAlguna(t, ["horario", "hora", "abren", "cierran", "dias de atencion", "cuando abren", "que horario"])) {
+            if (contieneAlguna(t, [
+                "horario", "hora", "abren", "cierran", "dias de atencion", "cuando abren",
+                "que horario", "dias atienden", "que dias atienden", "que dias trabajan", "que dias abren"
+            ])) {
                 partes.push(HORARIOS_TEXTO);
             }
 
-            if (contieneAlguna(t, ["quien atiende", "quienes atienden", "quien nos atiende", "quien te atiende", "quien esta a cargo", "quien es el vendedor"])) {
+            const mencionaQuien = contieneAlguna(t, ["quien", "quienes"]);
+            const mencionaAtencion = contieneAlguna(t, ["atiende", "atienden", "atencion", "cargo", "vendedor", "encargado"]);
+            if (mencionaQuien && mencionaAtencion) {
                 partes.push("Atiende Edgar Albert.");
             }
 
@@ -1728,11 +1733,32 @@
             };
         }
 
-        if (contieneAlguna(t, ["marca", "marcas"])) {
+        const pideMarca = contieneAlguna(t, ["marca", "marcas"]);
+        const pideMaterial = contieneAlguna(t, ["material", "materiales"]);
+
+        if (pideMarca && pideMaterial) {
+            const tipoExactoMM = detectarTipoExacto(t);
+            const categoriaExactaMM = detectarCategoriaExacta(t);
+
+            if (!tipoExactoMM && !categoriaExactaMM) {
+                const rMarca = respuestaAtributoGeneral("marca");
+                const rMaterial = respuestaAtributoGeneral("material");
+                return { texto: rMarca.texto + "\n\n" + rMaterial.texto };
+            }
+
+            const rMarca = manejarConsultaAtributo("marca", t);
+            const rMaterial = manejarConsultaAtributo("material", t);
+            if (rMarca && rMarca.texto && rMaterial && rMaterial.texto && !rMarca.chips && !rMaterial.chips) {
+                return { texto: rMarca.texto + "\n\n" + rMaterial.texto };
+            }
+            return rMarca;
+        }
+
+        if (pideMarca) {
             return manejarConsultaAtributo("marca", t);
         }
 
-        if (contieneAlguna(t, ["material", "materiales"])) {
+        if (pideMaterial) {
             return manejarConsultaAtributo("material", t);
         }
 
@@ -1740,11 +1766,7 @@
             const colorEspecifico = detectarColorEspecifico(t);
             const pideProductoDeEseColor = colorEspecifico &&
                 (detectarCategoriaExacta(t) || detectarTipoExacto(t) || detectarTipoEspecificoEtiqueta(t) || detectarSubtipoGenericoEtiqueta(t));
-            // Si preguntan "qué colores hay" en general, respondemos con el listado.
-            // Pero si además nombran un color puntual junto con una categoría/tipo
-            // (ej. "piercings de color rosa"), es un pedido de producto filtrado,
-            // no una pregunta por el listado de colores: dejamos que siga el flujo
-            // normal más abajo, que arma la grilla ya filtrada por ese color.
+       
             if (!pideProductoDeEseColor) {
                 return manejarConsultaAtributo("color", t);
             }
