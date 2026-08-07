@@ -2103,8 +2103,7 @@
         requestAnimationFrame(function () {
             botonEl.classList.add("visible");
         });
-        try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) {
-
+        try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) { /* almacenamiento no disponible */ }
 
         if (esTactil()) {
             const TOOLTIP_ASISTENTE_KEY = "delicatitaTooltipAsistenteVisto";
