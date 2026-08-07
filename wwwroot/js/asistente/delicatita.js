@@ -2007,7 +2007,7 @@
     function abrirPanel() {
         panelEl.classList.add("abierto");
         backdropEl.classList.add("activo");
-        bloquearScrollFondo();
+        lockScroll();
         if (!chatIniciado) {
             chatIniciado = true;
             renderChipsPrincipales();
@@ -2030,7 +2030,7 @@
     function cerrarPanel() {
         panelEl.classList.remove("abierto");
         backdropEl.classList.remove("activo");
-        desbloquearScrollFondo();
+        unlockScroll();
 
         const habiaFlujoPendiente = !!(contextoPendiente || contextoPendienteAtributo);
         if (habiaFlujoPendiente) {
@@ -2098,8 +2098,12 @@
 
 
     function revelarBoton() {
-        botonEl.classList.add("visible");
-        try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) { /* almacenamiento no disponible */ }
+        botonEl.classList.remove("visible");
+        void botonEl.offsetHeight;              // fuerza reflow antes de animar (mismo patrón que abrirModalProducto)
+        requestAnimationFrame(function () {
+            botonEl.classList.add("visible");
+        });
+        try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) {
 
 
         if (esTactil()) {
