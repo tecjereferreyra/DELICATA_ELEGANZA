@@ -2098,11 +2098,13 @@
 
 
     function revelarBoton() {
-        botonEl.classList.remove("visible");
-        void botonEl.offsetHeight;              // fuerza reflow antes de animar (mismo patrón que abrirModalProducto)
-        requestAnimationFrame(function () {
-            botonEl.classList.add("visible");
-        });
+        if (!botonEl.classList.contains("visible")) {
+            botonEl.classList.remove("visible");
+            void botonEl.offsetHeight;              // solo la primera vez que aparece
+            requestAnimationFrame(function () {
+                botonEl.classList.add("visible");
+            });
+        }
         try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) { /* almacenamiento no disponible */ }
 
         if (esTactil()) {

@@ -132,7 +132,7 @@ function _preventWheel(e) {
 
 const _preventKeyScroll = (e) => {
     const scrollKeys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
-    if (scrollKeys.includes(e.key) && !e.target.closest('.modal-overlay, .modal-content, .user-modal-content')) {
+    if (scrollKeys.includes(e.key) && !e.target.closest('.modal-overlay, .modal-content, .user-modal-content, .delicatita-panel')) {
         e.preventDefault();
     }
 };
