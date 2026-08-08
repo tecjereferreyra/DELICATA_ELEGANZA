@@ -190,6 +190,21 @@
                 "Dejalo secar abierto antes de guardarlo, para evitar humedad y malos olores.\n" +
                 "No lo fuerces al abrir o cerrar con viento fuerte.\n" +
                 "Revisá de tanto en tanto el mecanismo y las varillas."
+        },
+        {
+            claves: ["neceser", "neceseres", "necesers"],
+            etiqueta: "Necesers",
+            texto:
+                "Vacialo y airealo después de cada viaje para evitar humedad y olores.\n" +
+                "Limpiá el interior con un paño húmedo, sin productos abrasivos.\n" +
+                "Guardalo seco antes de volver a usarlo."
+        },
+        {
+            claves: ["tarjetero", "tarjeteros"],
+            etiqueta: "Tarjeteros",
+            texto:
+                "Limpialo con un paño seco o levemente húmedo según el material.\n" +
+                "Guardalo en un lugar seco, lejos de objetos que puedan rayarlo."
         }
     ];
     const COMPLEMENTOS_VIAJE_SUBTIPOS = [
