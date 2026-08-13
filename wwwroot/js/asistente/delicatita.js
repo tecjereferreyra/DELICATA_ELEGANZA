@@ -28,9 +28,7 @@
     function contieneAlguna(texto, palabras) {
         return palabras.some(function (p) { return texto.indexOf(p) !== -1; });
     }
-    // El motor de raíces verbales (esFormaVerboPedido, esRuidoPedido,
-    // contieneIntencionVer, etc.) vive en busqueda-normalizacion.js, que
-    // se carga antes que este script — ver ese archivo para el detalle.
+
     function contarPalabras(texto) {
         return texto.split(/\s+/).filter(Boolean).length;
     }
@@ -101,7 +99,7 @@
 
     const CUIDADOS = [
         {
-            claves: ["marroquineria", "cuero", "cartera", "carteras", "billetera", "mochila", "bolso"],
+            claves: ["marroquineria", "cuero", "cartera", "carteras", "billetera", "mochila", "bolso","sobres"],
             titulo: "Marroquinería y cuero",
             texto:
                 "Guardá la pieza en un lugar seco, lejos de la humedad y del sol directo.\n" +
@@ -110,7 +108,7 @@
                 "Evitá sobrecargar bolsillos y compartimentos para no deformar la pieza."
         },
         {
-            claves: ["bijouterie", "bijou", "aro", "aros", "collar", "collares", "pulsera", "dije", "cadena"],
+            claves: ["bijouterie", "bijou", "aro", "aros", "collar", "collares", "pulsera", "dije", "cadena","brazaletes"],
             titulo: "Bijouterie y accesorios",
             texto:
                 "Evitá el contacto directo con perfumes, cremas y agua.\n" +
@@ -357,6 +355,14 @@
                 "Guardala por separado para que no se enganche con otras piezas."
         },
         {
+            claves: ["brazalete", "brazaletes"],
+            etiqueta: "Brazaletes",
+            texto:
+                "Evitá forzar su apertura o moldearlo bruscamente al ponértelo para no debilitar el material.\n" +
+                "Guardalo en un espacio individual para proteger la superficie de rayones y fricción.\n" +
+                "Sacátelo antes de aplicar perfumes, cremas o realizar actividades de impacto."
+        },
+        {
             claves: ["chal", "chales"],
             etiqueta: "Chales",
             texto:
@@ -445,6 +451,15 @@
                 "Evitá sobrecargarla más allá de lo que soporta cómodamente.\n" +
                 "Limpiala con un paño húmedo y dejala secar antes de guardarla."
         },
+        {
+            claves: ["sobre", "sobres"],
+            etiqueta: "Sobres",
+            texto:
+                "Evitá sobrecargarlo con objetos voluminosos para no deformar su estructura ni forzar el cierre.\n" +
+                "Guardalo de forma plana o con un relleno suave para que conserve su forma original.\n" +
+                "Evitá apoyarlo sobre superficies húmedas o rugosas que puedan marcar la superficie."
+        },
+
 
         {
             claves: ["valija", "valijas"],
@@ -948,8 +963,7 @@
         return { productos: base, etiqueta: etiqueta, huboExtra: palabrasExtra.length > 0 };
     }
 
-    // Inyecta una lista de productos ya calculada directamente en la grilla,
-    // sin pasar por el parser de texto de la barra de búsqueda.
+
     function mostrarProductosEnGrid(productos, etiquetaBusqueda) {
         if (typeof renderizarProductosProgresivo !== "function") return false;
         if (typeof desactivarModoNuevos === "function") desactivarModoNuevos();
@@ -1858,10 +1872,7 @@
                     return { irABuscador: consultaSinVer };
                 }
 
-                // Queda texto además del verbo de intención, pero no matchea nada
-                // reconocible (categoría, tipo, marca, material, producto). Si son
-                // palabras con contenido real (no muletillas/errores sueltos),
-                // preferimos avisar que no entendimos antes que asumir un flujo.
+           
                 const palabrasSignificativas = palabrasExtraLista(consultaSinVerNormalizada, []);
                 if (palabrasSignificativas.length) {
                     return respuestaNoEntendido();
