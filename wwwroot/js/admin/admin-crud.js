@@ -1142,7 +1142,16 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
         const match = (list) => list.some(w => norm.includes(w));
 
 
-        if (match(["billetera", "wallet", "portatarjeta", "porta tarjeta", "tarjetero", "monedero", "portamonedas", "porta monedas"])) {
+        if (match(["tarjetero", "portatarjeta", "porta tarjeta", "portatarjetas", "porta tarjetas"])) {
+            setVisible(campos.genero, true);
+            setVisible(campos.alto, true);
+            setVisible(campos.ancho, true);
+            setVisible(campos.prof, true);
+            setVisible(campos.peso, true);
+            return;
+        }
+
+        if (match(["billetera", "wallet", "monedero", "portamonedas", "porta monedas"])) {
             setVisible(campos.cierre, true);
             setVisible(campos.genero, true);
             setVisible(campos.alto, true);

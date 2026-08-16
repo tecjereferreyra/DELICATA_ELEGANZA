@@ -1,31 +1,34 @@
 ﻿const COLOR_SINONIMOS = {
-    "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche"],
-    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "nieve", "ivory", "blanquito", "nacarado", "nacarada", "vainilla"],
-    "rojo": ["rojo", "roja", "rojos", "rojas", "red", "carmesi", "carmesí", "escarlata", "cereza", "sangre", "rubi", "rubí"],
-    "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "azul cielo", "cielo", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero", "denim", "jean", "azul oscuro", "azul pastel"],
+    "negro": ["negro", "negra", "negros", "negras", "black", "ebano", "carbon", "carbón", "oscuro", "oscura", "oscuros", "oscuras", "noche", "azabache", "onix", "ónix"],
+    "blanco": ["blanco", "blanca", "blancos", "blancas", "white", "marfil", "crema", "tiza", "nieve", "ivory", "blanquito", "nacarado", "nacarada", "vainilla", "hueso", "leche"],
+    "rojo": ["rojo", "roja", "rojos", "rojas", "red", "carmesi", "carmesí", "escarlata", "cereza", "sangre", "rubi", "rubí", "granada", "frutilla"],
+    "azul": ["azul", "azules", "blue", "marino", "azul marino", "celeste", "azul cielo", "cielo", "navy", "cobalto", "zafiro", "klein", "royal", "indigo", "índigo", "petroleo", "petróleo", "azul francia", "azul rey", "azul electrico", "azul eléctrico", "azul bebe", "azul bebé", "azul acero", "denim", "jean", "azul oscuro", "azul pastel", "azul francia claro", "azul noche", "azul jean"],
 
-    "verde": ["verde", "verdes", "green", "oliva", "militar", "verde militar", "kaki", "esmeralda", "menta", "sage", "botella", "verde botella", "musgo", "selva", "lima", "verde francia", "verde ingles", "verde inglés", "verde seco", "verde bosque", "verde jade", "verde manzana", "verde oscuro", "verde pastel"],
-    "marron": ["marron", "marrón", "marrones", "cafe", "café", "tabaco", "cognac", "camel", "cuero", "chocolate", "tierra", "havana", "walnut", "tobacco", "avellana", "canela"],
+    "verde": ["verde", "verdes", "green", "oliva", "militar", "verde militar", "kaki", "esmeralda", "menta", "sage", "botella", "verde botella", "musgo", "selva", "lima", "verde francia", "verde ingles", "verde inglés", "verde seco", "verde bosque", "verde jade", "verde manzana", "verde oscuro", "verde pastel", "verde loden", "verde pino", "verde eucalipto", "verde oliva claro"],
+    "marron": ["marron", "marrón", "marrones", "cafe", "café", "tabaco", "cognac", "camel", "cuero", "chocolate", "tierra", "havana", "walnut", "tobacco", "avellana", "canela", "habano", "cuero natural", "marrón chocolate", "marron chocolate", "camel claro"],
     "suela": ["suela", "teja", "madera", "castano", "castaño", "castañas", "nuez", "roble", "cobre", "cobre viejo"],
-    "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon", "salmón", "palo de rosa", "flamingo", "blush", "magenta", "hot pink", "rosa pastel"],
+    "rosa": ["rosa", "rosas", "pink", "fucsia", "salmon", "salmón", "palo de rosa", "flamingo", "blush", "magenta", "hot pink", "rosa pastel", "rosa viejo", "rosa antiguo", "chicle"],
     "lila": ["lila", "lilas", "violeta", "violetas", "morado", "morada", "purple", "lavanda", "lavender", "malva", "orquidea", "orquídea", "amatista", "uva", "berenjena", "violeta pastel"],
-    "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada", "antracita", "grafito", "piedra", "humo", "ceniza", "gris topo"],
+    "gris": ["gris", "grises", "grey", "gray", "plata", "plateado", "plateada", "antracita", "grafito", "piedra", "humo", "ceniza", "gris topo", "gris perla", "gris plomo", "gris hormigón", "gris hormigon"],
     "acero": ["acero", "acero inoxidable", "steel", "inox", "inoxidable", "metalico", "metálico", "cromado"],
-    "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro", "champagne", "bronce"],
+    "dorado": ["dorado", "dorada", "dorados", "doradas", "gold", "oro", "champagne", "bronce", "oro viejo", "oro antiguo"],
     "oro_rosa": ["oro rosa", "rose gold", "rosegold", "oro rosado"],
     "oro_blanco": ["oro blanco", "white gold", "plata brillante"],
     "ambar": ["ambar", "ámbar", "amber", "ambarino", "ambarina", "topacio", "miel oscura"],
     "naranja": ["naranja", "naranjas", "orange", "oxido", "óxido", "mango", "calabaza", "ladrillo", "brick", "anaranjado", "anaranjada", "anaranjados", "anaranjadas", "bermellon", "bermellón", "naranja pastel"],
     "terracota": ["terracota", "terracotta", "coral", "teja clara", "ocre rojo", "arcilla", "canyon"],
     "amarillo": ["amarillo", "amarilla", "amarillos", "amarillas", "yellow", "ocre", "mostaza", "limón", "limon", "canario", "miel", "amarillo pastel"],
-    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes", "vison", "visón", "bisón", "bison", "taupe", "natural", "crudo", "ecru", "lino", "caqui claro"],
+    "beige": ["beige", "beis", "nude", "arena", "tostado", "tostada", "nute", "nutes", "vison", "visón", "bisón", "bison", "taupe", "natural", "crudo", "ecru", "lino", "caqui claro", "arena clara"],
     "rosa_palo": ["rosa palo", "nude rosa", "piel", "skin", "durazno", "peach", "albaricoque", "apricot", "melocoton", "melocotón"],
-    "turquesa": ["turquesa", "turquoise", "agua", "aqua", "aguamarina", "tiffany", "verde agua", "aqua marine"],
+    "turquesa": ["turquesa", "turquoise", "agua", "aqua", "aguamarina", "tiffany", "verde agua", "aqua marine", "verde turquesa", "celeste turquesa"],
     "bordeaux": ["bordeaux", "bordo", "bordeau", "burdeos", "vino", "vino tinto", "vinotinto", "granate", "granate oscuro", "marsala"],
     "multicolor": ["multicolor", "estampado", "colores", "tie dye", "tie-dye", "multicolores", "arcoiris", "arco iris", "rainbow", "camuflado", "camuflada", "camo"],
     "tornasol": ["tornasol", "tornasoles", "tornasolado", "tornasolada", "tornasolados", "tornasoladas", "iridiscente", "iridiscentes", "irisado", "irisada", "holografico", "holográfico"],
     "tornasol_amarillo": ["tornasol amarillo", "tornasol dorado", "amarillo tornasol", "dorado tornasol"],
+    "tornasol_blanco": ["tornasol blanco", "blanco tornasol", "tornasol perlado", "perlado tornasol"],
+    "tornasol_naranja": ["tornasol naranja", "naranja tornasol", "tornasol anaranjado"],
     "tornasol_azul": ["tornasol azul", "azul tornasol"],
+    "tornasol_indigo": ["tornasol indigo", "tornasol índigo", "indigo tornasol", "índigo tornasol", "tornasol añil", "añil tornasol"],
     "tornasol_rojo": ["tornasol rojo", "rojo tornasol", "rojo tornasolado", "tornasol rojizo"],
     "tornasol_verde": ["tornasol verde", "verde tornasol"],
     "tornasol_rosa": ["tornasol rosa", "tornasol rosado", "rosa tornasol"],
@@ -37,14 +40,17 @@ const COLOR_CSS = {
     "ebano": "#111", "carbon": "#1a1a1a", "carbón": "#1a1a1a", "noche": "#0d0d0d",
     "black": "#111",
     "oscuro": "#1a1a1a", "oscura": "#1a1a1a", "oscuros": "#1a1a1a", "oscuras": "#1a1a1a",
+    "azabache": "#0a0a0a", "onix": "#0f0f0f", "ónix": "#0f0f0f",
 
     "blanco": "#f5f5f5", "blanca": "#f5f5f5", "blancos": "#f5f5f5", "blancas": "#f5f5f5",
     "white": "#f5f5f5", "marfil": "#fffff0", "crema": "#fffdd0", "tiza": "#f0ece4",
     "perla": "#f0e8d8", "nieve": "#fafafa", "ivory": "#fffff0", "blanquito": "#f5f5f5",
+    "hueso": "#f2ede0", "leche": "#f7f1e3",
 
     "rojo": "#c62828", "roja": "#c62828", "rojos": "#c62828", "rojas": "#c62828",
     "red": "#c62828", "escarlata": "#d50000", "carmesi": "#b71c1c", "carmesí": "#b71c1c",
     "cereza": "#880e4f", "sangre": "#7b0000",
+    "granada": "#9e1b32", "frutilla": "#c0143c",
 
     "bordo": "#6d1b2e", "bordeau": "#6d1b2e", "bordeaux": "#6d1b2e",
     "burdeos": "#6d1b2e", "vino": "#6d1b2e", "vino tinto": "#6d1b2e",
@@ -57,6 +63,7 @@ const COLOR_CSS = {
     "petroleo": "#00454a", "petróleo": "#00454a",
     "azul marino": "#0d2b6b", "azul cielo": "#64b5f6", "cielo": "#64b5f6",
     "azul oscuro": "#0a2a5e", "azul pastel": "#a9c9ec",
+    "azul francia claro": "#5da3e8", "azul noche": "#0a1a3a", "azul jean": "#3b5a80",
 
     "verde": "#2e7d32", "verdes": "#2e7d32", "green": "#2e7d32",
     "azul francia": "#318ce7",
@@ -77,12 +84,14 @@ const COLOR_CSS = {
     "lima": "#8bc34a", "verde francia": "#267f00",
     "verde manzana": "#8db600",
     "verde oscuro": "#0d3b1e", "verde pastel": "#b8ddc4",
+    "verde loden": "#4a5d3a", "verde pino": "#1c3d2e", "verde eucalipto": "#7a9b8e", "verde oliva claro": "#8a9a5b",
 
     "marron": "#6d4c41", "marrón": "#6d4c41", "marrones": "#6d4c41",
     "cafe": "#6d4c41", "café": "#6d4c41", "tabaco": "#7a5230",
     "cognac": "#9b5e28", "camel": "#c19a6b", "cuero": "#8b5a2b",
     "chocolate": "#4e342e", "tierra": "#795548", "havana": "#5d3a1a",
     "walnut": "#5c4033", "tobacco": "#7a5230", "avellana": "#9e7b5a",
+    "habano": "#8a5a2e", "cuero natural": "#a97449", "marrón chocolate": "#4e342e", "marron chocolate": "#4e342e", "camel claro": "#d4b088",
 
     "suela": "#8B5E3C", "teja": "#b05c34", "madera": "#8b6347",
     "castano": "#7b4f2e", "castaño": "#7b4f2e", "nuez": "#7a4e2d",
@@ -94,6 +103,7 @@ const COLOR_CSS = {
     "palo de rosa": "#d4a0a0", "flamingo": "#fc8eac", "blush": "#f4a7b9",
     "magenta": "#e040fb", "hot pink": "#ff4081",
     "rosa pastel": "#f5c6d8",
+    "rosa viejo": "#c48b8f", "rosa antiguo": "#c48b8f", "chicle": "#ff6fae",
 
     "rosa palo": "#e8c5b0", "nude rosa": "#e0b49a", "piel": "#d4a882",
     "skin": "#d4a882", "durazno": "#ffb347", "peach": "#ffcba4",
@@ -111,6 +121,7 @@ const COLOR_CSS = {
     "antracita": "#3d3d3d", "grafito": "#4a4a4a",
     "piedra": "#9e9e8f", "humo": "#8d8d8d", "ceniza": "#ababab",
     "gris topo": "#8a7f70",
+    "gris perla": "#c8c5bd", "gris plomo": "#5a5a5a", "gris hormigón": "#9b9b93", "gris hormigon": "#9b9b93",
 
     "acero": "#8da9bc", "acero inoxidable": "#8da9bc", "steel": "#8da9bc",
     "inox": "#9eb4c4", "inoxidable": "#9eb4c4",
@@ -118,6 +129,7 @@ const COLOR_CSS = {
 
     "dorado": "#c9a84c", "dorada": "#c9a84c", "dorados": "#c9a84c", "doradas": "#c9a84c",
     "gold": "#c9a84c", "oro": "#c9a84c", "champagne": "#f5e6c8", "bronce": "#8c6a2f",
+    "oro viejo": "#a8863e", "oro antiguo": "#a8863e",
 
     "naranja": "#ef6c00", "naranjas": "#ef6c00", "orange": "#ef6c00",
     "oxido": "#bf4e0a", "óxido": "#bf4e0a", "mango": "#e67e22",
@@ -139,10 +151,12 @@ const COLOR_CSS = {
     "vison": "#c4a882", "visón": "#c4a882", "bisón": "#c4a882", "bison": "#c4a882",
     "taupe": "#b09880", "natural": "#d2b48c", "crudo": "#c8b89a",
     "ecru": "#c8b89a", "lino": "#cdc2a8", "caqui claro": "#c2b280",
+    "arena clara": "#d9c9a8",
 
     "turquesa": "#00897b", "turquoise": "#00897b", "agua": "#00acc1",
     "aqua": "#00bcd4", "aguamarina": "#00bfa5", "tiffany": "#0abfbc",
     "verde agua": "#4db6ac", "aqua marine": "#7fffd4",
+    "verde turquesa": "#2a9d8f", "celeste turquesa": "#5fc9c9",
 
     "multicolor": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
     "estampado": "linear-gradient(135deg,#e53935,#1e88e5,#43a047,#fdd835)",
@@ -173,8 +187,24 @@ const COLOR_CSS = {
     "amarillo tornasol": "linear-gradient(135deg,#f7d046,#ffef8a,#f9a825,#fff3c4)",
     "dorado tornasol": "linear-gradient(135deg,#f7d046,#ffef8a,#c9a84c,#fff3c4)",
 
+    "tornasol blanco": "linear-gradient(135deg,#ffffff,#e8f4f8,#f0e8f0,#fdf6e3)",
+    "blanco tornasol": "linear-gradient(135deg,#ffffff,#e8f4f8,#f0e8f0,#fdf6e3)",
+    "tornasol perlado": "linear-gradient(135deg,#ffffff,#e8f4f8,#f0e8f0,#fdf6e3)",
+    "perlado tornasol": "linear-gradient(135deg,#ffffff,#e8f4f8,#f0e8f0,#fdf6e3)",
+
+    "tornasol naranja": "linear-gradient(135deg,#ef6c00,#ffb74d,#ff8a65,#e65100)",
+    "naranja tornasol": "linear-gradient(135deg,#ef6c00,#ffb74d,#ff8a65,#e65100)",
+    "tornasol anaranjado": "linear-gradient(135deg,#ef6c00,#ffb74d,#ff8a65,#e65100)",
+
     "tornasol azul": "linear-gradient(135deg,#1565c0,#64b5f6,#00c6ff,#3949ab)",
     "azul tornasol": "linear-gradient(135deg,#1565c0,#64b5f6,#00c6ff,#3949ab)",
+
+    "tornasol indigo": "linear-gradient(135deg,#3949ab,#5c6bc0,#7986cb,#283593)",
+    "tornasol índigo": "linear-gradient(135deg,#3949ab,#5c6bc0,#7986cb,#283593)",
+    "indigo tornasol": "linear-gradient(135deg,#3949ab,#5c6bc0,#7986cb,#283593)",
+    "índigo tornasol": "linear-gradient(135deg,#3949ab,#5c6bc0,#7986cb,#283593)",
+    "tornasol añil": "linear-gradient(135deg,#3949ab,#5c6bc0,#7986cb,#283593)",
+    "añil tornasol": "linear-gradient(135deg,#3949ab,#5c6bc0,#7986cb,#283593)",
 
     "tornasol rojo": "linear-gradient(135deg,#c62828,#ff6659,#e91e8c,#8d0000)",
     "rojo tornasol": "linear-gradient(135deg,#c62828,#ff6659,#e91e8c,#8d0000)",
@@ -215,7 +245,6 @@ const COLOR_CSS = {
     "canela": "#a0522d",
     "uva": "#6a3b8c", "berenjena": "#4b1e40",
 };
-
 const COLOR_CSS_KEYS_ORDENADAS = Object.keys(COLOR_CSS).sort((a, b) => b.length - a.length);
 
 function _normalizarColorTexto(texto) {
