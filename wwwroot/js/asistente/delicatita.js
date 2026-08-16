@@ -412,6 +412,15 @@
                 "Limpiala con un paño suave humedecido y dejala secar a la sombra, lejos del sol directo."
         },
         {
+            "claves": ["mini cartera", "mini carteras"],
+            "etiqueta": "Mini cartera",
+            "texto":
+                "Limpiá la superficie exterior usando únicamente un paño de microfibra seco para eliminar huellas y mantener el brillo dorado sin rayar el metal.\n" +
+                "Evitá el contacto directo con perfumes, laca para el cabello o cosméticos, ya que los agentes químicos pueden opacar o corroer el acabado metálico.\n" +
+                "Guardala dentro de una funda de tela suave (como algodón o flanela) para protegerla de raspaduras y evitar que choque con otros accesorios rígidos."
+        },
+
+        {
             claves: ["mochila", "mochilas"],
             etiqueta: "Mochilas",
             texto:
