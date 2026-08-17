@@ -53,6 +53,7 @@ function crearTarjetaDOM(prod, index = 0) {
         }
     }
     card.addEventListener("mouseenter", () => {
+        if (esTouchDevice) return;
         if (!prod._imagenesCache) {
             fetch(`/api/Productos/${prod.IdProducto}`)
                 .then(r => r.ok ? r.json() : null)

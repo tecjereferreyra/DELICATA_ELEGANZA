@@ -421,31 +421,27 @@ function renderSkeletons(cantidad = 8) {
     }
     contenedor.appendChild(fragment);
 }
-
 async function cargarProductos(forzar = false) {
     if (isLoadingProductos) return;
     isLoadingProductos = true;
     try {
         const cacheKey = "delicata_productos_v1";
-        const cacheTsKey = "delicata_productos_ts";
-        const MAX_AGE = 5 * 60 * 1000;
-        const ahora = Date.now();
-        const ts = parseInt(localStorage.getItem(cacheTsKey) || "0");
-        const cacheVigente = !forzar && (ahora - ts) < MAX_AGE && !!localStorage.getItem(cacheKey);
-        const cachedRaw = cacheVigente ? localStorage.getItem(cacheKey) : null;
-        if (cachedRaw) {
+        const cachedRaw = localStorage.getItem(cacheKey);
+        let mostroCache = false;
+
+        if (!forzar && cachedRaw) {
             try {
                 const cached = JSON.parse(cachedRaw);
                 if (cached?.length > 0) {
                     productosData = cached;
                     aplicarFiltros();
+                    mostroCache = true;
                 }
             } catch (e) {
                 localStorage.removeItem(cacheKey);
             }
-        } else {
-            renderSkeletons(8);
         }
+        if (!mostroCache) renderSkeletons(8);
 
         const resp = await fetch(`${API_URL}?_=${Date.now()}`, {
             cache: "no-store"
@@ -456,13 +452,19 @@ async function cargarProductos(forzar = false) {
             const prod = normalizarProducto(p);
             return recalcularCamposBusqueda(prod);
         });
+
+        const cambiaron = !mostroCache || JSON.stringify(nuevos.map(p => [p.IdProducto, p.Stock, p.ImagenUrl]))
+            !== JSON.stringify(productosData.map(p => [p.IdProducto, p.Stock, p.ImagenUrl]));
+
+        productosData = nuevos;
+
+        const paraGuardar = nuevos.map(({ _indiceBusqueda, _camposNormalizados, _tokensBusqueda, ...resto }) => resto);
         try {
-            localStorage.setItem(cacheKey, JSON.stringify(nuevos));
-            localStorage.setItem(cacheTsKey, String(Date.now()));
+            localStorage.setItem(cacheKey, JSON.stringify(paraGuardar));
         } catch (e) {
         }
-        productosData = nuevos;
-        aplicarFiltros();
+
+        if (cambiaron) aplicarFiltros(true);
     } catch (err) {
         console.error("Error cargando productos", err);
         if (productosData.length === 0) {

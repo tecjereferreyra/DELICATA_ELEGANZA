@@ -931,6 +931,9 @@ async function guardarEdicionProducto() {
             .then(r => r.json())
             .then(p => {
                 const actualizado = normalizarProducto(p);
+                if (archivo) {
+                    actualizado.ImagenUrl += (actualizado.ImagenUrl.includes("?") ? "&" : "?") + "v=" + Date.now();
+                }
                 recalcularCamposBusqueda(actualizado);
                 const idx = productosData.findIndex(x => x.IdProducto === actualizado.IdProducto);
                 if (idx !== -1) productosData[idx] = actualizado;
