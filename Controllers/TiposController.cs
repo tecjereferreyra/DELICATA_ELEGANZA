@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Npgsql;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -57,11 +60,28 @@ namespace DELICATA_ELEGANZA.Controllers
                 return Ok(existingTipo); // Devolver el tipo existente
             }
 
-            // Si no existe, crear un nuevo tipo
-            _context.Tipos.Add(tipo);
-            await _context.SaveChangesAsync();
+            // Si no existe, crear un nuevo tipo (vía stored procedure validado)
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                var creado = await _context.Tipos
+                    .FromSqlInterpolated($"SELECT * FROM sp_crear_tipo({tipo.Nombre}, {rol})")
+                    .AsNoTracking()
+                    .ToListAsync();
 
-            return CreatedAtAction(nameof(GetTipo), new { id = tipo.id_tipo }, tipo);
+                var nuevo = creado.FirstOrDefault();
+                if (nuevo == null) return StatusCode(500, "No se pudo crear el tipo.");
+
+                return CreatedAtAction(nameof(GetTipo), new { id = nuevo.id_tipo }, nuevo);
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
         }
 
         // PUT: api/Tipos
@@ -70,11 +90,25 @@ namespace DELICATA_ELEGANZA.Controllers
         public async Task<ActionResult> UpdateTipo([FromBody] Tipos tipo)
         {
             if (tipo == null || tipo.id_tipo == 0) return BadRequest("Id inválido.");
-            var exists = await _context.Tipos.AnyAsync(t => t.id_tipo == tipo.id_tipo);
-            if (!exists) return NotFound("Tipo no encontrado.");
 
-            _context.Entry(tipo).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_actualizar_tipo({tipo.id_tipo}, {tipo.Nombre}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
 
@@ -83,11 +117,20 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteTipo(int id)
         {
-            var tipo = await _context.Tipos.FindAsync(id);
-            if (tipo == null) return NotFound("Tipo no encontrado.");
-
-            _context.Tipos.Remove(tipo);
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_eliminar_tipo({id}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
     }

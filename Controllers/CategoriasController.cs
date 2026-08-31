@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Npgsql;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -57,11 +60,28 @@ namespace DELICATA_ELEGANZA.Controllers
                 return Ok(existingCategoria); // Devolver la categoría existente
             }
 
-            // Si no existe, crear una nueva categoría
-            _context.Categorias.Add(categoria);
-            await _context.SaveChangesAsync();
+            // Si no existe, crear una nueva categoría (vía stored procedure validado)
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                var creada = await _context.Categorias
+                    .FromSqlInterpolated($"SELECT * FROM sp_crear_categoria({categoria.Nombre}, {rol})")
+                    .AsNoTracking()
+                    .ToListAsync();
 
-            return CreatedAtAction(nameof(GetCategoria), new { id = categoria.id_categoria }, categoria);
+                var nueva = creada.FirstOrDefault();
+                if (nueva == null) return StatusCode(500, "No se pudo crear la categoría.");
+
+                return CreatedAtAction(nameof(GetCategoria), new { id = nueva.id_categoria }, nueva);
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
         }
 
         // PUT: api/Categorias
@@ -70,11 +90,25 @@ namespace DELICATA_ELEGANZA.Controllers
         public async Task<ActionResult> UpdateCategoria([FromBody] Categorias categoria)
         {
             if (categoria == null || categoria.id_categoria == 0) return BadRequest("Id inválido.");
-            var exists = await _context.Categorias.AnyAsync(c => c.id_categoria == categoria.id_categoria);
-            if (!exists) return NotFound("Categoría no encontrada.");
 
-            _context.Entry(categoria).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_actualizar_categoria({categoria.id_categoria}, {categoria.Nombre}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
 
@@ -83,11 +117,20 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteCategoria(int id)
         {
-            var categoria = await _context.Categorias.FindAsync(id);
-            if (categoria == null) return NotFound("Categoría no encontrada.");
-
-            _context.Categorias.Remove(categoria);
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_eliminar_categoria({id}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
     }

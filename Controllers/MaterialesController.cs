@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Npgsql;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -57,11 +60,28 @@ namespace DELICATA_ELEGANZA.Controllers
                 return Ok(existingMaterial); // Devolver el material existente
             }
 
-            // Si no existe, crear un nuevo material
-            _context.Materiales.Add(material);
-            await _context.SaveChangesAsync();
+            // Si no existe, crear un nuevo material (vía stored procedure validado)
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                var creado = await _context.Materiales
+                    .FromSqlInterpolated($"SELECT * FROM sp_crear_material({material.Nombre}, {rol})")
+                    .AsNoTracking()
+                    .ToListAsync();
 
-            return CreatedAtAction(nameof(GetMaterial), new { id = material.id_material }, material);
+                var nuevo = creado.FirstOrDefault();
+                if (nuevo == null) return StatusCode(500, "No se pudo crear el material.");
+
+                return CreatedAtAction(nameof(GetMaterial), new { id = nuevo.id_material }, nuevo);
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
         }
 
         // PUT: api/Materiales
@@ -70,11 +90,25 @@ namespace DELICATA_ELEGANZA.Controllers
         public async Task<ActionResult> UpdateMaterial([FromBody] Materiales material)
         {
             if (material == null || material.id_material == 0) return BadRequest("Id inválido.");
-            var exists = await _context.Materiales.AnyAsync(m => m.id_material == material.id_material);
-            if (!exists) return NotFound("Material no encontrado.");
 
-            _context.Entry(material).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_actualizar_material({material.id_material}, {material.Nombre}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
 
@@ -83,11 +117,20 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteMaterial(int id)
         {
-            var material = await _context.Materiales.FindAsync(id);
-            if (material == null) return NotFound("Material no encontrado.");
-
-            _context.Materiales.Remove(material);
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_eliminar_material({id}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
     }

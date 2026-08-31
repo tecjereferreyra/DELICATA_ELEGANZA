@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Npgsql;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -274,37 +276,50 @@ namespace DELICATA_ELEGANZA.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                producto.Nombre = productoDto.Nombre;
-                producto.Modelo = productoDto.Modelo;
-                producto.Color = productoDto.Color;
-                producto.Alto = productoDto.Alto;
-                producto.Ancho = productoDto.Ancho;
-                producto.Profundidad = productoDto.Profundidad;
-                producto.Peso = productoDto.Peso;
-                producto.Diametro = productoDto.Diametro;
-                producto.CantidadRuedas = productoDto.CantidadRuedas;
-                producto.FuelleExpandible = productoDto.FuelleExpandible;
-                producto.MedidasTexto = productoDto.MedidasTexto;
-                producto.Compartimentos = productoDto.Compartimentos;
-                producto.Stock = productoDto.Stock ?? producto.Stock;
-                producto.Disponible = producto.Stock > 0;
+                var idCategoria = await GetOrCreateCategoria(productoDto.Categoria);
+                var idMarca = await GetOrCreateMarca(productoDto.Marca);
+                var idTipo = await GetOrCreateTipo(productoDto.Tipo);
+                var idMaterial = await GetOrCreateMaterial(productoDto.Material);
+                var idTipoCierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
+                var idCapacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
+                var idGenero = await GetOrCreateGenero(productoDto.Genero);
 
-                producto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
-                producto.id_marca = await GetOrCreateMarca(productoDto.Marca);
-                producto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
-                producto.id_material = await GetOrCreateMaterial(productoDto.Material);
-                producto.id_tipo_cierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
-                producto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
-                producto.id_genero = await GetOrCreateGenero(productoDto.Genero);
-
+                string imagenUrlFinal = producto.ImagenUrl;
                 if (imagen != null && imagen.Length > 0)
                 {
                     imagenViejaUrl = producto.ImagenUrl;
-                    producto.ImagenUrl = await ProcesarImagenAsync(imagen);
+                    imagenUrlFinal = await ProcesarImagenAsync(imagen);
                 }
 
-                await _context.SaveChangesAsync();
+                int? stockFinal = productoDto.Stock ?? producto.Stock;
+                var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                    SELECT sp_actualizar_producto(
+                        {id}, {productoDto.Nombre}, {productoDto.Modelo}, {productoDto.Color},
+                        {idCategoria}, {idMarca}, {idTipo}, {idMaterial}, {idTipoCierre}, {idCapacidad}, {idGenero},
+                        {productoDto.Compartimentos}, {stockFinal}, {imagenUrlFinal},
+                        {productoDto.CantidadRuedas}, {productoDto.FuelleExpandible}, {productoDto.MedidasTexto},
+                        {productoDto.Alto}, {productoDto.Ancho}, {productoDto.Profundidad}, {productoDto.Peso}, {productoDto.Diametro},
+                        {rol}
+                    )");
+
                 await transaction.CommitAsync();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                await transaction.RollbackAsync();
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502" || ex.SqlState == "23514")
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(new { mensaje = ex.MessageText });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                await transaction.RollbackAsync();
+                return NotFound(new { mensaje = ex.MessageText });
             }
             catch (Exception ex)
             {
@@ -352,41 +367,52 @@ namespace DELICATA_ELEGANZA.Controllers
 
             _cache.Remove("productos_lista");
 
-            var nuevoProducto = new Productos
-            {
-                Nombre = productoDto.Nombre,
-                Modelo = productoDto.Modelo,
-                Color = productoDto.Color,
-                Alto = productoDto.Alto,
-                Ancho = productoDto.Ancho,
-                Profundidad = productoDto.Profundidad,
-                Peso = productoDto.Peso,
-                Diametro = productoDto.Diametro,
-                CantidadRuedas = productoDto.CantidadRuedas,
-                FuelleExpandible = productoDto.FuelleExpandible,
-                MedidasTexto = productoDto.MedidasTexto,
-                Compartimentos = productoDto.Compartimentos,
-                Stock = productoDto.Stock,
-            };
-            nuevoProducto.Disponible = nuevoProducto.Stock > 0;
-
             using var transaction = await _context.Database.BeginTransactionAsync();
+            Productos nuevoProducto;
             try
             {
-                nuevoProducto.id_categoria = await GetOrCreateCategoria(productoDto.Categoria);
-                nuevoProducto.id_marca = await GetOrCreateMarca(productoDto.Marca);
-                nuevoProducto.id_tipo = await GetOrCreateTipo(productoDto.Tipo);
-                nuevoProducto.id_material = await GetOrCreateMaterial(productoDto.Material);
-                nuevoProducto.id_tipo_cierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
-                nuevoProducto.id_capacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
-                nuevoProducto.id_genero = await GetOrCreateGenero(productoDto.Genero);
+                var idCategoria = await GetOrCreateCategoria(productoDto.Categoria);
+                var idMarca = await GetOrCreateMarca(productoDto.Marca);
+                var idTipo = await GetOrCreateTipo(productoDto.Tipo);
+                var idMaterial = await GetOrCreateMaterial(productoDto.Material);
+                var idTipoCierre = await GetOrCreateTipoCierre(productoDto.TipoCierre);
+                var idCapacidad = await GetOrCreateCapacidad(productoDto.Capacidad);
+                var idGenero = await GetOrCreateGenero(productoDto.Genero);
 
+                string imagenUrl = null;
                 if (imagen != null && imagen.Length > 0)
-                    nuevoProducto.ImagenUrl = await ProcesarImagenAsync(imagen);
+                    imagenUrl = await ProcesarImagenAsync(imagen);
 
-                _context.Productos.Add(nuevoProducto);
-                await _context.SaveChangesAsync();
+                var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+
+                var creado = await _context.Productos.FromSqlInterpolated($@"
+                    SELECT * FROM sp_crear_producto(
+                        {productoDto.Nombre}, {productoDto.Modelo}, {productoDto.Color},
+                        {idCategoria}, {idMarca}, {idTipo}, {idMaterial}, {idTipoCierre}, {idCapacidad}, {idGenero},
+                        {productoDto.Compartimentos}, {productoDto.Stock}, {imagenUrl},
+                        {productoDto.CantidadRuedas}, {productoDto.FuelleExpandible}, {productoDto.MedidasTexto},
+                        {productoDto.Alto}, {productoDto.Ancho}, {productoDto.Profundidad}, {productoDto.Peso}, {productoDto.Diametro},
+                        {rol}
+                    )").AsNoTracking().ToListAsync();
+
+                nuevoProducto = creado.FirstOrDefault();
+                if (nuevoProducto == null)
+                {
+                    await transaction.RollbackAsync();
+                    return StatusCode(500, new { mensaje = "Error al crear el producto" });
+                }
+
                 await transaction.CommitAsync();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                await transaction.RollbackAsync();
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502" || ex.SqlState == "23514")
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(new { mensaje = ex.MessageText });
             }
             catch (Exception ex)
             {
@@ -437,7 +463,7 @@ namespace DELICATA_ELEGANZA.Controllers
             if (producto == null)
                 return NotFound();
 
-           
+
             var imagenesCarrusel = await _context.ProductoImagenes
                 .Where(i => i.id_producto == id)
                 .Select(i => i.Url)
@@ -447,11 +473,11 @@ namespace DELICATA_ELEGANZA.Controllers
             if (!string.IsNullOrEmpty(producto.ImagenUrl))
                 urlsABorrar.Add(producto.ImagenUrl);
 
-            
+
             _context.Productos.Remove(producto);
             await _context.SaveChangesAsync();
 
-       
+
             foreach (var url in urlsABorrar.Distinct())
             {
                 var publicId = ExtraerPublicIdDeUrl(url);
@@ -475,7 +501,7 @@ namespace DELICATA_ELEGANZA.Controllers
             return NoContent();
         }
 
-     
+
         private async Task<int?> GetOrCreateCategoria(string nombre)
         {
             if (string.IsNullOrWhiteSpace(nombre)) return null;
@@ -665,7 +691,7 @@ namespace DELICATA_ELEGANZA.Controllers
             return result.SecureUrl.ToString();
         }
 
-  
+
         private string ExtraerPublicIdDeUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url))

@@ -37,13 +37,24 @@ namespace DELICATA_ELEGANZA.Controllers
                 _configuration.GetConnectionString("DefaultConnection"));
             await con.OpenAsync();
 
-            string query = @"INSERT INTO ""Usuarios"" (""UserName"", ""Email"", ""PasswordHash"", ""Rol"", ""Activo"", ""FechaCreacion"")
-                             VALUES (@n, @c, @p, 'Usuario', true, NOW())";
+            string query = @"SELECT * FROM sp_registrar_usuario(@n, @c, @p)";
             using var cmd = new NpgsqlCommand(query, con);
             cmd.Parameters.AddWithValue("@n", usuario.Nombre);
             cmd.Parameters.AddWithValue("@c", usuario.Correo);
             cmd.Parameters.AddWithValue("@p", hashed);
-            await cmd.ExecuteNonQueryAsync();
+
+            try
+            {
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                return BadRequest(new { message = "Ese correo ya está registrado." });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502" || ex.SqlState == "22007")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
 
             _ = Task.Run(async () =>
             {
@@ -93,7 +104,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 ?? throw new InvalidOperationException("Jwt:Key no configurado");
 
             var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
-            
+
 
             var claims = new[]
             {
@@ -127,25 +138,29 @@ namespace DELICATA_ELEGANZA.Controllers
                     _configuration.GetConnectionString("DefaultConnection"));
                 await con.OpenAsync();
 
-                using var cmd = new NpgsqlCommand(
-                    @"SELECT ""IdUsuario"" FROM ""Usuarios"" WHERE ""Email"" = @email AND ""Activo"" = true", con);
-                cmd.Parameters.AddWithValue("@email", dto.Email);
-                var userId = await cmd.ExecuteScalarAsync();
-
-                if (userId == null)
-                    return Ok(new { message = "Si el correo existe, se enviará un enlace." });
-
                 string token = Guid.NewGuid().ToString();
                 DateTime expira = DateTime.UtcNow.AddMinutes(30);
 
-                using var updateCmd = new NpgsqlCommand(@"
-                    UPDATE ""Usuarios""
-                    SET ""ResetToken"" = @token, ""ResetTokenExpira"" = @expira
-                    WHERE ""IdUsuario"" = @id", con);
-                updateCmd.Parameters.AddWithValue("@token", token);
-                updateCmd.Parameters.AddWithValue("@expira", expira);
-                updateCmd.Parameters.AddWithValue("@id", userId);
-                await updateCmd.ExecuteNonQueryAsync();
+                object userId = null;
+                using var cmd = new NpgsqlCommand(
+                    @"SELECT * FROM sp_actualizar_reset_token(@email, @token, @expira)", con);
+                cmd.Parameters.AddWithValue("@email", dto.Email);
+                cmd.Parameters.AddWithValue("@token", token);
+                cmd.Parameters.AddWithValue("@expira", expira);
+
+                try
+                {
+                    using var rd = await cmd.ExecuteReaderAsync();
+                    if (await rd.ReadAsync())
+                        userId = rd["id_usuario"];
+                }
+                catch (PostgresException ex) when (ex.SqlState == "23502" || ex.SqlState == "22007")
+                {
+                    return BadRequest(new { message = ex.MessageText });
+                }
+
+                if (userId == null)
+                    return Ok(new { message = "Si el correo existe, se enviará un enlace." });
 
                 _ = Task.Run(async () =>
                 {
@@ -170,25 +185,26 @@ namespace DELICATA_ELEGANZA.Controllers
                 _configuration.GetConnectionString("DefaultConnection"));
             await con.OpenAsync();
 
-            using var cmd = new NpgsqlCommand(@"
-                SELECT ""IdUsuario"" FROM ""Usuarios""
-                WHERE ""ResetToken"" = @token
-                AND ""ResetTokenExpira"" > NOW()
-                AND ""Activo"" = true", con);
-            cmd.Parameters.AddWithValue("@token", dto.Token);
-            var userId = await cmd.ExecuteScalarAsync();
-
-            if (userId == null) return BadRequest();
-
             string hash = BCrypt.Net.BCrypt.HashPassword(dto.NuevaContrasena);
 
-            using var updateCmd = new NpgsqlCommand(@"
-                UPDATE ""Usuarios""
-                SET ""PasswordHash"" = @hash, ""ResetToken"" = NULL, ""ResetTokenExpira"" = NULL
-                WHERE ""IdUsuario"" = @id", con);
-            updateCmd.Parameters.AddWithValue("@hash", hash);
-            updateCmd.Parameters.AddWithValue("@id", userId);
-            await updateCmd.ExecuteNonQueryAsync();
+            object userId = null;
+            using var cmd = new NpgsqlCommand(
+                @"SELECT * FROM sp_resetear_password(@token, @hash)", con);
+            cmd.Parameters.AddWithValue("@token", dto.Token);
+            cmd.Parameters.AddWithValue("@hash", hash);
+
+            try
+            {
+                using var rd = await cmd.ExecuteReaderAsync();
+                if (await rd.ReadAsync())
+                    userId = rd["id_usuario"];
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
+
+            if (userId == null) return BadRequest();
 
             return Ok();
         }

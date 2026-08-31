@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Npgsql;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -53,10 +56,27 @@ namespace DELICATA_ELEGANZA.Controllers
             if (existente != null)
                 return Ok(existente);
 
-            _context.Generos.Add(genero);
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                var creado = await _context.Generos
+                    .FromSqlInterpolated($"SELECT * FROM sp_crear_genero({genero.Descripcion}, {rol})")
+                    .AsNoTracking()
+                    .ToListAsync();
 
-            return CreatedAtAction(nameof(GetGenero), new { id = genero.id_genero }, genero);
+                var nuevo = creado.FirstOrDefault();
+                if (nuevo == null) return StatusCode(500, "No se pudo crear el género.");
+
+                return CreatedAtAction(nameof(GetGenero), new { id = nuevo.id_genero }, nuevo);
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
         }
 
         // PUT: api/Generos
@@ -65,11 +85,25 @@ namespace DELICATA_ELEGANZA.Controllers
         public async Task<ActionResult> UpdateGenero([FromBody] Generos genero)
         {
             if (genero == null || genero.id_genero == 0) return BadRequest("Id inválido.");
-            var exists = await _context.Generos.AnyAsync(g => g.id_genero == genero.id_genero);
-            if (!exists) return NotFound("Género no encontrado.");
 
-            _context.Entry(genero).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_actualizar_genero({genero.id_genero}, {genero.Descripcion}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
 
@@ -78,11 +112,20 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteGenero(int id)
         {
-            var genero = await _context.Generos.FindAsync(id);
-            if (genero == null) return NotFound("Género no encontrado.");
-
-            _context.Generos.Remove(genero);
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_eliminar_genero({id}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
     }

@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Npgsql;
 
 namespace DELICATA_ELEGANZA.Controllers
 {
@@ -57,11 +60,28 @@ namespace DELICATA_ELEGANZA.Controllers
                 return Ok(existingMarca); // Devolver la marca existente
             }
 
-            // Si no existe, crear una nueva marca
-            _context.Marcas.Add(marca);
-            await _context.SaveChangesAsync();
+            // Si no existe, crear una nueva marca (vía stored procedure validado)
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                var creada = await _context.Marcas
+                    .FromSqlInterpolated($"SELECT * FROM sp_crear_marca({marca.Nombre}, {rol})")
+                    .AsNoTracking()
+                    .ToListAsync();
 
-            return CreatedAtAction(nameof(GetMarca), new { id = marca.id_marca }, marca);
+                var nueva = creada.FirstOrDefault();
+                if (nueva == null) return StatusCode(500, "No se pudo crear la marca.");
+
+                return CreatedAtAction(nameof(GetMarca), new { id = nueva.id_marca }, nueva);
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
         }
 
         // PUT: api/Marcas
@@ -70,11 +90,25 @@ namespace DELICATA_ELEGANZA.Controllers
         public async Task<ActionResult> UpdateMarca([FromBody] Marcas marca)
         {
             if (marca == null || marca.id_marca == 0) return BadRequest("Id inválido.");
-            var exists = await _context.Marcas.AnyAsync(m => m.id_marca == marca.id_marca);
-            if (!exists) return NotFound("Marca no encontrada.");
 
-            _context.Entry(marca).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_actualizar_marca({marca.id_marca}, {marca.Nombre}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502")
+            {
+                return BadRequest(new { message = ex.MessageText });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
 
@@ -83,11 +117,20 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteMarca(int id)
         {
-            var marca = await _context.Marcas.FindAsync(id);
-            if (marca == null) return NotFound("Marca no encontrada.");
-
-            _context.Marcas.Remove(marca);
-            await _context.SaveChangesAsync();
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
+            try
+            {
+                await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT sp_eliminar_marca({id}, {rol})");
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound(new { message = ex.MessageText });
+            }
             return NoContent();
         }
     }
