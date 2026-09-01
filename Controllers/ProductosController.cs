@@ -227,29 +227,39 @@ namespace DELICATA_ELEGANZA.Controllers
         [HttpPatch("{id}/stock")]
         public async Task<IActionResult> ActualizarStock(int id, [FromBody] StockUpdateDTO dto)
         {
-            if (dto.Stock < 0)
-                return BadRequest(new { mensaje = "El stock no puede ser negativo" });
-
             _cache.Remove("productos_lista");
 
-            var producto = await _context.Productos.FirstOrDefaultAsync(p => p.id_producto == id);
-            if (producto == null)
-                return NotFound();
-
-            producto.Stock = dto.Stock;
-            producto.Disponible = dto.Stock > 0;
-
+            var rol = User.FindFirst(ClaimTypes.Role)?.Value;
             try
             {
-                await _context.SaveChangesAsync();
+                var resultado = await _context.Productos
+                    .FromSqlInterpolated($"SELECT * FROM sp_actualizar_stock({id}, {dto.Stock}, {rol})")
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var producto = resultado.FirstOrDefault();
+                if (producto == null)
+                    return NotFound();
+
+                return Ok(new { id_producto = producto.id_producto, stock = producto.Stock, disponible = producto.Disponible });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "28000")
+            {
+                return Forbid();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23502" || ex.SqlState == "23514")
+            {
+                return BadRequest(new { mensaje = ex.MessageText });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002")
+            {
+                return NotFound();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al actualizar stock del producto {Id}", id);
                 return StatusCode(500, new { mensaje = "Error al actualizar el stock" });
             }
-
-            return Ok(new { id_producto = producto.id_producto, stock = producto.Stock, disponible = producto.Disponible });
         }
         // ============================================================
         // PUT: api/Productos/5
