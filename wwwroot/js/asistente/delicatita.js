@@ -2137,7 +2137,9 @@
             botonEl.classList.remove("visible");
             void botonEl.offsetHeight;              // solo la primera vez que aparece
             requestAnimationFrame(function () {
-                botonEl.classList.add("visible");
+                requestAnimationFrame(function () {
+                    botonEl.classList.add("visible");
+                });
             });
         }
         try { localStorage.setItem(STORAGE_KEY, "1"); } catch (e) { /* almacenamiento no disponible */ }

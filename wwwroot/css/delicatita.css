@@ -18,6 +18,7 @@
     box-shadow: 0 6px 20px var(--color-sombra-premium);
     cursor: pointer;
     z-index: 900;
+    will-change: opacity, transform;
     transition: transform .28s cubic-bezier(.34, 1.56, .64, 1),box-shadow .28s,opacity .35s;
     opacity: 0;
     transform: scale(.6)
@@ -25,7 +26,9 @@
 
     .btn-delicatita-flotante.visible {
         display: flex;
-        animation: .45s cubic-bezier(.34,1.56,.64,1) forwards delicatitaAparecer
+        opacity: 1;
+        transform: scale(1);
+        animation: .45s cubic-bezier(.34,1.56,.64,1) delicatitaAparecer
     }
 
 @keyframes delicatitaAparecer {
