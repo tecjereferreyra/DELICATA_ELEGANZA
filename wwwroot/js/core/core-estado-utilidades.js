@@ -102,7 +102,7 @@ function _preventBgScroll(e) {
         return;
     }
 
-    const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .modal-overlay, .mobile-menu');
+    const scrollable = e.target.closest('.modal-box, .modal-content, .user-modal-content, .modal-overlay, .mobile-menu, .delicatita-mensajes');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
@@ -117,7 +117,7 @@ function _preventBgScroll(e) {
 
 
 function _preventWheel(e) {
-    const scrollable = e.target.closest('.modal-box, .modal-overlay, .modal-content, .user-modal-content, .mobile-menu');
+    const scrollable = e.target.closest('.modal-box, .modal-overlay, .modal-content, .user-modal-content, .mobile-menu, .delicatita-mensajes');
     if (scrollable) {
         const atTop = scrollable.scrollTop === 0;
         const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
