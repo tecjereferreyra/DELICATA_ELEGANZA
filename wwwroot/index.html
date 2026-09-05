@@ -37,8 +37,10 @@
     <noscript><link rel="stylesheet" href="/fonts/css/all.min.css"></noscript>
 
 
-    <link href="./css/carrito.css" rel="stylesheet">
-    <link href="./css/delicatita.css" rel="stylesheet">
+    <link rel="preload" href="./css/carrito.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./css/carrito.css"></noscript>
+    <link rel="preload" href="./css/delicatita.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="./css/delicatita.css"></noscript>
     <!-- JavaScript -->
     <script src="./js/carrito.js" defer></script>
     <script src="./js/core/core-estado-utilidades.js" defer></script>
@@ -160,7 +162,7 @@
                     <li data-cat="complementos" data-tipo="cajas bijou">Cajas Bijou</li>
                     <li data-cat="complementos" data-tipo="cintos">Cintos</li>
                     <li data-cat="complementos" data-tipo="paraguas">Paraguas</li>
-                    <li data-cat="complementos" data-tipo="necesers">Necesers</li>      
+                    <li data-cat="complementos" data-tipo="necesers">Necesers</li>
                     <li data-cat="complementos" data-tipo="tarjeteros">Tarjeteros</li>
                 </ul>
             </li>
@@ -314,13 +316,13 @@
         <div class="vidriera-track-wrapper">
             <div class="vidriera-track" id="vidreiraTrack">
                 <div class="vidriera-slide">
-                    <img src="/Vidriera/Foto1.jpeg" alt="Vidriera Delicata Eleganza" loading="eager" decoding="async" fetchpriority="high">
+                    <img src="/Vidriera/Foto1.webp" alt="Vidriera Delicata Eleganza" loading="eager" decoding="async" fetchpriority="high">
                 </div>
                 <div class="vidriera-slide">
-                    <img src="/Vidriera/Foto2.jpeg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
+                    <img src="/Vidriera/Foto2.webp" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
                 </div>
                 <div class="vidriera-slide">
-                    <img src="/Vidriera/Foto3.jpeg" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
+                    <img src="/Vidriera/Foto3.webp" alt="Vidriera Delicata Eleganza" loading="lazy" decoding="async">
                 </div>
 
             </div>
