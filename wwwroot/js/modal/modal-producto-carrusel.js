@@ -333,7 +333,10 @@ function verificarUsuarioAutorizado() {
         if (loginIcon) loginIcon.style.display = "inline-block";
         if (logoutIcon) logoutIcon.style.display = "none";
     }
-
+    const dashboardBtn = document.getElementById("dashboardBtn");
+    const dashboardBtnMobile = document.getElementById("dashboardBtnMobile");
+    if (dashboardBtn) dashboardBtn.style.display = esAdminActual ? "inline-block" : "none";
+    if (dashboardBtnMobile) dashboardBtnMobile.style.display = esAdminActual ? "flex" : "none";
     const modalProducto = domCache.modal;
     if (modalProducto && modalProducto.classList.contains("show")) {
         const adminBox = document.getElementById("modalAdminButtons");

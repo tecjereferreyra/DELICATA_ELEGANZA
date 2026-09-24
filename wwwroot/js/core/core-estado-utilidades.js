@@ -2,7 +2,7 @@
 
 const API_URL = "https://delicata-eleganza.onrender.com/api/Productos";
 const USUARIOS_URL = "https://delicata-eleganza.onrender.com/api/Usuarios";
-
+const DASHBOARD_URL = "https://delicata-eleganza.onrender.com/api/Dashboard";
 let productosData = [];
 let hamburger;
 let mobileMenu;

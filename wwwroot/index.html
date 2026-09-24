@@ -111,6 +111,9 @@
             <button id="logoutBtn" class="logout-icon" style="display:none;" aria-label="Cerrar sesión">
                 <i class="fa-solid fa-door-open"></i>
             </button>
+            <button id="dashboardBtn" class="user-icon" style="display:none;" aria-label="Panel de administración">
+                <i class="fa-solid fa-gauge-high"></i>
+            </button>
         </div>
     </header>
 
@@ -119,7 +122,9 @@
         <button class="menu-close" aria-label="Cerrar menú">✕</button>
         <div class="mobile-logo">DE</div>
         <div class="mobile-greeting" id="mobileGreeting">¡Hola Visitante!</div>
-
+        <button id="dashboardBtnMobile" class="mobile-admin-link" style="display:none;">
+            <i class="fa-solid fa-gauge-high"></i> Panel de administración
+        </button>
         <ul class="mobile-categories">
             <li data-cat="todos">Todos</li>
 
@@ -174,6 +179,7 @@
                 </span>
                 <ul class="mobile-submenu">
                     <li data-cat="fiesta" data-tipo="aros">Aros</li>
+                    <li data-cat="fiesta" data-tipo="apliques de pelo">Apliques de pelo</li>
                     <li data-cat="fiesta" data-tipo="carteras">Carteras</li>
                     <li data-cat="fiesta" data-tipo="collares">Collares</li>
                     <li data-cat="fiesta" data-tipo="chales">Chales</li>
@@ -275,6 +281,7 @@
             <a href="#" data-cat="fiesta">Fiesta <i class="fa-solid fa-chevron-down cat-arrow"></i></a>
             <ul class="cat-submenu">
                 <li><a href="#" data-cat="fiesta" data-tipo="aros">Aros</a></li>
+                <li><a href="#" data-cat="fiesta" data-tipo="apliques de pelo">Apliques de pelo</a></li>
                 <li><a href="#" data-cat="fiesta" data-tipo="carteras">Carteras</a></li>
                 <li><a href="#" data-cat="fiesta" data-tipo="collares">Collares</a></li>
                 <li><a href="#" data-cat="fiesta" data-tipo="chales">Chales</a></li>
@@ -691,7 +698,15 @@
             </div>
         </div>
     </div>
-
+    <div id="modalDashboard" class="modal-overlay" aria-hidden="true">
+        <div class="modal-box modal-dashboard">
+            <button class="modal-close" onclick="cerrarModalAdmin('modalDashboard')">&times;</button>
+            <h2 class="user-title">Panel de administración</h2>
+            <div id="dashboardContenido" class="dashboard-grid">
+                <p class="dashboard-cargando">Cargando indicadores…</p>
+            </div>
+        </div>
+    </div>
     <!-- ══════════════ FOOTER ══════════════ -->
     <footer class="footer" id="siteFooter">
         <div class="footer-icons">

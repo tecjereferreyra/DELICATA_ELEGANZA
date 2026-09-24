@@ -141,8 +141,8 @@ const COLOR_CSS = {
     "teja clara": "#c1603a", "ocre rojo": "#b5451b", "arcilla": "#c1694f",
     "canyon": "#c96a40",
 
-    "amarillo": "#f9a825", "amarilla": "#f9a825", "amarillos": "#f9a825", "amarillas": "#f9a825",
-    "yellow": "#f9a825", "ocre": "#cc8800", "mostaza": "#c9a227",
+    "amarillo": "#ffd60a", "amarilla": "#ffd60a", "amarillos": "#ffd60a", "amarillas": "#ffd60a",
+    "yellow": "#ffd60a", "ocre": "#cc8800", "mostaza": "#c9a227",
     "limón": "#d4e157", "limon": "#d4e157", "canario": "#ffe082", "miel": "#e6ac00",
     "amarillo pastel": "#fbe8a6",
 

@@ -71,7 +71,7 @@ body, header.navbar {
     src: url('/fonts/cinzel-v26-latin-regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
 }
 
 @font-face {
@@ -79,7 +79,7 @@ body, header.navbar {
     src: url('/fonts/cinzel-v26-latin-600.woff2') format('woff2');
     font-weight: 600;
     font-style: normal;
-    font-display: swap;
+    font-display: optional;
 }
 
 @font-face {
@@ -87,7 +87,7 @@ body, header.navbar {
     src: url('/fonts/poppins-v24-latin-300.woff2') format('woff2');
     font-weight: 300;
     font-style: normal;
-    font-display: swap
+    font-display: swap;
 }
 
 @font-face {
@@ -95,7 +95,7 @@ body, header.navbar {
     src: url('/fonts/poppins-v24-latin-regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
-    font-display: swap
+    font-display: swap;
 }
 
 @font-face {
@@ -103,7 +103,7 @@ body, header.navbar {
     src: url('/fonts/poppins-v24-latin-500.woff2') format('woff2');
     font-weight: 500;
     font-style: normal;
-    font-display: swap
+    font-display: swap;
 }
 
 :root {
@@ -863,6 +863,112 @@ header.navbar .title {
     .logout-icon:hover i, .user-icon:hover i {
         transform: translateY(-1px);
         color: #c9a97a
+    }
+.modal-dashboard {
+    max-width: 780px;
+    width: min(92vw, 780px);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: .9rem;
+    margin-top: 1rem;
+}
+
+.dashboard-card {
+    background: var(--color-fondo-principal, #f4ece0);
+    border: 1px solid rgba(201,168,76,.35);
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+}
+
+    .dashboard-card .valor {
+        font-family: Cinzel, serif;
+        font-size: 1.8rem;
+        color: var(--color-marca-oro);
+        display: block;
+    }
+
+    .dashboard-card .etiqueta {
+        font-family: Poppins, sans-serif;
+        font-size: .78rem;
+        color: var(--color-texto-marron, #3b2f22);
+    }
+.dashboard-lista {
+    grid-column: 1 / -1;
+    text-align: left;
+}
+
+    .dashboard-lista .etiqueta-titulo {
+        display: block;
+        font-family: Cinzel, serif;
+        color: var(--color-marca-oro);
+        font-size: .9rem;
+        margin-bottom: .5rem;
+    }
+
+    .dashboard-lista ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .dashboard-lista li {
+        display: flex;
+        justify-content: space-between;
+        padding: .35rem 0;
+        border-bottom: 1px dashed rgba(201,168,76,.25);
+        font-family: Poppins, sans-serif;
+        font-size: .85rem;
+        color: var(--color-texto-marron, #3b2f22);
+    }
+
+        .dashboard-lista li:last-child {
+            border-bottom: none;
+        }
+
+        .dashboard-lista li strong {
+            color: var(--color-marca-oro);
+        }
+.dashboard-ver-todas {
+    display: block;
+    margin: .6rem auto 0;
+    background: none;
+    border: 1px solid var(--color-marca-oro, #c9a84c);
+    color: var(--color-texto-marron, #3b2f22);
+    font-family: Poppins, sans-serif;
+    font-size: .78rem;
+    padding: .4rem .9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+
+    .dashboard-ver-todas:hover {
+        background: var(--color-marca-oro, #c9a84c);
+        color: rgba(17,17,17,.92);
+    }
+.mobile-admin-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    width: 100%;
+    margin: 0 0 1rem;
+    padding: .8rem 1rem;
+    background: rgba(201,168,76,.12);
+    border: 1px solid rgba(201,168,76,.4);
+    border-radius: 10px;
+    color: var(--color-marca-oro);
+    font-family: Cinzel, serif;
+    font-size: .95rem;
+    cursor: pointer;
+}
+
+    .mobile-admin-link:hover {
+        background: rgba(201,168,76,.22);
     }
 
 .hamburger {
@@ -3232,7 +3338,14 @@ footer.footer {
         hyphens: auto;
         white-space: normal
     }
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: .6rem;
+    }
 
+    .dashboard-card .valor {
+        font-size: 1.4rem;
+    }
         .modal-extra p b, .modal-info-grid p b {
             display: block;
             margin-bottom: 4px
