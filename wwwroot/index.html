@@ -111,9 +111,9 @@
             <button id="logoutBtn" class="logout-icon" style="display:none;" aria-label="Cerrar sesión">
                 <i class="fa-solid fa-door-open"></i>
             </button>
-            <button id="dashboardBtn" class="user-icon" style="display:none;" aria-label="Panel de administración">
+            <a id="dashboardBtn" href="/dashboard.html" target="_blank" rel="noopener" class="user-icon" style="display:none;" aria-label="Panel de administración">
                 <i class="fa-solid fa-gauge-high"></i>
-            </button>
+            </a>
         </div>
     </header>
 
@@ -695,15 +695,7 @@
             </div>
         </div>
     </div>
-    <div id="modalDashboard" class="modal-overlay" aria-hidden="true">
-        <div class="modal-box modal-dashboard">
-            <button class="modal-close" onclick="cerrarModalAdmin('modalDashboard')">&times;</button>
-            <h2 class="user-title">Panel de administración</h2>
-            <div id="dashboardContenido" class="dashboard-grid">
-                <p class="dashboard-cargando">Cargando indicadores…</p>
-            </div>
-        </div>
-    </div>
+   
     <!-- ══════════════ FOOTER ══════════════ -->
     <footer class="footer" id="siteFooter">
         <div class="footer-icons">

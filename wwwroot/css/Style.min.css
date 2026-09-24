@@ -883,7 +883,25 @@ header.navbar .title {
     padding: 1rem;
     text-align: center;
 }
+.dashboard-page {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
 
+.btn-volver-inicio {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--color-marca-oro);
+    text-decoration: none;
+    font-family: Cinzel, serif;
+    font-size: .85rem;
+}
+
+    .btn-volver-inicio:hover {
+        color: #c9a97a;
+    }
     .dashboard-card .valor {
         font-family: Cinzel, serif;
         font-size: 1.8rem;
