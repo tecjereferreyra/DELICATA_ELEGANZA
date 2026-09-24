@@ -1197,11 +1197,6 @@ function toggleFieldsByTipo(nombre, esEditar = false, modo = "form") {
             abrirModalAdmin("modalDashboard");
             cargarDashboard();
         });
-        document.getElementById("dashboardBtnMobile")?.addEventListener("click", () => {
-            document.querySelector(".mobile-menu")?.classList.remove("active");
-            abrirModalAdmin("modalDashboard");
-            cargarDashboard();
-        });
         document.getElementById("dashboardContenido")?.addEventListener("click", (e) => {
             const boton = e.target.closest(".dashboard-ver-todas");
             if (!boton) return;
