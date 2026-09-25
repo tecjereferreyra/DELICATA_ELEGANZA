@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace DELICATA_ELEGANZA.Controllers
@@ -207,6 +208,74 @@ namespace DELICATA_ELEGANZA.Controllers
             if (userId == null) return BadRequest();
 
             return Ok();
+        }
+        [Authorize(Roles = "Administrador")]
+        [HttpGet]
+        public async Task<IActionResult> Listar()
+        {
+            try
+            {
+                using var con = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                await con.OpenAsync();
+
+                using var cmd = new NpgsqlCommand("SELECT * FROM sp_listar_usuarios()", con);
+                using var rd = await cmd.ExecuteReaderAsync();
+
+                var usuarios = new List<object>();
+                while (await rd.ReadAsync())
+                {
+                    usuarios.Add(new
+                    {
+                        idUsuario = rd["IdUsuario"],
+                        userName = rd["UserName"] == DBNull.Value ? "" : rd["UserName"].ToString(),
+                        email = rd["Email"] == DBNull.Value ? "" : rd["Email"].ToString(),
+                        rol = rd["Rol"].ToString(),
+                        activo = (bool)rd["Activo"],
+                        fechaCreacion = rd["FechaCreacion"]
+                    });
+                }
+                return Ok(usuarios);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[USUARIOS LISTAR ERROR] {ex}");
+                return StatusCode(500, new { message = "Error al listar usuarios" });
+            }
+        }
+
+        [Authorize(Roles = "Administrador")]
+        [HttpPatch("{id}/rol")]
+        public async Task<IActionResult> ActualizarRol(int id, [FromBody] ActualizarRolDto dto)
+        {
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Rol))
+                return BadRequest(new { message = "Rol requerido" });
+
+            try
+            {
+                using var con = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                await con.OpenAsync();
+
+                using var cmd = new NpgsqlCommand("SELECT * FROM sp_actualizar_rol_usuario(@id, @rol)", con);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@rol", dto.Rol);
+
+                using var rd = await cmd.ExecuteReaderAsync();
+                if (!await rd.ReadAsync()) return NotFound();
+
+                return Ok(new { idUsuario = rd["IdUsuario"], rol = rd["Rol"].ToString() });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0002") { return NotFound(); }
+            catch (PostgresException ex) when (ex.SqlState == "22023") { return BadRequest(new { message = "Rol inválido" }); }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[USUARIOS ROL ERROR] {ex}");
+                return StatusCode(500, new { message = "Error al actualizar el rol" });
+            }
+        }
+
+        public class ActualizarRolDto
+        {
+            public string Rol { get; set; } = "";
         }
 
         public class UsuarioLogin

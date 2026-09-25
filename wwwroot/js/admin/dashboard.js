@@ -5,7 +5,10 @@
         return;
     }
     cargarDashboard();
+    cargarUsuarios();
 });
+
+const USUARIOS_URL_ADMIN = "https://delicata-eleganza.onrender.com/api/Usuarios";
 
 async function cargarDashboard() {
     const contenedor = document.getElementById("dashboardContenido");
@@ -26,11 +29,11 @@ async function cargarDashboard() {
         const data = await resp.json();
 
         contenedor.innerHTML = `
-        <div class="dashboard-card"><span class="valor">${data.totalProductos ?? 0}</span><span class="etiqueta">Productos totales</span></div>
-        <div class="dashboard-card"><span class="valor">${data.sinStock ?? 0}</span><span class="etiqueta">Sin stock</span></div>
-        <div class="dashboard-card"><span class="valor">${data.stockBajo ?? 0}</span><span class="etiqueta">Stock bajo (&lt;6)</span></div>
-        <div class="dashboard-card"><span class="valor">${data.sinImagen ?? 0}</span><span class="etiqueta">Sin imagen</span></div>
-        <div class="dashboard-card"><span class="valor">${data.usuariosUltimos30d ?? 0}</span><span class="etiqueta">Usuarios nuevos (30d)</span></div>
+        <div class="dashboard-card acento-neutro"><i class="fa-solid fa-box"></i><span class="valor">${data.totalProductos ?? 0}</span><span class="etiqueta">Productos totales</span></div>
+        <a href="/index.html?filtroAdmin=sinStock" class="dashboard-card acento-alerta"><i class="fa-solid fa-triangle-exclamation"></i><span class="valor">${data.sinStock ?? 0}</span><span class="etiqueta">Sin stock</span></a>
+        <a href="/index.html?filtroAdmin=stockBajo" class="dashboard-card acento-advertencia"><i class="fa-solid fa-layer-group"></i><span class="valor">${data.stockBajo ?? 0}</span><span class="etiqueta">Stock bajo (&lt;6)</span></a>
+        <a href="/index.html?filtroAdmin=sinImagen" class="dashboard-card acento-info"><i class="fa-solid fa-image"></i><span class="valor">${data.sinImagen ?? 0}</span><span class="etiqueta">Sin imagen</span></a>
+        <div class="dashboard-card acento-positivo"><i class="fa-solid fa-user-plus"></i><span class="valor">${data.usuariosUltimos30d ?? 0}</span><span class="etiqueta">Usuarios nuevos (30d)</span></div>
         ${renderListaDashboard("Productos por categoría", data.porCategoria)}
         ${renderListaDashboard("Productos por marca", data.porMarca, 8)}
     `;
@@ -63,10 +66,86 @@ function renderListaDashboard(titulo, items, limite = null) {
 `;
 }
 
-document.addEventListener("click", (e) => {
-    const boton = e.target.closest(".dashboard-ver-todas");
-    if (!boton) return;
-    const card = boton.closest(".dashboard-lista");
-    card?.querySelectorAll("li").forEach(li => li.style.display = "");
-    boton.remove();
+async function cargarUsuarios() {
+    const contenedor = document.getElementById("usuariosContenido");
+    if (!contenedor) return;
+    contenedor.innerHTML = '<p class="dashboard-cargando">Cargando usuarios…</p>';
+
+    try {
+        const resp = await fetch(USUARIOS_URL_ADMIN, {
+            headers: { "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}` }
+        });
+        if (!resp.ok) throw new Error("Respuesta no OK");
+        const usuarios = await resp.json();
+
+        if (!usuarios.length) {
+            contenedor.innerHTML = '<p class="dashboard-cargando">No hay usuarios registrados.</p>';
+            return;
+        }
+
+        const filas = usuarios.map(u => {
+            const esAdmin = u.rol === "Administrador";
+            return `
+            <tr data-id="${u.idUsuario}">
+                <td>${u.userName || "—"}</td>
+                <td>${u.email || "—"}</td>
+                <td><span class="badge-rol ${esAdmin ? "admin" : ""}">${u.rol}</span></td>
+                <td>
+                    <button type="button" class="btn-toggle-rol" data-rol-actual="${u.rol}">
+                        ${esAdmin ? "Quitar admin" : "Hacer admin"}
+                    </button>
+                </td>
+            </tr>`;
+        }).join("");
+
+        contenedor.innerHTML = `
+        <table class="tabla-usuarios">
+            <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Acción</th></tr></thead>
+            <tbody>${filas}</tbody>
+        </table>`;
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+        contenedor.innerHTML = '<p class="dashboard-cargando">No se pudo cargar la lista de usuarios.</p>';
+    }
+}
+
+document.addEventListener("click", async (e) => {
+    const botonVerTodas = e.target.closest(".dashboard-ver-todas");
+    if (botonVerTodas) {
+        const card = botonVerTodas.closest(".dashboard-lista");
+        card?.querySelectorAll("li").forEach(li => li.style.display = "");
+        botonVerTodas.remove();
+        return;
+    }
+
+    const btnRol = e.target.closest(".btn-toggle-rol");
+    if (btnRol) {
+        const fila = btnRol.closest("tr");
+        const id = fila?.dataset.id;
+        const rolActual = btnRol.dataset.rolActual;
+        const nuevoRol = rolActual === "Administrador" ? "Usuario" : "Administrador";
+
+        if (!confirm(`¿Cambiar el rol a "${nuevoRol}"?`)) return;
+
+        btnRol.disabled = true;
+        btnRol.textContent = "Guardando...";
+
+        try {
+            const resp = await fetch(`${USUARIOS_URL_ADMIN}/${id}/rol`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("tokenDelicata")}`
+                },
+                body: JSON.stringify({ Rol: nuevoRol })
+            });
+            if (!resp.ok) throw new Error("No se pudo actualizar");
+            cargarUsuarios();
+        } catch (err) {
+            console.error(err);
+            alert("No se pudo actualizar el rol. Intentá de nuevo.");
+            btnRol.disabled = false;
+            btnRol.textContent = rolActual === "Administrador" ? "Quitar admin" : "Hacer admin";
+        }
+    }
 });

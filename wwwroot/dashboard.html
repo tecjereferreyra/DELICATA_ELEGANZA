@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>Panel de administración — Delicata Eleganza</title>
-
+    <style>
+        html, body {
+            background: #111111;
+            margin: 0
+        }
+    </style>
     <link rel="icon" href="/LogoDE/genfavicon-512.png?v=2" type="image/png">
 
     <link rel="preload" href="/fonts/poppins-v24-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -27,11 +32,17 @@
         </a>
         <h1 class="title">Panel de administración</h1>
     </header>
+    <main>
+    <div id="dashboardContenido" class="dashboard-grid">
+        <p class="dashboard-cargando">Cargando indicadores…</p>
+    </div>
 
-    <main class="dashboard-page">
-        <div id="dashboardContenido" class="dashboard-grid">
-            <p class="dashboard-cargando">Cargando indicadores…</p>
+    <section class="dashboard-usuarios">
+        <h2 class="dashboard-subtitulo">Usuarios</h2>
+        <div id="usuariosContenido" class="tabla-usuarios-wrap">
+            <p class="dashboard-cargando">Cargando usuarios…</p>
         </div>
+    </section>
     </main>
 </body>
 </html>

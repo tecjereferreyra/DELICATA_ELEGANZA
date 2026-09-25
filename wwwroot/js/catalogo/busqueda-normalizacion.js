@@ -688,6 +688,35 @@ const CATEGORIAS_MAP = {
     "piercing": "piercing",
     "panoleria": "panoleria"
 };
+const ETIQUETAS_FILTRO_ADMIN = {
+    sinStock: "Productos sin stock",
+    stockBajo: "Productos con stock bajo (menos de 6)",
+    sinImagen: "Productos sin imagen"
+};
+
+function mostrarBannerFiltroAdmin() {
+    let banner = document.getElementById("bannerFiltroAdmin");
+    if (!filtroAdminActivo) {
+        banner?.remove();
+        return;
+    }
+    if (!banner) {
+        banner = document.createElement("div");
+        banner.id = "bannerFiltroAdmin";
+        banner.className = "banner-filtro-admin";
+        const contenedor = document.getElementById("contenedor-productos");
+        contenedor?.parentNode.insertBefore(banner, contenedor);
+    }
+    banner.innerHTML = `
+        <span>Filtro admin: <strong>${ETIQUETAS_FILTRO_ADMIN[filtroAdminActivo] || filtroAdminActivo}</strong></span>
+        <button type="button" id="btnQuitarFiltroAdmin">Quitar filtro ✕</button>
+    `;
+    document.getElementById("btnQuitarFiltroAdmin")?.addEventListener("click", () => {
+        filtroAdminActivo = null;
+        history.replaceState(null, "", location.pathname);
+        aplicarFiltros();
+    });
+}
 const aplicarFiltros = (preservarPaginacion = false) => {
     const productosYaRenderizadosPrevios = productosRenderizados;
     const categoriaActivaRaw = categoriaActivaActual;
@@ -723,7 +752,16 @@ const aplicarFiltros = (preservarPaginacion = false) => {
                 subcategoriaActivaActual.includes(tipo);
         });
     }
-
+    if (filtroAdminActivo) {
+        base = base.filter(p => {
+            const stock = Number(p.Stock ?? 0);
+            if (filtroAdminActivo === "sinStock") return stock === 0;
+            if (filtroAdminActivo === "stockBajo") return stock >= 1 && stock <= 5;
+            if (filtroAdminActivo === "sinImagen") return p.ImagenUrl === "/ImagenUrl/default.jpg";
+            return true;
+        });
+    }
+    mostrarBannerFiltroAdmin();
     if (modoNuevosActivo) {
         productosFiltrados = [...base]
             .sort((a, b) => (b.IdProducto ?? 0) - (a.IdProducto ?? 0))

@@ -15,6 +15,7 @@ let categoriaActivaActual = "todos";
 let subcategoriaActivaActual = "";
 let modoNuevosActivo = false;
 let filtroPrevioNuevos = null;
+let filtroAdminActivo = new URLSearchParams(location.search).get("filtroAdmin");
 const CANTIDAD_NUEVOS = 40;
 
 function desactivarModoNuevos() {
