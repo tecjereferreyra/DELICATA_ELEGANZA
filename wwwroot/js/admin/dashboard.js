@@ -14,11 +14,11 @@ async function cargarDashboard() {
     const contenedor = document.getElementById("dashboardContenido");
     if (!contenedor) return;
     contenedor.innerHTML = `
+<div class="dashboard-card skeleton-card"></div>
     <div class="dashboard-card skeleton-card"></div>
     <div class="dashboard-card skeleton-card"></div>
     <div class="dashboard-card skeleton-card"></div>
-    <div class="dashboard-card skeleton-card"></div>
-    <div class="dashboard-card skeleton-card"></div>
+    <div class="dashboard-card skeleton-lista"></div>
     <div class="dashboard-card skeleton-lista"></div>
 `;
 

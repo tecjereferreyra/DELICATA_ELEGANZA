@@ -140,7 +140,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 await con.OpenAsync();
 
                 string token = Guid.NewGuid().ToString();
-                DateTime expira = DateTime.UtcNow.AddMinutes(30);
+                DateTime expira = DateTime.SpecifyKind(DateTime.UtcNow.AddMinutes(30), DateTimeKind.Unspecified);
 
                 object userId = null;
                 using var cmd = new NpgsqlCommand(
