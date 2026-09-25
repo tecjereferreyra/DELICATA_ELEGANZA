@@ -762,7 +762,6 @@ const aplicarFiltros = (preservarPaginacion = false) => {
             const stock = Number(p.Stock ?? 0);
             if (filtroAdminActivo === "sinStock") return stock === 0;
             if (filtroAdminActivo === "stockBajo") return stock >= 1 && stock <= 5;
-            if (filtroAdminActivo === "sinImagen") return p.ImagenUrl === "/ImagenUrl/default.jpg";
             return true;
         });
     }

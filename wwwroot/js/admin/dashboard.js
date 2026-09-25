@@ -39,7 +39,6 @@ async function cargarDashboard() {
         <div class="dashboard-card acento-neutro"><i class="fa-solid fa-box"></i><span class="valor">${data.totalProductos ?? 0}</span><span class="etiqueta">Productos totales</span></div>
         <a href="/index.html?filtroAdmin=sinStock" class="dashboard-card acento-alerta"><i class="fa-solid fa-triangle-exclamation"></i><span class="valor">${data.sinStock ?? 0}</span><span class="etiqueta">Sin stock</span></a>
         <a href="/index.html?filtroAdmin=stockBajo" class="dashboard-card acento-advertencia"><i class="fa-solid fa-layer-group"></i><span class="valor">${data.stockBajo ?? 0}</span><span class="etiqueta">Stock bajo (&lt;6)</span></a>
-        <a href="/index.html?filtroAdmin=sinImagen" class="dashboard-card acento-info"><i class="fa-solid fa-image"></i><span class="valor">${data.sinImagen ?? 0}</span><span class="etiqueta">Sin imagen</span></a>
         <div class="dashboard-card acento-positivo"><i class="fa-solid fa-user-plus"></i><span class="valor">${data.usuariosUltimos30d ?? 0}</span><span class="etiqueta">Usuarios nuevos (30d)</span></div>
         ${renderListaDashboard("Productos por categoría", data.porCategoria)}
         ${renderListaDashboard("Productos por marca", data.porMarca, 8)}
