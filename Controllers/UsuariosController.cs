@@ -153,7 +153,7 @@ namespace DELICATA_ELEGANZA.Controllers
                 {
                     using var rd = await cmd.ExecuteReaderAsync();
                     if (await rd.ReadAsync())
-                        userId = rd["IdUsuario"];
+                        userId = rd[0];
                 }
                 catch (PostgresException ex) when (ex.SqlState == "23502" || ex.SqlState == "22007")
                 {
@@ -198,7 +198,7 @@ namespace DELICATA_ELEGANZA.Controllers
             {
                 using var rd = await cmd.ExecuteReaderAsync();
                 if (await rd.ReadAsync())
-                    userId = rd["IdUsuario"];
+                    userId = rd[0];
             }
             catch (PostgresException ex) when (ex.SqlState == "23502")
             {
