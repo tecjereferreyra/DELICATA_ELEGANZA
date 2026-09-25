@@ -13,7 +13,14 @@ const USUARIOS_URL_ADMIN = "https://delicata-eleganza.onrender.com/api/Usuarios"
 async function cargarDashboard() {
     const contenedor = document.getElementById("dashboardContenido");
     if (!contenedor) return;
-    contenedor.innerHTML = '<p class="dashboard-cargando">Cargando indicadores…</p>';
+    contenedor.innerHTML = `
+    <div class="dashboard-card skeleton-card"></div>
+    <div class="dashboard-card skeleton-card"></div>
+    <div class="dashboard-card skeleton-card"></div>
+    <div class="dashboard-card skeleton-card"></div>
+    <div class="dashboard-card skeleton-card"></div>
+    <div class="dashboard-card skeleton-lista"></div>
+`;
 
     try {
         const resp = await fetch(`${DASHBOARD_URL}/resumen`, {
@@ -69,7 +76,12 @@ function renderListaDashboard(titulo, items, limite = null) {
 async function cargarUsuarios() {
     const contenedor = document.getElementById("usuariosContenido");
     if (!contenedor) return;
-    contenedor.innerHTML = '<p class="dashboard-cargando">Cargando usuarios…</p>';
+    contenedor.innerHTML = `
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+`;
 
     try {
         const resp = await fetch(USUARIOS_URL_ADMIN, {

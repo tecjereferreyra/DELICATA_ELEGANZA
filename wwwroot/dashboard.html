@@ -1,12 +1,12 @@
 ﻿<!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="pagina-dashboard">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>Panel de administración — Delicata Eleganza</title>
     <style>
-        html, body {
+        html.pagina-dashboard, body.pagina-dashboard {
             background: #111111;
             margin: 0
         }
@@ -25,7 +25,7 @@
     <script src="./js/core/core-estado-utilidades.js" defer></script>
     <script src="./js/admin/dashboard.js" defer></script>
 </head>
-<body>
+<body class="pagina-dashboard">
     <header class="navbar">
         <a href="/index.html" class="btn-volver-inicio">
             <i class="fa-solid fa-arrow-left"></i> Volver a inicio
@@ -33,16 +33,24 @@
         <h1 class="title">Panel de administración</h1>
     </header>
     <main>
-    <div id="dashboardContenido" class="dashboard-grid">
-        <p class="dashboard-cargando">Cargando indicadores…</p>
-    </div>
-
-    <section class="dashboard-usuarios">
-        <h2 class="dashboard-subtitulo">Usuarios</h2>
-        <div id="usuariosContenido" class="tabla-usuarios-wrap">
-            <p class="dashboard-cargando">Cargando usuarios…</p>
+        <div id="dashboardContenido" class="dashboard-grid">
+            <div class="dashboard-card skeleton-card"></div>
+            <div class="dashboard-card skeleton-card"></div>
+            <div class="dashboard-card skeleton-card"></div>
+            <div class="dashboard-card skeleton-card"></div>
+            <div class="dashboard-card skeleton-card"></div>
+            <div class="dashboard-card skeleton-lista"></div>
         </div>
-    </section>
+
+        <section class="dashboard-usuarios">
+            <h2 class="dashboard-subtitulo">Usuarios</h2>
+            <div id="usuariosContenido" class="tabla-usuarios-wrap">
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+            </div>
+        </section>
     </main>
 </body>
 </html>

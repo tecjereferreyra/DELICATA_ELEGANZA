@@ -694,26 +694,26 @@ const ETIQUETAS_FILTRO_ADMIN = {
     sinImagen: "Productos sin imagen"
 };
 
-function mostrarBannerFiltroAdmin() {
-    let banner = document.getElementById("bannerFiltroAdmin");
+function mostrarToastFiltroAdmin() {
+    let toast = document.getElementById("toastFiltroAdmin");
     if (!filtroAdminActivo) {
-        banner?.remove();
+        toast?.remove();
         return;
     }
-    if (!banner) {
-        banner = document.createElement("div");
-        banner.id = "bannerFiltroAdmin";
-        banner.className = "banner-filtro-admin";
-        const contenedor = document.getElementById("contenedor-productos");
-        contenedor?.parentNode.insertBefore(banner, contenedor);
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toastFiltroAdmin";
+        toast.className = "toast-filtro-admin";
+        document.body.appendChild(toast);
     }
-    banner.innerHTML = `
-        <span>Filtro admin: <strong>${ETIQUETAS_FILTRO_ADMIN[filtroAdminActivo] || filtroAdminActivo}</strong></span>
-        <button type="button" id="btnQuitarFiltroAdmin">Quitar filtro ✕</button>
+    toast.innerHTML = `
+        <span>Filtro: <strong>${ETIQUETAS_FILTRO_ADMIN[filtroAdminActivo] || filtroAdminActivo}</strong></span>
+        <button type="button" id="btnQuitarFiltroAdmin">✕</button>
     `;
     document.getElementById("btnQuitarFiltroAdmin")?.addEventListener("click", () => {
         filtroAdminActivo = null;
         history.replaceState(null, "", location.pathname);
+        mostrarToastFiltroAdmin();
         aplicarFiltros();
     });
 }
@@ -761,7 +761,7 @@ const aplicarFiltros = (preservarPaginacion = false) => {
             return true;
         });
     }
-    mostrarBannerFiltroAdmin();
+    mostrarToastFiltroAdmin();
     if (modoNuevosActivo) {
         productosFiltrados = [...base]
             .sort((a, b) => (b.IdProducto ?? 0) - (a.IdProducto ?? 0))
