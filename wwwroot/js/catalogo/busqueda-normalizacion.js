@@ -715,6 +715,11 @@ function mostrarToastFiltroAdmin() {
         history.replaceState(null, "", location.pathname);
         mostrarToastFiltroAdmin();
         aplicarFiltros();
+        if (typeof irAlContenedorProductos === "function") {
+            irAlContenedorProductos();
+        } else {
+            document.getElementById("contenedor-productos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
     });
 }
 const aplicarFiltros = (preservarPaginacion = false) => {
