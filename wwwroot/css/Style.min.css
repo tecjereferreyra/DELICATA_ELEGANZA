@@ -852,11 +852,12 @@ header.navbar .title {
 
     .logout-icon i, .user-icon i {
         font-size: 1.3rem;
-        transition: transform .3s,color .3s
+        transition: transform .3s,color .3s;
+        cursor: pointer;
     }
 
     .logout-icon i {
-        font-size: 1.4rem
+        font-size: 1.4rem;      
     }
 
     .logout-icon:hover i, .user-icon:hover i {
